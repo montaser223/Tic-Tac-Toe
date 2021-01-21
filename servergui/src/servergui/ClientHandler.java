@@ -20,10 +20,11 @@ import java.util.logging.Logger;
  */
 public class ClientHandler extends Thread {
 
+    static boolean startFlag;
     DataInputStream dis;
     PrintStream ps;
     String UserName;
-    private static Vector<ClientHandler> clients = new Vector<ClientHandler>();
+    static Vector<ClientHandler> clients = new Vector<ClientHandler>();
 
     ClientHandler(Socket socket) {
         try {
@@ -44,15 +45,18 @@ public class ClientHandler extends Thread {
     }
 
     public static void logout(String _userName) {
-        //printAllUser();
-        System.out.println("52");
-//        clients.forEach((t) -> {
+        System.out.println("47");
+        printAllUser();
+        System.out.println(clients);
+        System.out.println("49");
+        System.out.println(clients.indexOf(_userName));;
+        for (ClientHandler client : clients) {
+            System.out.println("Line 55 :" + client.UserName);
+        }
+        System.out.println("55");
+        //        clients.forEach((t) -> {
 //            System.out.println(t.UserName);
 //        });
-//        for(ClientHandler client: clients)
-//         {
-//             System.out.println("Line 55 :"+client.UserName);
-//         }
 //
 //        int len = clients.capacity();
 //        System.out.println(len);
@@ -68,12 +72,33 @@ public class ClientHandler extends Thread {
 //       c.stop();
     }
 
-//    static int getIndex(String _us) {
-//        for (ClientHandler client : clients) {
-//            System.out.println(client.UserName);
-//        }
-//        return 0;
-//    }
+    void logOut(String _un) {
+        int index = getIndex(_un);
+        if (index > -1) {
+            try {
+                ClientHandler client = clients.elementAt(index);
+                System.out.println(client);
+                clients.removeElementAt(clients.indexOf(client));
+                client.dis.close();
+                client.ps.close();
+                client.stop();
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
+        } else {
+            System.out.println("Cannot remove client at index 0");
+        }
+    }
+
+    int getIndex(String _un) {
+        int index = -1;
+        for (ClientHandler client : clients) {
+            if (client.UserName == _un) {
+                index = clients.indexOf(client);
+            }
+        }
+        return index;
+    }
 
 //    static int getIndex(String _userName)
 //    {
@@ -92,17 +117,25 @@ public class ClientHandler extends Thread {
 //        return index;
 //    }
     //@Override
-    public void stopClientHandler() {
-        this.stop();
+    public static void stopClientHandler() {
+//        this.stop();
+        startFlag = false;
+        for (ClientHandler client : clients) {
+            logout(client.UserName);
+        }
     }
 
     @Override
     public void run() {
-        while (true) {
+        startFlag= true;
+        while (startFlag) {
             String msg = null;
             try {
                 msg = dis.readLine();
-                sendMsg(msg, this.UserName);
+                if (msg.equals("logout")) {
+                    logOut(this.UserName);
+                }
+                //getIndex(this.UserName, msg);
 
                 // logOut / request 
             } catch (IOException ex) {
@@ -118,7 +151,7 @@ public class ClientHandler extends Thread {
         }
     }
 
-    static void printAllUser() {
+    public static void printAllUser() {
         for (ClientHandler client : clients) {
             System.out.println(client.UserName);
         }

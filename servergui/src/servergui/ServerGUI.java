@@ -56,7 +56,7 @@ class Server extends Thread{
                 try {
                     
                     socket = serverSocket.accept();
-                    handler = new ClientHandler(socket);
+                     new ClientHandler(socket);
                     // here the server should send the sockt to the login function in clientHandler class
                     // or create an object of a clinetHandler class this Constructor taking socket
                     // new ClientHandler(scoket);
@@ -75,6 +75,7 @@ class Server extends Thread{
         startflag  = false;
         try {
             serverSocket.close();
+            ClientHandler.stopClientHandler();
             //handler.stopClientHandler();
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);

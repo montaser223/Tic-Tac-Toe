@@ -5,7 +5,7 @@
  */
 package xopro1;
 
-import servergui.*;
+import servergui.ClientHandler;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -259,7 +259,7 @@ public class XoPro1 extends Application {
                 primaryStage.setScene(scene);
 
             }
-        });
+        }); 
         signupBtn2.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
@@ -298,13 +298,17 @@ public class XoPro1 extends Application {
                 
                 userText1.clear();
                 passText1.clear();
-                System.out.println("User: "+usernameDislay3.getText());
-                ClientHandler.logout(usernameDislay3.getText());
+               // System.out.println("User: "+usernameDislay3.getText());
+                ps.println("logout");
+                //ClientHandler.printAllUser();
+//                        logout(usernameDislay3.getText());
                 primaryStage.setScene(scene);
 
 //                ClientHandler.logout(text3);
             }
         });
+        
+        
 
         root1.setId("root1");
         scene.getStylesheets().addAll(this.getClass().getResource("style.css").toExternalForm());
@@ -313,6 +317,11 @@ public class XoPro1 extends Application {
         primaryStage.show();
     }
 
+    @Override
+    public void stop()
+    {
+        thread.stop();
+    }
     /**
      * @param args the command line arguments
      */
