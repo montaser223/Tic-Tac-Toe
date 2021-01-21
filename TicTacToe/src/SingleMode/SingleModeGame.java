@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Button;
@@ -146,7 +147,6 @@ public class SingleModeGame extends AnchorPane {
         while(playerXpositions.contains(cpuPosition)|| playerOpositions.contains(cpuPosition)){
             cpuPosition = random.nextInt(9) +1;
         }
-        System.out.println(cpuPosition);
         return cpuPosition;
     }
     
@@ -173,6 +173,7 @@ public class SingleModeGame extends AnchorPane {
                 updateScore();
             } else if (checkWinner() == "tie") {
                 drawTie();
+                updateScore();
             }
         }
     }
@@ -226,32 +227,6 @@ public class SingleModeGame extends AnchorPane {
         buttons[8] = bt9;
         for (index=0; index<9; index++) {
             buttons[index].setFont(Font.font("MV Boli", FontWeight.BOLD, 24));
-            /*buttons[index].setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if (gameFlag) {
-                    buttons[index].setText(symbol);
-                    buttons[index].setDisable(true);
-                    if (symbol == "X") {
-
-                        playerXpositions.add(index+1);
-                        symbol = "O";
-                        if (checkWinner() == "X") {
-                            highLightWinner(playerXpositions);
-                            gameFlag = false;
-                            playerScoreCounter++;
-                            updateScore();
-                        } else if (checkWinner() == "tie") {
-                            drawTie();
-                        }else{
-                            playComputerMove();
-                        }
-                    }
-                }
-            }
-
-        });*/
-            
         }
 
         bt1.setOnAction(new EventHandler<ActionEvent>() {
@@ -270,6 +245,8 @@ public class SingleModeGame extends AnchorPane {
                             updateScore();
                         } else if (checkWinner() == "tie") {
                             drawTie();
+                            gameFlag = false;
+                            updateScore();
                         }else{
                             playComputerMove();
                         }
@@ -295,6 +272,8 @@ public class SingleModeGame extends AnchorPane {
                             updateScore();
                         } else if (checkWinner() == "tie") {
                             drawTie();
+                            gameFlag = false;
+                            updateScore();
                         }else{
                             playComputerMove();
                         }
@@ -320,6 +299,8 @@ public class SingleModeGame extends AnchorPane {
                         } else if (checkWinner() == "tie") {
                             bt3.setText("Tie");
                             drawTie();
+                            gameFlag = false;
+                            updateScore();
                         }
                         else{
                             playComputerMove();
@@ -347,6 +328,8 @@ public class SingleModeGame extends AnchorPane {
                         } else if (checkWinner() == "tie") {
                             bt4.setText("Tie");
                             drawTie();
+                            gameFlag = false;
+                            updateScore();
                         }else{
                             playComputerMove();
                         }
@@ -372,6 +355,7 @@ public class SingleModeGame extends AnchorPane {
                         } else if (checkWinner() == "tie") {
                             bt5.setText("Tie");
                             drawTie();
+                            updateScore();
                         }else{
                             playComputerMove();
                         }
@@ -398,6 +382,8 @@ public class SingleModeGame extends AnchorPane {
                         } else if (checkWinner() == "tie") {
                             bt6.setText("Tie");
                             drawTie();
+                            gameFlag = false;
+                            updateScore();
                         }else{
                             playComputerMove();
                         }
@@ -424,6 +410,8 @@ public class SingleModeGame extends AnchorPane {
                         } else if (checkWinner() == "tie") {
                             bt7.setText("Tie");
                             drawTie();
+                            gameFlag = false;
+                            updateScore();
                         }else{
                             playComputerMove();
                         }
@@ -450,6 +438,8 @@ public class SingleModeGame extends AnchorPane {
                         } else if (checkWinner() == "tie") {
                             bt8.setText("Tie");
                             drawTie();
+                            gameFlag = false;
+                            updateScore();
                         }else{
                             playComputerMove();
                         }
@@ -476,6 +466,9 @@ public class SingleModeGame extends AnchorPane {
                         } else if (checkWinner() == "tie") {
                             bt9.setText("Tie");
                             drawTie();
+                            gameFlag = false;
+                            updateScore();
+                            
                         }else{
                             playComputerMove();
                         }
@@ -581,11 +574,7 @@ public class SingleModeGame extends AnchorPane {
         exit.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                String[] str = new String[9];
-                str[0] = "X";
-                str[1] = "O";
-                //str[2] = "X";
-                drawOldPositions(str);
+                Platform.exit();
             }
             
         });
