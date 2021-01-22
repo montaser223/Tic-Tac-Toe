@@ -5,10 +5,10 @@
  */
 package xopro1;
 
-import servergui.ClientHandler;
-
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.logging.Level;
@@ -37,12 +37,12 @@ import xopro1.XoDataBase;
  * @author black horse
  */
 public class XoPro1 extends Application {
- 
+
     XoDataBase db;
     int count;
     Socket socket;
-    DataInputStream dis;
-    PrintStream ps;
+    ObjectInputStream readObj;
+    ObjectOutputStream writeObj;
     Thread thread;
     private StackPane root1 = new StackPane();
     private StackPane root2 = new StackPane();
@@ -168,13 +168,7 @@ public class XoPro1 extends Application {
                 scoreDislay3,
                 grid3);
         root3.getChildren().addAll(vBox3);
-        try {
-            socket = new Socket("127.0.0.1", 5005);
-            dis = new DataInputStream(socket.getInputStream());
-            ps = new PrintStream(socket.getOutputStream());
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
-        }
+
         /*
         Button btn = new Button("Request");
         btn.setOnAction(new EventHandler<ActionEvent>() {
@@ -184,15 +178,15 @@ public class XoPro1 extends Application {
             }
         });
          */
-
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (true) {
-                    String request = null;
                     try {
-                        request = dis.readLine();
-                        // handel request
+                        socket = new Socket("127.0.0.1", 5005);
+                        writeObj = new ObjectOutputStream(socket.getOutputStream());
+                        readObj = new ObjectInputStream(socket.getInputStream());
+//                        readObj.readObject();
                     } catch (IOException ex) {
                         System.out.println(ex.getMessage());
                     }
@@ -213,6 +207,14 @@ public class XoPro1 extends Application {
             @Override
             public void handle(ActionEvent event) {
 
+                Player newPlayer = new Player("montase", "123");
+                try {
+                    writeObj.writeObject(newPlayer);
+                    System.out.println("object sent!");
+                } catch (IOException ex) {
+                    System.out.println(ex.getMessage());
+                }
+
                 if (userText1.getText().isEmpty() || passText1.getText().isEmpty()) {
 
                     alertEmptyLogIn1.showAndWait();
@@ -222,7 +224,6 @@ public class XoPro1 extends Application {
                     if (login == 1) {
                         usernameDislay3.setText(userText1.getText());
                         primaryStage.setScene(scene3);
-                        ps.println(userText1.getText());
                     } else {
                         alertWrongLogIn1.showAndWait();
                         userText1.clear();
@@ -259,7 +260,7 @@ public class XoPro1 extends Application {
                 primaryStage.setScene(scene);
 
             }
-        }); 
+        });
         signupBtn2.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
@@ -295,11 +296,10 @@ public class XoPro1 extends Application {
 
             @Override
             public void handle(ActionEvent event) {
-                
+
                 userText1.clear();
                 passText1.clear();
-               // System.out.println("User: "+usernameDislay3.getText());
-                ps.println("logout");
+                // System.out.println("User: "+usernameDislay3.getText());
                 //ClientHandler.printAllUser();
 //                        logout(usernameDislay3.getText());
                 primaryStage.setScene(scene);
@@ -307,8 +307,6 @@ public class XoPro1 extends Application {
 //                ClientHandler.logout(text3);
             }
         });
-        
-        
 
         root1.setId("root1");
         scene.getStylesheets().addAll(this.getClass().getResource("style.css").toExternalForm());
@@ -318,10 +316,10 @@ public class XoPro1 extends Application {
     }
 
     @Override
-    public void stop()
-    {
+    public void stop() {
         thread.stop();
     }
+
     /**
      * @param args the command line arguments
      */

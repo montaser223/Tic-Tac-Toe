@@ -7,9 +7,13 @@ package servergui;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,142 +22,113 @@ import java.util.logging.Logger;
  *
  * @author black horse
  */
-public class ClientHandler extends Thread {
+public class ClientHandler extends Thread implements Serializable {
 
-    static boolean startFlag;
-    DataInputStream dis;
-    PrintStream ps;
-    String UserName;
+//    static boolean startFlag;
+//    DataInputStream dis;
+//    PrintStream ps;
+//    String UserName;
     static Vector<ClientHandler> clients = new Vector<ClientHandler>();
+    ObjectInputStream readObj;
+    ObjectOutputStream writeObj;
+
+    public static HashMap<String, ClientHandler> connectedPlayers = new HashMap<String, ClientHandler>();
 
     ClientHandler(Socket socket) {
         try {
-            dis = new DataInputStream(socket.getInputStream());
-            ps = new PrintStream(socket.getOutputStream());
-            String msg = dis.readLine();
-            login(this, msg);
+            readObj = new ObjectInputStream(socket.getInputStream());
+            writeObj = new ObjectOutputStream(socket.getOutputStream());
+            start();
+
         } catch (IOException ex) {
-            System.out.println(ex.getMessage());
+            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    public void login(ClientHandler client, String _UserName) {
-        client.UserName = _UserName;
-        clients.add(client);
-        start();
-        printAllUser();
-    }
+    private void messageHandler(Player p) {
+        switch (p.getRequest()) {
+            case "login":
+                login(p);
+                break;
+            case "logout":
+                logout(p);
+                break;
 
-    public static void logout(String _userName) {
-        System.out.println("47");
-        printAllUser();
-        System.out.println(clients);
-        System.out.println("49");
-        System.out.println(clients.indexOf(_userName));;
-        for (ClientHandler client : clients) {
-            System.out.println("Line 55 :" + client.UserName);
         }
-        System.out.println("55");
-        //        clients.forEach((t) -> {
-//            System.out.println(t.UserName);
-//        });
-//
-//        int len = clients.capacity();
-//        System.out.println(len);
-//        System.out.println("57");
-//        System.out.println(_userName);
-//        int i = getIndex(_userName);
-//        System.out.println("Line 59 " + i);
-        //clients.remove(i);
-//       clients.re
-//       ClientHandler c = clients.get(getIndex(_userName));
-//       c.dis.close();
-//       c.ps.close();
-//       c.stop();
     }
 
     void logOut(String _un) {
-        int index = getIndex(_un);
-        if (index > -1) {
-            try {
-                ClientHandler client = clients.elementAt(index);
-                System.out.println(client);
-                clients.removeElementAt(clients.indexOf(client));
-                client.dis.close();
-                client.ps.close();
-                client.stop();
-            } catch (IOException e) {
-                System.out.println(e.getMessage());
-            }
-        } else {
-            System.out.println("Cannot remove client at index 0");
-        }
+//        int index = getIndex(_un);
+//        if (index > -1) {
+//            ClientHandler client = clients.elementAt(index);
+//            System.out.println(client);
+//            clients.removeElementAt(clients.indexOf(client));
+//        } else {
+//            System.out.println("Cannot remove client at index 0");
+//        }
     }
 
     int getIndex(String _un) {
-        int index = -1;
-        for (ClientHandler client : clients) {
-            if (client.UserName == _un) {
-                index = clients.indexOf(client);
-            }
-        }
-        return index;
+//        int index = -1;
+//        for (ClientHandler client : clients) {
+//            if (client.UserName == _un) {
+//                index = clients.indexOf(client);
+//            }
+//        }
+        return 0;
     }
 
-//    static int getIndex(String _userName)
-//    {
-//        System.out.println("getIndex : "+_userName);
-//        int index =0 ;
-//        for(ClientHandler client:clients)
-//        {
-//            System.out.println(client.UserName+" Line 64 "+_userName);
-////            if(client.UserName == _userName)
-////            {
-//                System.out.println("Line 65"+clients.indexOf(client));
-//                //clients.
-//                index = clients.indexOf(client);
-//            //}
+    public void stopClientHandler() {
+
+//        startFlag = false;
+//        for (ClientHandler client : clients) {
+//            logout(client.UserName);
 //        }
-//        return index;
-//    }
-    //@Override
-    public static void stopClientHandler() {
-//        this.stop();
-        startFlag = false;
-        for (ClientHandler client : clients) {
-            logout(client.UserName);
+    }
+    
+    private void login(Player newPlayer) {
+        // will connect with data base and check of this user
+        // will add  player user name with the playe object to HashMap
+        // will send back a message with respod  == loged in using the this.writeObject.writeObject(player.getRespond())
+        newPlayer.setRespond("logedIn");
+        System.out.println("logedin");
+        try {
+            this.writeObj.writeObject(newPlayer);
+        } catch (IOException ex) {
+            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private void logout(Player newPlayer) {
+
+    }
+
+    private void sginUp(Player newPlayer) {
+
     }
 
     @Override
     public void run() {
-        startFlag= true;
-        while (startFlag) {
-            String msg = null;
+        while (true) {
             try {
-                msg = dis.readLine();
-                if (msg.equals("logout")) {
-                    logOut(this.UserName);
-                }
-                //getIndex(this.UserName, msg);
-
-                // logOut / request 
+//                Player p2 = (Player) readObj.readObject();
+                System.out.println("line 115" + readObj.readObject());
+//                messageHandler(p2);
             } catch (IOException ex) {
                 System.out.println(ex.getMessage());
-                //Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ClassNotFoundException ex) {
+                System.out.println(ex.getMessage());
             }
         }
-    }
-
-    void sendMsg(String msg, String SenderName) {
-        for (ClientHandler ml : clients) {
-            ml.ps.println(SenderName + " Says " + msg);
-        }
-    }
-
-    public static void printAllUser() {
-        for (ClientHandler client : clients) {
-            System.out.println(client.UserName);
-        }
+//        startFlag = true;
+//        while (startFlag) {
+//            String msg = null;
+//                msg = dis.readLine();
+//                if (msg.equals("logout")) {
+//                    logOut(this.UserName);
+//                }
+        //getIndex(this.UserName, msg);
+        // logOut / request 
+//        }
     }
 }
