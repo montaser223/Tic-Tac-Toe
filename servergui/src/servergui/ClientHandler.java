@@ -27,10 +27,11 @@ import java.util.logging.Logger;
 public class ClientHandler extends Thread implements Serializable {
 
 
-    static Vector<ClientHandler> clients = new Vector<ClientHandler>();
-    ObjectInputStream readObj;
-    ObjectOutputStream writeObj;
-    XoDataBase database;
+    private static Vector<ClientHandler> clients = new Vector<ClientHandler>();
+    private ObjectInputStream readObj;
+    private ObjectOutputStream writeObj;
+    private XoDataBase database;
+    private volatile boolean connected;
 
     public static HashMap<String, ClientHandler> connectedPlayers = new HashMap<String, ClientHandler>();
     
@@ -39,20 +40,23 @@ public class ClientHandler extends Thread implements Serializable {
             database = new XoDataBase();
             writeObj = new ObjectOutputStream(socket.getOutputStream());
             readObj = new ObjectInputStream(socket.getInputStream());
+            connected = true;
             start();
 
         } catch (IOException ex) {
             Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Clinet socket is not work");
+            connected = false;
         }
     }
 
-    private void messageHandler(Player p) {
-        switch (p.getRequest()) {
+    private void messageHandler(Player newPlayer) {
+        switch (newPlayer.getRequest()) {
             case "login":
-                login(p);
+                login(newPlayer);
                 break;
             case "logout":
-                logout(p);
+                logout(newPlayer);
                 break;
 
         }
@@ -114,11 +118,24 @@ public class ClientHandler extends Thread implements Serializable {
     }
 
     private void sginUp(Player newPlayer) {
+        
+        int isExist = database.check_username(newPlayer.getUsername());
+        
+        if(isExist == 1){
+            newPlayer.setRespond(Respond.FAILURE);
+            sendMsg(newPlayer);
+            
+        }else{
+            database.sign_up(newPlayer.getFirstname(), newPlayer.getLastname(), newPlayer.getUsername(),newPlayer.getPassword());
+            newPlayer.setRespond(Respond.SUCCESS);
+            sendMsg(newPlayer); 
+        }
+        
     }
 
     @Override
     public void run() {
-        while (true) {
+        while (connected) {
             try {
                 Player p2 = (Player) readObj.readObject();
                 messageHandler(p2);
@@ -128,15 +145,5 @@ public class ClientHandler extends Thread implements Serializable {
                 System.out.println(ex.getMessage());
             }
         }
-//        startFlag = true;
-//        while (startFlag) {
-//            String msg = null;
-//                msg = dis.readLine();
-//                if (msg.equals("logout")) {
-//                    logOut(this.UserName);
-//                }
-        //getIndex(this.UserName, msg);
-        // logOut / request 
-//        }
     }
 }

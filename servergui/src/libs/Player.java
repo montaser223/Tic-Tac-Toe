@@ -21,6 +21,14 @@ public class Player implements Serializable{
         request = Request.LOGIN;
     }
 
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+
     public Player(String _username, String _password, String _firstname, String _lastname) {
         username = _username;
         password = _password;
