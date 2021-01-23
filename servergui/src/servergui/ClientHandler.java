@@ -25,11 +25,6 @@ import java.util.logging.Logger;
  */
 public class ClientHandler extends Thread implements Serializable {
 
-    static Vector<ClientHandler> clients = new Vector<ClientHandler>();
-    ObjectInputStream readObj;
-    ObjectOutputStream writeObj;
-    XoDataBase database;
-
     private static Vector<ClientHandler> clients = new Vector<ClientHandler>();
     private ObjectInputStream readObj;
     private ObjectOutputStream writeObj;
