@@ -19,24 +19,24 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
 /**
  *
  * @author black horse
  */
 public class ClientHandler extends Thread implements Serializable {
 
-//    static boolean startFlag;
-//    DataInputStream dis;
-//    PrintStream ps;
-//    String UserName;
+
     static Vector<ClientHandler> clients = new Vector<ClientHandler>();
     ObjectInputStream readObj;
     ObjectOutputStream writeObj;
+    XoDataBase database;
 
     public static HashMap<String, ClientHandler> connectedPlayers = new HashMap<String, ClientHandler>();
-
+    
     ClientHandler(Socket socket) {
         try {
+            database = new XoDataBase();
             writeObj = new ObjectOutputStream(socket.getOutputStream());
             readObj = new ObjectInputStream(socket.getInputStream());
             start();
@@ -87,34 +87,40 @@ public class ClientHandler extends Thread implements Serializable {
 //        }
     }
 
-    private void login(Player newPlayer) {
-        // will connect with data base and check of this user
-        // will add  player user name with the playe object to HashMap
-        // will send back a message with respod  == loged in using the this.writeObject.writeObject(player.getRespond())
-        newPlayer.setRespond("logedIn");
-        System.out.println("logedin");
+    private void sendMsg(Player player){
+        
         try {
-            this.writeObj.writeObject(newPlayer);
+            this.writeObj.writeObject(player);
         } catch (IOException ex) {
             Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    private void login(Player newPlayer) {
+        int isCorrect = database.check_username_password(newPlayer.getPassword(),newPlayer.getUsername());
+        if(isCorrect == 1){
+            newPlayer.setRespond(Respond.SUCCESS);
+            newPlayer.setState(Status.ONLINE);
+            connectedPlayers.put(newPlayer.getUsername(), this);
+            sendMsg(newPlayer);
+            
+        }else{
+            newPlayer.setRespond(Respond.FAILURE);
+            sendMsg(newPlayer);
+        }
+    }
 
     private void logout(Player newPlayer) {
-
     }
 
     private void sginUp(Player newPlayer) {
-
     }
 
     @Override
     public void run() {
         while (true) {
             try {
-                System.out.println("line 114 ");
                 Player p2 = (Player) readObj.readObject();
-                System.out.println("line 115 " + p2);
                 messageHandler(p2);
             } catch (IOException ex) {
                 System.out.println(ex.getMessage());

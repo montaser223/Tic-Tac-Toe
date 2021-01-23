@@ -34,6 +34,7 @@ public class XoDataBase {
     public XoDataBase() {
 
         try {
+            
             // String q = new String("select * from student");
             DriverManager.registerDriver(new com.mysql.jdbc.Driver());
 
