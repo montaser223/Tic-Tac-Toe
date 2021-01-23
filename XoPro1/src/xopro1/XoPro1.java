@@ -5,7 +5,7 @@
  */
 package xopro1;
 
-import servergui.*;
+import libs.*;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -219,7 +219,7 @@ public class XoPro1 extends Application implements Serializable {
 //                Player newPlayer2 = new Player();
 //                newPlayer2.set
 //                Player newPlayer = new Player("montaser", "123");
-                Player newPlayer = new Player("montaser","123");
+                Player newPlayer = new Player("montaser", "123");
                 try {
                     writeObj.writeObject(newPlayer);
                     System.out.println("object sent!");

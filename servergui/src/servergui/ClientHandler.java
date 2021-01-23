@@ -5,6 +5,7 @@
  */
 package servergui;
 
+import libs.*;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;

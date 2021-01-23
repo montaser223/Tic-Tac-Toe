@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package servergui;
+package libs;
 
 import java.io.Serializable;
 
@@ -28,18 +28,6 @@ public class Player implements Serializable{
         lastname = _lastname;
         request = Request.SIGNUP;
     }
-
-//    public Player() {
-//        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//    }
-//
-//    public Player(String string, String string0) {
-//         Tools | Templates.
-//    }
-
-//    public Player(String montase, String string) {
-//        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//    }
 
     public void setUsername(String username) {
         this.username = username;
@@ -88,5 +76,5 @@ public class Player implements Serializable{
     public String getRespond() {
         return respond;
     }
-
+    
 }
