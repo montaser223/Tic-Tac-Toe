@@ -3,14 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package servergui;
+package libs;
 
 /**
  *
- * @author abobakr
+ * @author black horse
  */
 public class Request {
+
     public static final String LOGIN = "login";
     public static final String LOGOUT = "logout";
     public static final String GAME = "game";
+    public static final String SIGNUP = "signup";
 }

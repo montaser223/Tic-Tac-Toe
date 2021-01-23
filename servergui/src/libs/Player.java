@@ -3,27 +3,31 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package servergui;
+package libs;
 
 import java.io.Serializable;
 
-
 /**
  *
- * @author abobakr
+ * @author black horse
  */
-
 public class Player implements Serializable{
-     private  String username;
-     private  String password;
-     private  String state;
-     private  String scour;
-     private  String request;
-     private  String respond;
-     
-   
-     
-     
+
+    String username, password, firstname, lastname, state, scour, request, respond;
+
+     public Player(String _username, String _password) {
+        username = _username;
+        password = _password;
+        request = Request.LOGIN;
+    }
+
+    public Player(String _username, String _password, String _firstname, String _lastname) {
+        username = _username;
+        password = _password;
+        firstname = _firstname;
+        lastname = _lastname;
+        request = Request.SIGNUP;
+    }
 
     public void setUsername(String username) {
         this.username = username;
@@ -72,8 +76,5 @@ public class Player implements Serializable{
     public String getRespond() {
         return respond;
     }
-     
-     
-     
     
 }

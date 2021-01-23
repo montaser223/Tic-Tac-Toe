@@ -27,22 +27,19 @@ import javafx.stage.Stage;
  *
  * @author black horse
  */
-class Server extends Thread{
+class Server extends Thread {
 
     ClientHandler handler;
     ServerSocket serverSocket;
-    Socket socket; 
+    Socket socket;
     volatile boolean startflag;
-    
-    Server()
-    {
+
+    Server() {
         try {
             serverSocket = new ServerSocket(5005);
-            startflag  = true;
+            startflag = true;
         } catch (IOException ex) {
-            //Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println(ex.getMessage());
-            
         }
         this.start();
     }
@@ -50,32 +47,28 @@ class Server extends Thread{
     @Override
     public void run() {
         //super.run(); //To change body of generated methods, choose Tools | Templates.
-         
-            while(startflag)
-            {
-                try {
-                    
-                    socket = serverSocket.accept();
-                    handler = new ClientHandler(socket);
-                    // here the server should send the sockt to the login function in clientHandler class
-                    // or create an object of a clinetHandler class this Constructor taking socket
-                    // new ClientHandler(scoket);
-                } catch (IOException ex) {
-                    System.out.println(ex.getMessage());
-                    // here we should add something to the client in case the server is down
-                }
+
+        while (startflag) {
+            try {
+
+                socket = serverSocket.accept();
+                System.out.println("Request Recived");
+                new ClientHandler(socket);
+                // here the server should send the sockt to the login function in clientHandler class
+                // or create an object of a clinetHandler class this Constructor taking socket
+            } catch (IOException ex) {
+                System.out.println(ex.getMessage());
+                // here we should add something to the client in case the server is down
             }
-    
+        }
+
     }
-    
-    public void stopServer()
-    {
+
+    public void stopServer() {
         // stop server and close  the server socket 
-        
-        startflag  = false;
+        startflag = false;
         try {
             serverSocket.close();
-            //handler.stopClientHandler();
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -83,67 +76,60 @@ class Server extends Thread{
 
 }
 
-
 public class ServerGUI extends Application {
-    
+
     Server s;
     Button startAndStopButton;
     boolean startFlag;
 
     @Override
     public void init() throws Exception {
-        
+
         startFlag = true;
         startAndStopButton = new Button("Start");
         startAndStopButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                
-                if(startFlag)
-                {
+
+                if (startFlag) {
                     s = new Server();
                     System.out.println("The server is runnig");
                     startAndStopButton.setText("Stop");
                     startFlag = false;
-                }
-                else
-                {
+                } else {
                     s.stopServer();
                     startFlag = true;
                     startAndStopButton.setText("Start");
                 }
-                
-                
+
             }
         });
     }
-    
+
     @Override
     public void start(Stage stage) throws Exception {
-        
+
         BorderPane root = new BorderPane();
-        
+
         root.setCenter(startAndStopButton);
         Scene scene = new Scene(root, 300, 300);
-        
+
         stage.setScene(scene);
         stage.show();
     }
 
-    
     @Override
-    public void stop()
-    {
+    public void stop() {
         /* this function will handle case if user close the app from the close btn (X)
             it will close Server and thread*/
         s.stopServer();
     }
+
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
         launch(args);
     }
-    
+
 }
