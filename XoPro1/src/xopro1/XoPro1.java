@@ -299,7 +299,7 @@ public class XoPro1 extends Application {
                 userText1.clear();
                 passText1.clear();
                 System.out.println("User: "+usernameDislay3.getText());
-                ClientHandler.logout(usernameDislay3.getText());
+               
                 primaryStage.setScene(scene);
 
 //                ClientHandler.logout(text3);
