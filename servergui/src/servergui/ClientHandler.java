@@ -19,13 +19,11 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 /**
  *
  * @author black horse
  */
 public class ClientHandler extends Thread implements Serializable {
-
 
     static Vector<ClientHandler> clients = new Vector<ClientHandler>();
     ObjectInputStream readObj;
@@ -33,7 +31,7 @@ public class ClientHandler extends Thread implements Serializable {
     XoDataBase database;
 
     public static HashMap<String, ClientHandler> connectedPlayers = new HashMap<String, ClientHandler>();
-    
+
     ClientHandler(Socket socket) {
         try {
             database = new XoDataBase();
@@ -58,59 +56,46 @@ public class ClientHandler extends Thread implements Serializable {
         }
     }
 
-    void logOut(String _un) {
-//        int index = getIndex(_un);
-//        if (index > -1) {
-//            ClientHandler client = clients.elementAt(index);
-//            System.out.println(client);
-//            clients.removeElementAt(clients.indexOf(client));
-//        } else {
-//            System.out.println("Cannot remove client at index 0");
-//        }
-    }
+    private void sendMsg(Player player) {
 
-    int getIndex(String _un) {
-//        int index = -1;
-//        for (ClientHandler client : clients) {
-//            if (client.UserName == _un) {
-//                index = clients.indexOf(client);
-//            }
-//        }
-        return 0;
-    }
-
-    public void stopClientHandler() {
-
-//        startFlag = false;
-//        for (ClientHandler client : clients) {
-//            logout(client.UserName);
-//        }
-    }
-
-    private void sendMsg(Player player){
-        
         try {
             this.writeObj.writeObject(player);
         } catch (IOException ex) {
             Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     private void login(Player newPlayer) {
-        int isCorrect = database.check_username_password(newPlayer.getPassword(),newPlayer.getUsername());
-        if(isCorrect == 1){
+        int isCorrect = database.check_username_password(newPlayer.getPassword(), newPlayer.getUsername());
+        if (isCorrect == 1) {
             newPlayer.setRespond(Respond.SUCCESS);
             newPlayer.setState(Status.ONLINE);
             connectedPlayers.put(newPlayer.getUsername(), this);
             sendMsg(newPlayer);
-            
-        }else{
+
+        } else {
             newPlayer.setRespond(Respond.FAILURE);
             sendMsg(newPlayer);
         }
     }
 
     private void logout(Player newPlayer) {
+        Boolean isRemoved = connectedPlayers.remove(newPlayer.getUsername(), this);
+        if (isRemoved) {
+            try {
+                newPlayer.setRespond(Respond.SUCCESS);
+                newPlayer.setState(Status.OFFLINE);
+                sendMsg(newPlayer);
+                connected = false;
+                readObj.close();
+                writeObj.close();
+            } catch (IOException ex) {
+                System.out.println(ex.getMessage());
+            }
+        } else {
+            newPlayer.setRespond(Respond.FAILURE);
+            sendMsg(newPlayer);
+        }
     }
 
     private void sginUp(Player newPlayer) {
@@ -128,15 +113,5 @@ public class ClientHandler extends Thread implements Serializable {
                 System.out.println(ex.getMessage());
             }
         }
-//        startFlag = true;
-//        while (startFlag) {
-//            String msg = null;
-//                msg = dis.readLine();
-//                if (msg.equals("logout")) {
-//                    logOut(this.UserName);
-//                }
-        //getIndex(this.UserName, msg);
-        // logOut / request 
-//        }
     }
 }
