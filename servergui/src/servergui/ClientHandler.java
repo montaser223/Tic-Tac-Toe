@@ -36,8 +36,8 @@ public class ClientHandler extends Thread implements Serializable {
 
     ClientHandler(Socket socket) {
         try {
-            readObj = new ObjectInputStream(socket.getInputStream());
             writeObj = new ObjectOutputStream(socket.getOutputStream());
+            readObj = new ObjectInputStream(socket.getInputStream());
             start();
 
         } catch (IOException ex) {
@@ -85,7 +85,7 @@ public class ClientHandler extends Thread implements Serializable {
 //            logout(client.UserName);
 //        }
     }
-    
+
     private void login(Player newPlayer) {
         // will connect with data base and check of this user
         // will add  player user name with the playe object to HashMap
@@ -111,9 +111,10 @@ public class ClientHandler extends Thread implements Serializable {
     public void run() {
         while (true) {
             try {
-//                Player p2 = (Player) readObj.readObject();
-                System.out.println("line 115" + readObj.readObject());
-//                messageHandler(p2);
+                System.out.println("line 114 ");
+                Player p2 = (Player) readObj.readObject();
+                System.out.println("line 115 " + p2);
+                messageHandler(p2);
             } catch (IOException ex) {
                 System.out.println(ex.getMessage());
             } catch (ClassNotFoundException ex) {

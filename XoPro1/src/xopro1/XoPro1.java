@@ -5,11 +5,13 @@
  */
 package xopro1;
 
+import servergui.*;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,7 +38,7 @@ import xopro1.XoDataBase;
  *
  * @author black horse
  */
-public class XoPro1 extends Application {
+public class XoPro1 extends Application implements Serializable {
 
     XoDataBase db;
     int count;
@@ -181,13 +183,21 @@ public class XoPro1 extends Application {
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
+                try {
+                    socket = new Socket("127.0.0.1", 5005);
+                    writeObj = new ObjectOutputStream(socket.getOutputStream());
+                    readObj = new ObjectInputStream(socket.getInputStream());
+//                       
+                } catch (IOException ex) {
+                    System.out.println(ex.getMessage());
+                }
                 while (true) {
                     try {
-                        socket = new Socket("127.0.0.1", 5005);
-                        writeObj = new ObjectOutputStream(socket.getOutputStream());
-                        readObj = new ObjectInputStream(socket.getInputStream());
-//                        readObj.readObject();
+                        Player p = (Player) readObj.readObject();
+                        System.out.println(p.getRespond());
                     } catch (IOException ex) {
+                        System.out.println(ex.getMessage());
+                    } catch (ClassNotFoundException ex) {
                         System.out.println(ex.getMessage());
                     }
                 }
@@ -206,8 +216,10 @@ public class XoPro1 extends Application {
 
             @Override
             public void handle(ActionEvent event) {
-
-                Player newPlayer = new Player("montase", "123");
+//                Player newPlayer2 = new Player();
+//                newPlayer2.set
+//                Player newPlayer = new Player("montaser", "123");
+                Player newPlayer = new Player("montaser","123");
                 try {
                     writeObj.writeObject(newPlayer);
                     System.out.println("object sent!");
@@ -299,6 +311,14 @@ public class XoPro1 extends Application {
 
                 userText1.clear();
                 passText1.clear();
+
+//                Player p = new Player();
+//                p.setRequest(Request.LOGOUT);
+//                try {
+//                    writeObj.writeObject(p);
+//                } catch (IOException ex) {
+//                    System.out.println(ex.getMessage());
+//                }
                 // System.out.println("User: "+usernameDislay3.getText());
                 //ClientHandler.printAllUser();
 //                        logout(usernameDislay3.getText());

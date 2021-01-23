@@ -15,19 +15,31 @@ public class Player implements Serializable{
 
     String username, password, firstname, lastname, state, scour, request, respond;
 
-    Player(String _username, String _password) {
+     public Player(String _username, String _password) {
         username = _username;
         password = _password;
         request = Request.LOGIN;
     }
 
-    Player(String _username, String _password, String _firstname, String _lastname) {
+    public Player(String _username, String _password, String _firstname, String _lastname) {
         username = _username;
         password = _password;
         firstname = _firstname;
         lastname = _lastname;
         request = Request.SIGNUP;
     }
+
+//    public Player() {
+//        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//    }
+//
+//    public Player(String string, String string0) {
+//         Tools | Templates.
+//    }
+
+//    public Player(String montase, String string) {
+//        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//    }
 
     public void setUsername(String username) {
         this.username = username;
