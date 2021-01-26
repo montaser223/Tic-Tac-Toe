@@ -3,27 +3,29 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package servergui;
+package xodatabase;
 
+import com.mysql.jdbc.Driver;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import libs.Player;
-import libs.Status;
+import libs.Respond;
+import libs.Player;
+import java.io.Serializable;
+
 
 /**
  *
- * @author black horse
+ * @author Eman
  */
-public class XoDataBase {
+public class XoDataBase implements Serializable{
 
-    ArrayList<Player> players = new ArrayList<Player>();
     int ID;
     String firstname;
     String lastname;
@@ -34,11 +36,12 @@ public class XoDataBase {
     Statement stmt = null;
     String queryString = null;
     ResultSet rs = null;
+    Player newplayer;
+    
 
     public XoDataBase() {
 
         try {
-
             // String q = new String("select * from student");
             DriverManager.registerDriver(new com.mysql.jdbc.Driver());
 
@@ -51,7 +54,7 @@ public class XoDataBase {
 
     }
 
-    public ArrayList<Player> selectplayer() {
+    public void selectplayer() {
 
         try {
             queryString = new String("select *from player");
@@ -59,33 +62,17 @@ public class XoDataBase {
             //rs.first();
 
             while (rs.next()) {
-                Player newPlayer = new Player(rs.getString("username"), rs.getInt("score"), rs.getString("status"));
-                players.add(newPlayer);
                 ID = rs.getInt("ID");
-//                System.out.println(rs.getInt("ID"));
-//                System.out.println(rs.getString("firstname"));
-//                System.out.println(rs.getString("lastname"));
-//                System.out.println(rs.getString("username"));
-//                System.out.println(rs.getString("password"));
-//                System.out.println(rs.getInt("score"));
+                System.out.println(rs.getInt("ID"));
+                System.out.println(rs.getString("firstname"));
+                System.out.println(rs.getString("lastname"));
+                System.out.println(rs.getString("username"));
+                System.out.println(rs.getString("password"));
+                System.out.println(rs.getInt("score"));
             }
         } catch (SQLException ex) {
             Logger.getLogger(XoDataBase.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return players;
-    }
-
-    public int updateStatus(String status, String _username) {
-        int res = 0;
-        queryString = "update player set status='" + status + "' where username='" + _username + "'";
-        try {
-            res = stmt.executeUpdate(queryString);
-//                    executeQuery(queryString);
-
-        } catch (SQLException ex) {
-            System.out.println(ex.getMessage());
-        }
-        return res;
     }
 
     public void sign_up(String _firstname, String _lastname, String _username, String _password) {
@@ -95,7 +82,7 @@ public class XoDataBase {
             rs = stmt.executeQuery(queryString);
             //  while(rs.next())
             if (!rs.next()) {
-
+ 
                 queryString = " insert into player (firstname,lastname, username, password)"
                         + " values (?, ?, ?, ?)";
 
@@ -108,6 +95,7 @@ public class XoDataBase {
 
                 preparedStmt.execute();
             } else {
+                
                 System.out.println("please Enter anther username this actually used ");
             }
         } catch (SQLException ex) {
@@ -116,7 +104,7 @@ public class XoDataBase {
 
     }
 
-    public int check_password(String _password) {
+    public int   check_password(String _password) {
 
         try {
             queryString = new String("select password from player where password='" + _password + "'");
@@ -151,42 +139,67 @@ public class XoDataBase {
         // username exists
         return 1;
     }
-
-    public int check_username_password(String _password, String _username) {
+    
+        public Player check_username_password(String _Username,String Password) {
+            Player  NewPlayer=new Player();
+            NewPlayer.setUsername(_Username);
+            NewPlayer.setPassword(Password);
+           
+            
 
         try {
-            queryString = new String("select username ,password from player where username='" + _username + "' and password='" + _password + "'");
+            queryString = new String("select username ,password from player where username='" + NewPlayer.getUsername() + "' and password='" + NewPlayer.getPassword() + "'");
 
             rs = stmt.executeQuery(queryString);
             //  username doesn't exist 
             if (!rs.next()) {
-                return 0;
+             NewPlayer.setRespond(Respond.FAILURE);
+              NewPlayer.setUsername(null);
+               NewPlayer.setPassword(null);
+             return NewPlayer;
+            }
+            
+            else{
+            
+             try {
+            queryString = new String("select *from player where username='" + NewPlayer.getUsername()+ "'");
+            rs = stmt.executeQuery(queryString);
+            //rs.first();
+
+            while (rs.next()) {
+              
+                
+                NewPlayer.setUsername(rs.getString("username"));
+                NewPlayer.setScour((rs.getInt("score")));
+                NewPlayer.setState(rs.getString("state"));
+                NewPlayer.setRespond(Respond.SUCCESS);
+                
+                
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(XoDataBase.class.getName()).log(Level.SEVERE, null, ex);
+        }
+            return NewPlayer;
             }
 
         } catch (SQLException ex) {
             Logger.getLogger(XoDataBase.class.getName()).log(Level.SEVERE, null, ex);
         }
         // username exists
-        return 1;
+        
+            //select_specifec_player(NewPlayer.getUsername());
+           NewPlayer.setRespond(Respond.SUCCESS);
+             return  NewPlayer;
+        
     }
-
-    public int sign_in(String _username, String _password) {
-        if (check_username_password(_password, _username) == 1) {
-            {
-
-                return 1;
-            }
-        }
-//false
-        return 0;
-    }
-
+        
+   
     @Override
     public void finalize() {
 
         try {
             stmt.close();
-            con.close();
+            con.close();  
             //System.out.println("closed");
 
         } catch (SQLException e) {
@@ -195,21 +208,25 @@ public class XoDataBase {
 
     }
 
-    public static void main(String[] args) {
-        XoDataBase o = new XoDataBase();
+ 
 
-        System.out.println(o.sign_in("emysoliman", "6789"));
-        System.out.println(o.sign_in("ahemreda", "6789"));
-        o.sign_up("khaled", "ashraf", "kaledAshraf", "102030");
-        // o.selectplayer();
-        //o.sign_up("eman","soliman","emysoliman","2345");
-        //o.sign_up("eman","soliman","omnyamostafa","2345");
-        //o.sign_up("eman","soliman","omnyamostaf","2345");
-        // System.out.println(o.check_password("123"));
-        //System.out.println(o.check_password("2345"));
-        //System.out.println(o.check_username("emysoliman"));
-        //System.out.println(o.check_username("emyso"));
-        o.finalize();
+
+
+    public static void main(String args[]) {
+
+      Player p=new Player();
+     // p.setUsername("emansol");
+      //p.setPassword("123");
+      XoDataBase c=new XoDataBase();
+      p=c.check_username_password("emansol","123");
+        System.out.println(p.getUsername());
+        System.out.println(p.getRespond());
+        System.out.println(p.getScour());
+        System.out.println(p.getState());
+        
+        
 
     }
+
 }
+
