@@ -1,10 +1,13 @@
 package tictactoe;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import libs.*;
-
+import org.json.simple.*;
 import java.lang.reflect.Array;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -29,6 +32,9 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import org.json.simple.parser.JSONParser;
+
+import org.json.simple.parser.ParseException;
 
 public class XOBase extends AnchorPane implements Serializable{
 
@@ -73,6 +79,10 @@ public class XOBase extends AnchorPane implements Serializable{
     Game myGame;
     private String mySymbol;
     private volatile boolean connected;
+    private JSONObject obj;
+    private JSONParser parser;
+    private DataInputStream inStream;
+    private DataOutputStream outStream;
     
     private String checkWinner(){
         String winner = null;
@@ -157,6 +167,7 @@ public class XOBase extends AnchorPane implements Serializable{
 //        }
 
         buttons[position-1].setText(xAndo);
+        buttons[position-1].setDisable(true);
     }
     
     private void drawTie(){
@@ -203,22 +214,13 @@ public class XOBase extends AnchorPane implements Serializable{
     private void sendGameMove(){
         try {
             
-            recordPositions();
-//            System.out.println("draw xo in send game");
-//            drawXO();
-            String [] arr = new String[9];
-            arr = recordedPositions;
-//            myGame.setX(playerXpositions);
-//            myGame.setO(playerOpositions);
-            int location = myGame.getLocation();
-            String xAndo = myGame.getxAndo();
-            System.out.println("Sending-> location of " + xAndo + " " +  location);
-            myGame.setGamePosition(arr);
-//            System.out.println("draw myGmae xo in send game");
-//            drawXOmyGame();
-            System.out.println("send move to handler");
-            this.writeObj.writeObject(myGame);
+            obj = new JSONObject();
+            obj  = JsonConverter.gameToJson(myGame);
             
+            int location = (int) obj.get("position");
+            String xAndo = (String) obj.get("xAndo");
+            System.out.println("Sending->" + xAndo + " to position " + location);
+            this.outStream.writeUTF(obj.toString());
         } catch (IOException ex) {
             Logger.getLogger(XOBase.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -234,46 +236,45 @@ public class XOBase extends AnchorPane implements Serializable{
                 try {
                     
                     Socket socket = new Socket("127.0.0.1", 5005);
-                    writeObj = new ObjectOutputStream(socket.getOutputStream());
-                    readObj = new ObjectInputStream(socket.getInputStream());
+                    outStream = new DataOutputStream(socket.getOutputStream());
+                    inStream = new DataInputStream(socket.getInputStream());
+                    
                     // receve the symbol 
-
-                    Game myGame = (Game) readObj.readObject();
-                    mySymbol = myGame.getSymbol();
+                    
+                    obj = (JSONObject) parser.parse(inStream.readUTF());
+                    mySymbol =(String) obj.get("symbol");
                     connected = true;
-                    System.out.println("reciving game symbol" + mySymbol + " from gmae handler");
-                    System.out.println("and this is my  symbol" + symbol);
+                    
+                    System.out.println("reciving game symbol " + mySymbol + " from gmae handler");
+                    System.out.println("and this is my  symbol " + symbol);
                 } catch (IOException ex) {
                     System.out.println(ex.getMessage());
-                } catch (ClassNotFoundException ex) {
+                } catch (ParseException ex) {
                     Logger.getLogger(XOBase.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 while (connected) {
                     try {
+                        
+                        myGame = new Game();
                         System.out.println("While: waiting for obj from gameHandler");
-                        Game myGame = (Game) readObj.readObject();
-                        System.out.println("receving game obj from game Handler" + myGame + "and the game symbol is " + myGame.getSymbol());
-                        symbol = myGame.getSymbol();
+                        obj = (JSONObject) parser.parse(inStream.readUTF());
+
+                        System.out.println("receving game obj from game Handler");
+                        
+                        symbol = (String) obj.get("symbol");
                         System.out.println(" this is " + symbol + "turn");
-//                        System.out.println("dawign myGame xo in receveing ");
-//                        String[] arr = myGame.getGamePosition();
-//                        playerXpositions = myGame.getX();
-//                        playerOpositions = myGame.getO();
-//                        drawXOmyGame();
-                        int location = myGame.getLocation();
-                        String xAndo = myGame.getxAndo();
-                        System.out.println("location of " + xAndo + " " +  location);
+                        Long location =(Long) obj.get("position");
+                        String xAndo = (String) obj.get("xAndo");
+                        System.out.println("location of " + xAndo + " " +  location.intValue());
 
                           Platform.runLater(() -> {
-                              drawPositions(location, xAndo );
+                              drawPositions(location.intValue(), xAndo );
                           });
                         
                     } catch (IOException ex) {
                         System.out.println(ex.getMessage());
-                    } catch (ClassNotFoundException ex) {
-                        connected = false;
-                        System.out.println(ex.getMessage());
-                        connected = false;
+                    } catch (ParseException ex) {
+                        Logger.getLogger(XOBase.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             }
@@ -286,6 +287,7 @@ public class XOBase extends AnchorPane implements Serializable{
         index = 1;
         startGame();
         symbol = "X";
+        parser = new JSONParser();
         
         splitPane = new SplitPane();
         anchorPane = new AnchorPane();
@@ -372,7 +374,7 @@ public class XOBase extends AnchorPane implements Serializable{
                     bt1.setText(symbol);
                     bt1.setDisable(true);
                     
-                    if(symbol == "X"){
+                    if(symbol.equalsIgnoreCase("X")){
                         
                         playerXpositions.add(1);
                         if(checkWinner() == "X"){
@@ -408,6 +410,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(1);
                             myGame.setSymbol("X");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                         
@@ -427,7 +430,7 @@ public class XOBase extends AnchorPane implements Serializable{
                     bt2.setText(symbol);
                     bt2.setDisable(true);
                     
-                    if(symbol == "X"){
+                    if(symbol.equalsIgnoreCase("X")){
                         
                         playerXpositions.add(2);
                         if(checkWinner() == "X"){
@@ -442,6 +445,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(2);
                             myGame.setSymbol("O");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                             
@@ -462,6 +466,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(2);
                             myGame.setSymbol("X");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                     }
@@ -477,7 +482,7 @@ public class XOBase extends AnchorPane implements Serializable{
                     
                     bt3.setText(symbol);
                     bt3.setDisable(true);
-                    if(symbol == "X"){
+                    if(symbol.equalsIgnoreCase("X")){
                         playerXpositions.add(3);
                         
                         if(checkWinner() == "X"){
@@ -492,6 +497,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(3);
                             myGame.setSymbol("O");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
 
                         }
@@ -514,6 +520,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(3);
                             myGame.setSymbol("X");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                     }
@@ -529,7 +536,7 @@ public class XOBase extends AnchorPane implements Serializable{
                     
                     bt4.setText(symbol);
                     bt4.setDisable(true);
-                    if(symbol == "X"){
+                    if(symbol.equalsIgnoreCase("X")){
                         
                         playerXpositions.add(4);
                         if(checkWinner() == "X"){
@@ -544,6 +551,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(4);
                             myGame.setSymbol("O");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                             
@@ -565,6 +573,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(4);
                             myGame.setSymbol("X");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                     }
@@ -580,7 +589,7 @@ public class XOBase extends AnchorPane implements Serializable{
                     
                     bt5.setText(symbol);
                     bt5.setDisable(true);
-                    if(symbol == "X"){
+                    if(symbol.equalsIgnoreCase("X")){
                         playerXpositions.add(5);
                         
                         if(checkWinner() == "X"){
@@ -595,6 +604,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(5);
                             myGame.setSymbol("O");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                             
@@ -615,6 +625,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(5);
                              myGame.setSymbol("X");
+                             System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                              sendGameMove();
                         }
                     }
@@ -630,7 +641,7 @@ public class XOBase extends AnchorPane implements Serializable{
                     
                     bt6.setText(symbol);
                     bt6.setDisable(true);
-                    if(symbol == "X"){
+                    if(symbol.equalsIgnoreCase("X")){
                         playerXpositions.add(6);
                        
                         if(checkWinner() == "X"){
@@ -646,6 +657,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(6);
                              myGame.setSymbol("O");
+                             System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                              sendGameMove();
                         }
                             
@@ -668,6 +680,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(6);
                             myGame.setSymbol("X");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                     }
@@ -683,7 +696,7 @@ public class XOBase extends AnchorPane implements Serializable{
                     
                     bt7.setText(symbol);
                     bt7.setDisable(true);
-                    if(symbol == "X"){
+                    if(symbol.equalsIgnoreCase("X")){
                         playerXpositions.add(7);
                         
                         
@@ -700,6 +713,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(7);
                             myGame.setSymbol("O");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                             
@@ -722,6 +736,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(7);
                             myGame.setSymbol("X");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                     }
@@ -737,10 +752,8 @@ public class XOBase extends AnchorPane implements Serializable{
                     
                     bt8.setText(symbol);
                     bt8.setDisable(true);
-                    if(symbol == "X"){
+                    if(symbol.equalsIgnoreCase("X")){
                         playerXpositions.add(8);
-                        
-                        
                         if(checkWinner() == "X"){
                             highLightWinner(playerXpositions);
                             myGame.setGameFlag(false);
@@ -753,6 +766,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(8);
                             myGame.setSymbol("O");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                             
@@ -775,6 +789,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(8);
                             myGame.setSymbol("X");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                     }
@@ -789,7 +804,7 @@ public class XOBase extends AnchorPane implements Serializable{
                 if(mySymbol.equalsIgnoreCase(symbol)){
                     bt9.setText(symbol);
                     bt9.setDisable(true);
-                    if(symbol == "X"){
+                    if(symbol.equalsIgnoreCase("X")){
                         playerXpositions.add(9);
                         if(checkWinner() == "X"){
                             highLightWinner(playerXpositions);
@@ -803,6 +818,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(9);
                             myGame.setSymbol("O");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                             
@@ -824,6 +840,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setxAndo(symbol);
                             myGame.setLocation(9);
                             myGame.setSymbol("X");
+                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
                             sendGameMove();
                         }
                     }

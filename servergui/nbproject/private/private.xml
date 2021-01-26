@@ -3,12 +3,11 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/media/abobakr/Data/Projects/XO/servergui/src/servergui/ClientHandler.java</file>
             <file>file:/media/abobakr/Data/Projects/XO/servergui/src/tictactoe/TicTacToe.java</file>
             <file>file:/media/abobakr/Data/Projects/XO/servergui/src/servergui/ServerGUI.java</file>
             <file>file:/media/abobakr/Data/Projects/XO/servergui/src/servergui/GameHandler.java</file>
+            <file>file:/media/abobakr/Data/Projects/XO/servergui/src/libs/JsonConverter.java</file>
             <file>file:/media/abobakr/Data/Projects/XO/servergui/src/tictactoe/XOBase.java</file>
-            <file>file:/media/abobakr/Data/Projects/XO/servergui/src/libs/Game.java</file>
         </group>
     </open-files>
 </project-private>
