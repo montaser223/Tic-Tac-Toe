@@ -35,13 +35,19 @@ public class ClientHandler extends Thread implements Serializable {
 
     public static HashMap<String, ClientHandler> connectedPlayers = new HashMap<String, ClientHandler>();
     
+    
     ClientHandler(Socket socket) {
+        
         try {
+            
+            System.out.println("Player connected");
             database = new XoDataBase();
             writeObj = new ObjectOutputStream(socket.getOutputStream());
             readObj = new ObjectInputStream(socket.getInputStream());
             connected = true;
             start();
+            System.out.println("Sending the object to the game handler");
+            new GameHandler(readObj, writeObj);
 
         } catch (IOException ex) {
             Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
@@ -51,6 +57,7 @@ public class ClientHandler extends Thread implements Serializable {
     }
 
     private void messageHandler(Player newPlayer) {
+        
         switch (newPlayer.getRequest()) {
             case "login":
                 login(newPlayer);
@@ -101,13 +108,15 @@ public class ClientHandler extends Thread implements Serializable {
     }
     
     private void login(Player newPlayer) {
+        
         int isCorrect = database.check_username_password(newPlayer.getPassword(),newPlayer.getUsername());
+        
         if(isCorrect == 1){
             newPlayer.setRespond(Respond.SUCCESS);
             newPlayer.setState(Status.ONLINE);
+            newPlayer.setScour(database.getPlayerScore(newPlayer.getUsername()));
             connectedPlayers.put(newPlayer.getUsername(), this);
             sendMsg(newPlayer);
-            
         }else{
             newPlayer.setRespond(Respond.FAILURE);
             sendMsg(newPlayer);
@@ -135,10 +144,15 @@ public class ClientHandler extends Thread implements Serializable {
 
     @Override
     public void run() {
+        
         while (connected) {
             try {
+                
                 Player p2 = (Player) readObj.readObject();
+                
                 messageHandler(p2);
+                
+                
             } catch (IOException ex) {
                 System.out.println(ex.getMessage());
             } catch (ClassNotFoundException ex) {

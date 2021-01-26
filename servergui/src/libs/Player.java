@@ -15,6 +15,14 @@ public class Player implements Serializable{
 
     String username, password, firstname, lastname, state, scour, request, respond;
 
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
      public Player(String _username, String _password) {
         username = _username;
         password = _password;

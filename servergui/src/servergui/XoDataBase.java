@@ -34,12 +34,11 @@ public class XoDataBase {
     public XoDataBase() {
 
         try {
-            
             // String q = new String("select * from student");
-            DriverManager.registerDriver(new com.mysql.jdbc.Driver());
+//            DriverManager.registerDriver(new com.mysql.jdbc.Driver());
 
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/xo_db", "root", "");
-            stmt = con.createStatement();
+//            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/xo_db", "root", "");
+//            stmt = con.createStatement();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -160,6 +159,11 @@ public class XoDataBase {
 //false
         return 0;
     }
+    
+    public String getPlayerScore(String _username){
+        return "";
+    }
+    
 
     @Override
     public void finalize() {

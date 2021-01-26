@@ -53,7 +53,8 @@ class Server extends Thread {
 
                 socket = serverSocket.accept();
                 System.out.println("Request Recived");
-                new ClientHandler(socket);
+//                new ClientHandler(socket);
+                new GameHandler(socket);
                 // here the server should send the sockt to the login function in clientHandler class
                 // or create an object of a clinetHandler class this Constructor taking socket
             } catch (IOException ex) {

@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+
+<xs:schema version="1.0"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified">
+    
+    <!-- Create first simple type -->
+    <xs:simpleType name="WeekDayNames"> 
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Saturday"/>
+            <xs:enumeration value="Sunday"/>
+            <xs:enumeration value="Monday"/>
+            <xs:enumeration value="Tuesday"/>
+            <xs:enumeration value="Wednesday"/>
+            <xs:enumeration value="Thursday"/>
+            <xs:enumeration value="Friday"/>
+        </xs:restriction>
+    </xs:simpleType> 
+    
+    <!-- Create second simple type --> 
+    <xs:simpleType name="WeekDayNumbers">
+        <xs:restriction base="xs:positiveInteger">
+            <xs:minInclusive value="1"/>
+            <xs:maxInclusive value="7"/>
+        </xs:restriction>
+    </xs:simpleType>
+    
+    <!-- Define the element -->   
+    <xs:element name="WeekDay">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="week">
+                <xs:simpleType>
+                    
+                    <xs:union memberTypes="WeekDayNumbers WeekDayNames"/>
+                </xs:simpleType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

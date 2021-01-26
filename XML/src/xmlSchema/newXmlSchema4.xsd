@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+
+<xs:schema version="1.0"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified">
+    
+    
+    
+    <xs:simpleType name="categoryType">
+       
+        <xs:restriction base ="xs:string">
+            <xs:enumeration value ="science"/>
+            <xs:enumeration value ="fiction"/>
+        </xs:restriction>
+        
+    </xs:simpleType>
+    
+    <xs:simpleType name="inStockType">
+        <xs:restriction base ="xs:string">
+            <xs:enumeration value ="true"/>
+            <xs:enumeration value ="false"/>
+        </xs:restriction>
+    </xs:simpleType> 
+    
+    <xs:complexType name="Book">
+        <xs:attribute name="Category" type="categoryType" default="fiction"/>
+        <xs:attribute name="InStock" type="inStockType" default="false"/>
+        <xs:sequence>
+            <xs:element name="Title" type="xs:string"/>
+            <xs:element name="Author" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+    
+    
+    <xs:element name="BookStore">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Book" type="Book" minOccurs="1" maxOccurs="unbounded" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    
+    
+    
+           
+</xs:schema>
