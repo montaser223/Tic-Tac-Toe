@@ -4,33 +4,38 @@
  * and open the template in the editor.
  */
 package libs;
+ 
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import static libs.PlayersList.players;
+
+/**
+ *
+ * @author Eman
+ */
+
+
 
 /**
  *
  * @author black horse
+ * 
  */
-public class Player implements Serializable {
+ public class Player implements Serializable{
+  
 
-    ArrayList<Player> players = new ArrayList<>();
-    String username, password, firstname, lastname, status, request, respond;
+    String username, password, firstname, lastname, state,  request, respond,buttonerespond,player2;
     int scour;
 
-    public Player(String _username, String _password) {
+    public Player()
+    {
+    }
+     public Player(String _username, String _password) {
         username = _username;
         password = _password;
         request = Request.LOGIN;
-        // status = Status.ONLINE;
     }
 
-    public Player(String _username, int _scour, String _status) {
-        username = _username;
-        scour = _scour;
-        status = _status;
-    }
+     
 
     public void setFirstname(String firstname) {
         this.firstname = firstname;
@@ -57,7 +62,7 @@ public class Player implements Serializable {
     }
 
     public void setState(String state) {
-        this.status = state;
+        this.state = state;
     }
 
     public void setScour(int scour) {
@@ -81,7 +86,7 @@ public class Player implements Serializable {
     }
 
     public String getState() {
-        return status;
+        return state;
     }
 
     public int getScour() {
@@ -95,12 +100,18 @@ public class Player implements Serializable {
     public String getRespond() {
         return respond;
     }
-
-    public void setPlayerList(ArrayList<Player> _players) {
-        players = _players;
+    
+     public String getButtoneRespond() {
+        return buttonerespond;
     }
-
-    public ArrayList<Player> getPlayersList() {
-        return players;
+     
+       public void  setButtoneRespond(String bntrespond) {
+           this.buttonerespond=bntrespond;
+        
     }
+     
+     
+     
+    
 }
+ 
