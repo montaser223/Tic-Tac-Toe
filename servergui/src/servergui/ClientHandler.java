@@ -14,10 +14,16 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static java.util.logging.Logger.global;
+import jdk.nashorn.internal.ir.debug.JSONWriter;
+import jdk.nashorn.internal.parser.JSONParser;
+import org.json.simple.JSONObject;
 
 /**
  *
@@ -25,6 +31,7 @@ import java.util.logging.Logger;
  */
 public class ClientHandler extends Thread implements Serializable {
 
+    static ArrayList<Player> players = new ArrayList<Player>();
     private static Vector<ClientHandler> clients = new Vector<ClientHandler>();
     private ObjectInputStream readObj;
     private ObjectOutputStream writeObj;
@@ -35,10 +42,12 @@ public class ClientHandler extends Thread implements Serializable {
 
     ClientHandler(Socket socket) {
         try {
+
             database = new XoDataBase();
             writeObj = new ObjectOutputStream(socket.getOutputStream());
             readObj = new ObjectInputStream(socket.getInputStream());
             connected = true;
+//            writeObj.wr
             start();
 
         } catch (IOException ex) {
@@ -72,15 +81,46 @@ public class ClientHandler extends Thread implements Serializable {
     private void login(Player newPlayer) {
         int isCorrect = database.check_username_password(newPlayer.getPassword(), newPlayer.getUsername());
         if (isCorrect == 1) {
-            newPlayer.setRespond(Respond.SUCCESS);
-            newPlayer.setState(Status.ONLINE);
-            connectedPlayers.put(newPlayer.getUsername(), this);
-            sendMsg(newPlayer);
-
+            int isOnline = database.updateStatus(Status.ONLINE, newPlayer.getUsername());
+            if (isOnline == 1) {
+                newPlayer.setRespond(Respond.SUCCESS);
+                newPlayer.setState(Status.ONLINE);
+                connectedPlayers.put(newPlayer.getUsername(), this);
+                sendMsg(newPlayer);
+                updatePlayerList();
+            } else {
+                newPlayer.setRespond(Respond.FAILURE);
+                sendMsg(newPlayer);
+            }
         } else {
             newPlayer.setRespond(Respond.FAILURE);
             sendMsg(newPlayer);
         }
+    }
+
+    public void updatePlayerList() {
+        players = database.selectplayer();
+        PlayersList.setPlayerList(players);
+        for (Player player : players) {
+            if (player.getState().equals(Status.ONLINE)) {
+                player.setRequest(Request.USERS);
+                player.setPlayerList(PlayersList.getPlayersList());
+                ClientHandler user = connectedPlayers.get(player.getUsername());
+                user.sendMsg(player);
+            }
+
+        }
+    }
+
+    public void broadcastMessage(ArrayList<Player> players) {
+        players.forEach((action) -> {
+            if (action.getState().equals(Status.ONLINE)) {
+                action.setRequest(Request.USERS);
+                //action.setPlayerList(players);
+                sendMsg(action);
+            }
+
+        });
     }
 
     private void logout(Player newPlayer) {
@@ -103,19 +143,19 @@ public class ClientHandler extends Thread implements Serializable {
     }
 
     private void sginUp(Player newPlayer) {
-        
+
         int isExist = database.check_username(newPlayer.getUsername());
-        
-        if(isExist == 1){
+
+        if (isExist == 1) {
             newPlayer.setRespond(Respond.FAILURE);
             sendMsg(newPlayer);
-            
-        }else{
-            database.sign_up(newPlayer.getFirstname(), newPlayer.getLastname(), newPlayer.getUsername(),newPlayer.getPassword());
-            newPlayer.setRespond(Respond.SUCCESS);
-            sendMsg(newPlayer); 
+
+        } else {
+//            database.sign_up(newPlayer.getFirstname(), newPlayer.getLastname(), newPlayer.getUsername(),newPlayer.getPassword());
+//            newPlayer.setRespond(Respond.SUCCESS);
+//            sendMsg(newPlayer); 
         }
-        
+
     }
 
     @Override
@@ -123,6 +163,10 @@ public class ClientHandler extends Thread implements Serializable {
         while (connected) {
             try {
                 Player p2 = (Player) readObj.readObject();
+//                JSONParser p3 = new JSONParser(p2, global,true);
+//                JSONO p3 = new JSONWriter(p2
+//                System.out.println("Line 180 : " + p2);
+//                System.out.println("Line 18 : " + p2.get(p2.keySet()));
                 messageHandler(p2);
             } catch (IOException ex) {
                 System.out.println(ex.getMessage());

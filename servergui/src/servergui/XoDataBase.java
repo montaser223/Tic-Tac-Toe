@@ -11,8 +11,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import libs.Player;
+import libs.Status;
 
 /**
  *
@@ -20,6 +23,7 @@ import java.util.logging.Logger;
  */
 public class XoDataBase {
 
+    ArrayList<Player> players = new ArrayList<Player>();
     int ID;
     String firstname;
     String lastname;
@@ -34,7 +38,7 @@ public class XoDataBase {
     public XoDataBase() {
 
         try {
-            
+
             // String q = new String("select * from student");
             DriverManager.registerDriver(new com.mysql.jdbc.Driver());
 
@@ -47,7 +51,7 @@ public class XoDataBase {
 
     }
 
-    public void selectplayer() {
+    public ArrayList<Player> selectplayer() {
 
         try {
             queryString = new String("select *from player");
@@ -55,17 +59,33 @@ public class XoDataBase {
             //rs.first();
 
             while (rs.next()) {
+                Player newPlayer = new Player(rs.getString("username"), rs.getInt("score"), rs.getString("status"));
+                players.add(newPlayer);
                 ID = rs.getInt("ID");
-                System.out.println(rs.getInt("ID"));
-                System.out.println(rs.getString("firstname"));
-                System.out.println(rs.getString("lastname"));
-                System.out.println(rs.getString("username"));
-                System.out.println(rs.getString("password"));
-                System.out.println(rs.getInt("score"));
+//                System.out.println(rs.getInt("ID"));
+//                System.out.println(rs.getString("firstname"));
+//                System.out.println(rs.getString("lastname"));
+//                System.out.println(rs.getString("username"));
+//                System.out.println(rs.getString("password"));
+//                System.out.println(rs.getInt("score"));
             }
         } catch (SQLException ex) {
             Logger.getLogger(XoDataBase.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return players;
+    }
+
+    public int updateStatus(String status, String _username) {
+        int res = 0;
+        queryString = "update player set status='" + status + "' where username='" + _username + "'";
+        try {
+            res = stmt.executeUpdate(queryString);
+//                    executeQuery(queryString);
+
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+        return res;
     }
 
     public void sign_up(String _firstname, String _lastname, String _username, String _password) {

@@ -6,19 +6,30 @@
 package libs;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import static libs.PlayersList.players;
 
 /**
  *
  * @author black horse
  */
-public class Player implements Serializable{
+public class Player implements Serializable {
 
-    String username, password, firstname, lastname, state, scour, request, respond;
+    ArrayList<Player> players = new ArrayList<>();
+    String username, password, firstname, lastname, status, request, respond;
+    int scour;
 
-     public Player(String _username, String _password) {
+    public Player(String _username, String _password) {
         username = _username;
         password = _password;
         request = Request.LOGIN;
+        // status = Status.ONLINE;
+    }
+
+    public Player(String _username, int _scour, String _status) {
+        username = _username;
+        scour = _scour;
+        status = _status;
     }
 
     public void setFirstname(String firstname) {
@@ -46,10 +57,10 @@ public class Player implements Serializable{
     }
 
     public void setState(String state) {
-        this.state = state;
+        this.status = state;
     }
 
-    public void setScour(String scour) {
+    public void setScour(int scour) {
         this.scour = scour;
     }
 
@@ -70,10 +81,10 @@ public class Player implements Serializable{
     }
 
     public String getState() {
-        return state;
+        return status;
     }
 
-    public String getScour() {
+    public int getScour() {
         return scour;
     }
 
@@ -84,5 +95,12 @@ public class Player implements Serializable{
     public String getRespond() {
         return respond;
     }
-    
+
+    public void setPlayerList(ArrayList<Player> _players) {
+        players = _players;
+    }
+
+    public ArrayList<Player> getPlayersList() {
+        return players;
+    }
 }

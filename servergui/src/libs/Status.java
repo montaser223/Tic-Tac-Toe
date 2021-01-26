@@ -11,5 +11,5 @@ package libs;
  */
 public class Status {
     public static final String ONLINE = "online";
-    public static final String OFFLINE = "ofline";
+    public static final String OFFLINE = "offline";
 }

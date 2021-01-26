@@ -1,21 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<jnlp spec="1.0" xmlns:jfx="http://javafx.com" href="XoPro1.jnlp">
+<jnlp spec="1.0" xmlns:jfx="http://javafx.com" href="servergui.jnlp">
   <information>
-    <title>XoPro1</title>
+    <title>servergui</title>
     <vendor>black horse</vendor>
     <description>null</description>
     <offline-allowed/>
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="XoPro1.jar" size="43667" download="eager" />
     <jar href="lib\json-simple-2.1.1.jar" size="57585" download="eager" />
     <jar href="lib\mysql-connector-java-5.1.49-bin.jar" size="1006906" download="eager" />
-    <jar href="lib\servergui.jar" size="24633" download="eager" />
+    <jar href="servergui.jar" size="13689" download="eager" />
   </resources>
-  <applet-desc  width="800" height="600" main-class="com.javafx.main.NoJavaFXFallback"  name="XoPro1" >
+  <applet-desc  width="800" height="600" main-class="com.javafx.main.NoJavaFXFallback"  name="servergui" >
     <param name="requiredFXVersion" value="8.0+"/>
   </applet-desc>
-  <jfx:javafx-desc  width="800" height="600" main-class="xopro1.XoPro1"  name="XoPro1" />
+  <jfx:javafx-desc  width="800" height="600" main-class="servergui.ServerGUI"  name="servergui" />
   <update check="always"/>
 </jnlp>
