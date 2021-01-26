@@ -112,29 +112,24 @@ public class ClientHandler extends Thread implements Serializable {
         }
     }
 
-    public void broadcastMessage(ArrayList<Player> players) {
-        players.forEach((action) -> {
-            if (action.getState().equals(Status.ONLINE)) {
-                action.setRequest(Request.USERS);
-                //action.setPlayerList(players);
-                sendMsg(action);
-            }
-
-        });
-    }
-
     private void logout(Player newPlayer) {
-        Boolean isRemoved = connectedPlayers.remove(newPlayer.getUsername(), this);
-        if (isRemoved) {
-            try {
-                newPlayer.setRespond(Respond.SUCCESS);
-                newPlayer.setState(Status.OFFLINE);
+        int isOffline = database.updateStatus(Status.OFFLINE, newPlayer.getUsername());
+        if (isOffline == 1) {
+            Boolean isRemoved = connectedPlayers.remove(newPlayer.getUsername(), this);
+            if (isRemoved) {
+                try {
+                    newPlayer.setRespond(Respond.SUCCESS);
+                    newPlayer.setState(Status.OFFLINE);
+                    sendMsg(newPlayer);
+                    connected = false;
+                    readObj.close();
+                    writeObj.close();
+                } catch (IOException ex) {
+                    System.out.println(ex.getMessage());
+                }
+            } else {
+                newPlayer.setRespond(Respond.FAILURE);
                 sendMsg(newPlayer);
-                connected = false;
-                readObj.close();
-                writeObj.close();
-            } catch (IOException ex) {
-                System.out.println(ex.getMessage());
             }
         } else {
             newPlayer.setRespond(Respond.FAILURE);
