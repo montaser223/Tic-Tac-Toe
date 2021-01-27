@@ -145,19 +145,42 @@ public class GameHandler extends Thread  implements Serializable{
     @Override
     public void run() {
 //        super.run(); //To change body of generated methods, choose Tools | Templates.
+
         while(connected){
-            try {
+            
                 
                 System.out.println("inside the thread waiting move ");
-                String obj = inStream.readLine();
-                System.out.println(obj);
-                sendGameMove(obj);
+                String obj;
+            try {
+                
+                
+                obj = inStream.readLine();
                 System.out.println("receved move from player");
-
+                if(obj == null){
+                    
+                    System.out.println("breaking the loop");
+                    connected = false;
+                    inStream.close();
+                    outStream.close();
+                    outStream.println("wlecom");
+                    break;
+                }else{
+                    System.out.println(obj);
+                    sendGameMove(obj);
+                }
+                
+                System.out.println("11111");
+                
             } catch (IOException ex) {
                 Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
                 connected = false;
             }
+                
+                
+
+            
+                
+            
             
         }
     }

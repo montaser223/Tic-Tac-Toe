@@ -15,4 +15,7 @@ public class Request {
     public static final String LOGOUT = "logout";
     public static final String GAME = "game";
     public static final String SIGNUP = "signup";
+    
+    public static final String GAME_MOVE = "gameMove";
+    public static final String GAME_PLAYAGAIN = "playAgain";
 }
