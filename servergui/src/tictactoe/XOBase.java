@@ -1,10 +1,12 @@
 package tictactoe;
 
+import com.google.gson.Gson;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.io.Serializable;
 import libs.*;
 import org.json.simple.*;
@@ -33,7 +35,6 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import org.json.simple.parser.JSONParser;
-
 import org.json.simple.parser.ParseException;
 
 public class XOBase extends AnchorPane implements Serializable{
@@ -65,27 +66,27 @@ public class XOBase extends AnchorPane implements Serializable{
     protected final Button recordGame;
     protected final Button exitGame;
     
+    
     private  ArrayList<Integer> playerXpositions = new ArrayList<Integer>();
     private  ArrayList<Integer> playerOpositions = new ArrayList<Integer>();
     
-    private String symbol;
-    Button[] buttons;
-    private boolean gameFlag;
-    String[] recordedPositions;
-    private int index;
+    private String currentMove; //symbol
+    private Button[] buttons;
+    private String[] recordedPositions;
     
-    ObjectInputStream readObj;
-    ObjectOutputStream writeObj;
+    
     Game myGame;
     private String mySymbol;
     private volatile boolean connected;
-    private JSONObject obj;
-    private JSONParser parser;
+    
+    
     private DataInputStream inStream;
-    private DataOutputStream outStream;
+    private PrintStream outStream;
+    
+    
     
     private String checkWinner(){
-        String winner = null;
+        String winner = "";
         List topRow = Arrays.asList(1,2,3);
         List midRow = Arrays.asList(4,5,6);
         List botRow = Arrays.asList(7,8,9);
@@ -111,20 +112,21 @@ public class XOBase extends AnchorPane implements Serializable{
         for(List winningComp: winning){
            
             if(playerXpositions.containsAll(winningComp)){
-                winner = "X";
+                winner = Game.X_MOVE;
                  playerXpositions.clear();
                  playerXpositions.addAll(winningComp);
             }
             else if(playerOpositions.containsAll(winningComp)){
-                winner = "O";
+                winner = Game.O_MOVE;
                  playerOpositions.clear();
                  playerOpositions.addAll(winningComp);
             }
             else if(playerXpositions.size() + playerOpositions.size() == 9)
-                winner =  "tie";
+                winner =  Game.DRAW;
         }
         return winner;
     }
+    
     private void highLightWinner(ArrayList<Integer> winner){
         // will take the winner position and highlight each button equl to this position
         
@@ -142,7 +144,7 @@ public class XOBase extends AnchorPane implements Serializable{
         }
     }
     
-    private void drawPositions(int position,String xAndo)
+    private void drawPositions(int position,String playedMove)
     {
         // will append symbol, and disable  buttons according to  last saved
 //        for(int index = 0; index <9; index++){
@@ -165,14 +167,37 @@ public class XOBase extends AnchorPane implements Serializable{
 //            buttons[i-1].setDisable(true);
 //            
 //        }
-
-        buttons[position-1].setText(xAndo);
+        
+        buttons[position-1].setText(playedMove);
         buttons[position-1].setDisable(true);
+        
+        if(playedMove.equalsIgnoreCase(Game.X_MOVE)){
+            
+            playerXpositions.add(position);
+            
+        }else{
+            
+            playerOpositions.add(position);
+        }
+        
+        
+        if(checkWinner().equalsIgnoreCase(Game.X_MOVE)){
+            
+            highLightWinner(playerXpositions);
+            
+        }else if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
+            
+             highLightWinner(playerOpositions);
+             
+        }else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
+            drawTie();
+        }
     }
     
     private void drawTie(){
+        
         for(Button btn: buttons){
-            btn.setText("Tie");
+            btn.setText(Game.DRAW);
         }
     }
     
@@ -190,40 +215,15 @@ public class XOBase extends AnchorPane implements Serializable{
         }
     }
     
-    /*private void position(){
-        for(Integer x: playerXpositions){
-            System.out.print("X: "+ x );
-        }
-        System.out.println("new line");
-         for(Integer o: playerOpositions){
-            System.out.print("O " + o);
-        }
-    }*/
-    
-    private void activeBoard(){
-        for(Button btn: buttons){
-            btn.setDisable(false);
-        }
-    }
-    private void disActiveBoard(){
-        for(Button btn: buttons){
-            btn.setDisable(true);
-        }
-    }
+   
     
     private void sendGameMove(){
-        try {
-            
-            obj = new JSONObject();
-            obj  = JsonConverter.gameToJson(myGame);
-            
-            int location = (int) obj.get("position");
-            String xAndo = (String) obj.get("xAndo");
-            System.out.println("Sending->" + xAndo + " to position " + location);
-            this.outStream.writeUTF(obj.toString());
-        } catch (IOException ex) {
-            Logger.getLogger(XOBase.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        
+        
+        int position = myGame.getPosition();
+        String playedMove = myGame.getPlayedMove(); //myGame.getSymbol();
+        System.out.println("Sending->" + playedMove + " to position " + position);
+        this.outStream.println(new Gson().toJson(myGame));
     }
     
     
@@ -236,45 +236,45 @@ public class XOBase extends AnchorPane implements Serializable{
                 try {
                     
                     Socket socket = new Socket("127.0.0.1", 5005);
-                    outStream = new DataOutputStream(socket.getOutputStream());
+                    outStream = new PrintStream(socket.getOutputStream());
                     inStream = new DataInputStream(socket.getInputStream());
                     
                     // receve the symbol 
+                    myGame =  new Gson().fromJson(inStream.readLine(), Game.class);
                     
-                    obj = (JSONObject) parser.parse(inStream.readUTF());
-                    mySymbol =(String) obj.get("symbol");
+                    mySymbol = myGame.getNextMove();
                     connected = true;
                     
                     System.out.println("reciving game symbol " + mySymbol + " from gmae handler");
-                    System.out.println("and this is my  symbol " + symbol);
+                    System.out.println("and this is my  symbol " + currentMove);
+                    
                 } catch (IOException ex) {
                     System.out.println(ex.getMessage());
-                } catch (ParseException ex) {
-                    Logger.getLogger(XOBase.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 while (connected) {
+                    
                     try {
                         
-                        myGame = new Game();
+                        
                         System.out.println("While: waiting for obj from gameHandler");
-                        obj = (JSONObject) parser.parse(inStream.readUTF());
+                        String obj = inStream.readLine();
+                        myGame =  new Gson().fromJson(obj, Game.class);
 
                         System.out.println("receving game obj from game Handler");
                         
-                        symbol = (String) obj.get("symbol");
-                        System.out.println(" this is " + symbol + "turn");
-                        Long location =(Long) obj.get("position");
-                        String xAndo = (String) obj.get("xAndo");
-                        System.out.println("location of " + xAndo + " " +  location.intValue());
+                        currentMove = myGame.getNextMove();
+                        System.out.println(" this is " + currentMove + " turn");
+                        
+                        int position = myGame.getPosition();
+                        String xAndo = myGame.getPlayedMove();
+                        System.out.println("location of " + xAndo + " " +  position);
 
                           Platform.runLater(() -> {
-                              drawPositions(location.intValue(), xAndo );
+                              drawPositions(position, xAndo );
                           });
                         
                     } catch (IOException ex) {
                         System.out.println(ex.getMessage());
-                    } catch (ParseException ex) {
-                        Logger.getLogger(XOBase.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             }
@@ -282,17 +282,18 @@ public class XOBase extends AnchorPane implements Serializable{
         th.start();
         
     }
+    
     public XOBase() {
+        
         myGame = new Game();
-        index = 1;
         startGame();
-        symbol = "X";
-        parser = new JSONParser();
+        currentMove = Game.X_MOVE;
         
         splitPane = new SplitPane();
         anchorPane = new AnchorPane();
         imageView = new ImageView();
         gridPane = new GridPane();
+        
         columnConstraints = new ColumnConstraints();
         columnConstraints0 = new ColumnConstraints();
         columnConstraints1 = new ColumnConstraints();
@@ -301,7 +302,6 @@ public class XOBase extends AnchorPane implements Serializable{
         rowConstraints1 = new RowConstraints();
         
         recordedPositions = new String[9];
-        gameFlag = true;
         buttons = new Button[9];
         
         bt1 = new Button();
@@ -367,50 +367,56 @@ public class XOBase extends AnchorPane implements Serializable{
         bt1.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                System.out.println("is  game turn " + symbol + " == " + mySymbol);
+                System.out.println("is  game turn " + currentMove + " == " + mySymbol);
                 
-                if(mySymbol.equalsIgnoreCase(symbol)){
-                    System.out.println("set btn txt");
-                    bt1.setText(symbol);
-                    bt1.setDisable(true);
-                    
-                    if(symbol.equalsIgnoreCase("X")){
+                if(mySymbol.equalsIgnoreCase(currentMove)){
+//                    bt1.setText(currentMove);
+//                    bt1.setDisable(true);
+//                    
+                    if(currentMove.equalsIgnoreCase(Game.X_MOVE)){
                         
                         playerXpositions.add(1);
-                        if(checkWinner() == "X"){
+                        if(checkWinner() == Game.X_MOVE){
                             highLightWinner(playerXpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("X");
+                            myGame.setWinner(Game.X_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER); 
+                            myGame.setPosition(1);
                             sendGameMove();
-                        }else if(checkWinner() == "tie"){
+                        }else if(checkWinner() == Game.DRAW){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(1);
                             sendGameMove();
                             
-                        }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(1);
-                            myGame.setSymbol("O");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                        }else{                        
+                            myGame.setPlayedMove(currentMove); 
+                            myGame.setPosition(1);  
+                            myGame.setNextMove(Game.O_MOVE); 
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                        
                     }
                     else{
                         playerOpositions.add(1);
-                        if(checkWinner() == "O"){
+                        if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
                             highLightWinner(playerOpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("O");
+                            myGame.setWinner(Game.O_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(1);
                             sendGameMove();
                         }
-                        else if(checkWinner() == "tie"){
+                        else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(1);
                             sendGameMove();
                         }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(1);
-                            myGame.setSymbol("X");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(1);
+                            myGame.setNextMove(Game.X_MOVE);
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove());
                             sendGameMove();
                         }
                         
@@ -423,107 +429,126 @@ public class XOBase extends AnchorPane implements Serializable{
         bt2.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
+                System.out.println("is  game turn " + currentMove + " == " + mySymbol);
                 
-                System.out.println("is game turn " + symbol + " == " + mySymbol);
-
-                if(mySymbol.equalsIgnoreCase(symbol)){
-                    bt2.setText(symbol);
-                    bt2.setDisable(true);
-                    
-                    if(symbol.equalsIgnoreCase("X")){
+                if(mySymbol.equalsIgnoreCase(currentMove)){
+//                    bt2.setText(currentMove);
+//                    bt2.setDisable(true);
+//                    
+                    if(currentMove.equalsIgnoreCase(Game.X_MOVE)){
                         
                         playerXpositions.add(2);
-                        if(checkWinner() == "X"){
+                        if(checkWinner() == Game.X_MOVE){
                             highLightWinner(playerXpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("X");
+                            myGame.setWinner(Game.X_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(2);
                             sendGameMove();
-                        }else if(checkWinner() == "tie"){
+                        }else if(checkWinner() == Game.DRAW){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(2);
                             sendGameMove();
-                        }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(2);
-                            myGame.setSymbol("O");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            
+                        }else{                        
+                            myGame.setPlayedMove(currentMove); 
+                            myGame.setPosition(2);  
+                            myGame.setNextMove(Game.O_MOVE); 
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                            
-
                     }
                     else{
                         playerOpositions.add(2);
-                        if(checkWinner() == "O"){
+                        if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
                             highLightWinner(playerOpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("O");
+                            myGame.setWinner(Game.O_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(2);
                             sendGameMove();
                         }
-                        else if(checkWinner() == "tie"){
+                        else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(2);
                             sendGameMove();
                         }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(2);
-                            myGame.setSymbol("X");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(2);
+                            myGame.setNextMove(Game.X_MOVE);
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                    }
+                        
+                        
+                    }   
                 }
             }
+            
         
         
         });
         bt3.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                if(mySymbol.equalsIgnoreCase(symbol)){
-                    
-                    bt3.setText(symbol);
+                System.out.println("is  game turn " + currentMove + " == " + mySymbol);
+                
+                if(mySymbol.equalsIgnoreCase(currentMove)){
+                    bt3.setText(currentMove);
                     bt3.setDisable(true);
-                    if(symbol.equalsIgnoreCase("X")){
-                        playerXpositions.add(3);
+                    
+                    if(currentMove.equalsIgnoreCase(Game.X_MOVE)){
                         
-                        if(checkWinner() == "X"){
+                        playerXpositions.add(3);
+                        if(checkWinner() == Game.X_MOVE){
                             highLightWinner(playerXpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("X");
+                            myGame.setWinner(Game.X_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(3);
+                            myGame.setNextMove(Game.GAME_OVER);
                             sendGameMove();
-                        }else if(checkWinner() == "tie"){
+                        }else if(checkWinner() == Game.DRAW){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(3);
                             sendGameMove();
-                        }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(3);
-                            myGame.setSymbol("O");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
-                            sendGameMove();
-
-                        }
                             
-
+                        }else{                        
+                            myGame.setPlayedMove(currentMove); 
+                            myGame.setPosition(3);  
+                            myGame.setNextMove(Game.O_MOVE); 
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
+                            sendGameMove();
+                        }
                     }
                     else{
                         playerOpositions.add(3);
                         
-                        if(checkWinner() == "O"){
+                        if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
                             highLightWinner(playerOpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("O");
+                            myGame.setWinner(Game.O_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(3);
                             sendGameMove();
                         }
-                        else if(checkWinner() == "tie"){
+                        else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(3);
                             sendGameMove();
                         }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(3);
-                            myGame.setSymbol("X");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(3);
+                            myGame.setNextMove(Game.X_MOVE);
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                    }
+                        
+                        
+                    }   
                 }
             }
         
@@ -532,51 +557,61 @@ public class XOBase extends AnchorPane implements Serializable{
         bt4.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                if(mySymbol.equalsIgnoreCase(symbol)){
-                    
-                    bt4.setText(symbol);
+                System.out.println("is  game turn " + currentMove + " == " + mySymbol);
+                
+                if(mySymbol.equalsIgnoreCase(currentMove)){
+                    bt4.setText(currentMove);
                     bt4.setDisable(true);
-                    if(symbol.equalsIgnoreCase("X")){
+                    
+                    if(currentMove.equalsIgnoreCase(Game.X_MOVE)){
                         
                         playerXpositions.add(4);
-                        if(checkWinner() == "X"){
+                        if(checkWinner() == Game.X_MOVE){
                             highLightWinner(playerXpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("X");
+                            myGame.setWinner(Game.X_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(4);
                             sendGameMove();
-                        }else if(checkWinner() == "tie"){
+                        }else if(checkWinner() == Game.DRAW){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(4);
                             sendGameMove();
-                        }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(4);
-                            myGame.setSymbol("O");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            
+                        }else{                        
+                            myGame.setPlayedMove(currentMove); 
+                            myGame.setPosition(4);  
+                            myGame.setNextMove(Game.O_MOVE); 
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                            
-
                     }
                     else{
                         playerOpositions.add(4);
-                        
-                        if(checkWinner() == "O"){
+                        if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
                             highLightWinner(playerOpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("O");
+                            myGame.setWinner(Game.O_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(4);
                             sendGameMove();
                         }
-                        else if(checkWinner() == "tie"){
+                        else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(4);
                             sendGameMove();
                         }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(4);
-                            myGame.setSymbol("X");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(4);
+                            myGame.setNextMove(Game.X_MOVE);
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                    }
+                        
+                        
+                    }   
                 }
             }
         
@@ -585,50 +620,61 @@ public class XOBase extends AnchorPane implements Serializable{
         bt5.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                if(mySymbol.equalsIgnoreCase(symbol)){
-                    
-                    bt5.setText(symbol);
+                System.out.println("is  game turn " + currentMove + " == " + mySymbol);
+                
+                if(mySymbol.equalsIgnoreCase(currentMove)){
+                    bt5.setText(currentMove);
                     bt5.setDisable(true);
-                    if(symbol.equalsIgnoreCase("X")){
-                        playerXpositions.add(5);
+                    
+                    if(currentMove.equalsIgnoreCase(Game.X_MOVE)){
                         
-                        if(checkWinner() == "X"){
+                        playerXpositions.add(5);
+                        if(checkWinner() == Game.X_MOVE){
                             highLightWinner(playerXpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("X");
+                            myGame.setWinner(Game.X_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(5);
+                            myGame.setNextMove(Game.GAME_OVER);
                             sendGameMove();
-                        }else if(checkWinner() == "tie"){
+                        }else if(checkWinner() == Game.DRAW){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(5);
                             sendGameMove();
-                        }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(5);
-                            myGame.setSymbol("O");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            
+                        }else{                        
+                            myGame.setPlayedMove(currentMove); 
+                            myGame.setPosition(5);  
+                            myGame.setNextMove(Game.O_MOVE); 
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                            
-
                     }
                     else{
                         playerOpositions.add(5);
-                        if(checkWinner() == "O"){
+                        if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
                             highLightWinner(playerOpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("O");
+                            myGame.setWinner(Game.O_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(5);
                             sendGameMove();
                         }
-                        else if(checkWinner() == "tie"){
+                        else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(5);
                             sendGameMove();
                         }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(5);
-                             myGame.setSymbol("X");
-                             System.out.println("Sending move the next turn is " + myGame.getSymbol() );
-                             sendGameMove();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(5);
+                            myGame.setNextMove(Game.X_MOVE);
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove());
+                            sendGameMove();
                         }
-                    }
+                        
+                        
+                    }   
                 }
             }
         
@@ -637,53 +683,61 @@ public class XOBase extends AnchorPane implements Serializable{
         bt6.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                if(mySymbol.equalsIgnoreCase(symbol)){
-                    
-                    bt6.setText(symbol);
+                System.out.println("is  game turn " + currentMove + " == " + mySymbol);
+                
+                if(mySymbol.equalsIgnoreCase(currentMove)){
+                    bt6.setText(currentMove);
                     bt6.setDisable(true);
-                    if(symbol.equalsIgnoreCase("X")){
+                    
+                    if(currentMove.equalsIgnoreCase(Game.X_MOVE)){
+                        
                         playerXpositions.add(6);
-                       
-                        if(checkWinner() == "X"){
+                        if(checkWinner() == Game.X_MOVE){
                             highLightWinner(playerXpositions);
-//                            gameFlag = false;
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("X");
+                            myGame.setWinner(Game.X_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(6);
                             sendGameMove();
-                        }else if(checkWinner() == "tie"){
+                        }else if(checkWinner() == Game.DRAW){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(6);
                             sendGameMove();
-                        }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(6);
-                             myGame.setSymbol("O");
-                             System.out.println("Sending move the next turn is " + myGame.getSymbol() );
-                             sendGameMove();
-                        }
                             
-
+                        }else{                        
+                            myGame.setPlayedMove(currentMove); 
+                            myGame.setPosition(6);  
+                            myGame.setNextMove(Game.O_MOVE); 
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
+                            sendGameMove();
+                        }
                     }
                     else{
                         playerOpositions.add(6);
-                        
-                        if(checkWinner() == "O"){
+                        if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
                             highLightWinner(playerOpositions);
-//                            gameFlag = false;
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("O");
+                            myGame.setWinner(Game.O_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(6);
                             sendGameMove();
                         }
-                        else if(checkWinner() == "tie"){
+                        else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(6);
                             sendGameMove();
                         }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(6);
-                            myGame.setSymbol("X");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(6);
+                            myGame.setNextMove(Game.X_MOVE);
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                    }
+                        
+                        
+                    }   
                 }
             }
         
@@ -692,54 +746,61 @@ public class XOBase extends AnchorPane implements Serializable{
         bt7.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                if(mySymbol.equalsIgnoreCase(symbol)){
-                    
-                    bt7.setText(symbol);
+                System.out.println("is  game turn " + currentMove + " == " + mySymbol);
+                
+                if(mySymbol.equalsIgnoreCase(currentMove)){
+                    bt7.setText(currentMove);
                     bt7.setDisable(true);
-                    if(symbol.equalsIgnoreCase("X")){
+                    
+                    if(currentMove.equalsIgnoreCase(Game.X_MOVE)){
+                        
                         playerXpositions.add(7);
-                        
-                        
-                        if(checkWinner() == "X"){
+                        if(checkWinner() == Game.X_MOVE){
                             highLightWinner(playerXpositions);
-//                            gameFlag = false;
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("X");
+                            myGame.setWinner(Game.X_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(7);
                             sendGameMove();
-                        }else if(checkWinner() == "tie"){
+                        }else if(checkWinner() == Game.DRAW){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(7);
                             sendGameMove();
-                        }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(7);
-                            myGame.setSymbol("O");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            
+                        }else{                        
+                            myGame.setPlayedMove(currentMove); 
+                            myGame.setPosition(7);  
+                            myGame.setNextMove(Game.O_MOVE); 
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                            
-                            
-
                     }
                     else{
                         playerOpositions.add(7);
-                        
-                        if(checkWinner() == "O"){
+                        if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
                             highLightWinner(playerOpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("O");
+                            myGame.setWinner(Game.O_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(7);
                             sendGameMove();
                         }
-                        else if(checkWinner() == "tie"){
+                        else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(7);
                             sendGameMove();
                         }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(7);
-                            myGame.setSymbol("X");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(7);
+                            myGame.setNextMove(Game.X_MOVE);
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                    }
+                        
+                        
+                    }   
                 }
             }
         
@@ -748,51 +809,61 @@ public class XOBase extends AnchorPane implements Serializable{
         bt8.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                if(mySymbol.equalsIgnoreCase(symbol)){
-                    
-                    bt8.setText(symbol);
+                System.out.println("is  game turn " + currentMove + " == " + mySymbol);
+                
+                if(mySymbol.equalsIgnoreCase(currentMove)){
+                    bt8.setText(currentMove);
                     bt8.setDisable(true);
-                    if(symbol.equalsIgnoreCase("X")){
+                    
+                    if(currentMove.equalsIgnoreCase(Game.X_MOVE)){
+                        
                         playerXpositions.add(8);
-                        if(checkWinner() == "X"){
+                        if(checkWinner() == Game.X_MOVE){
                             highLightWinner(playerXpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("X");
+                            myGame.setWinner(Game.X_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(8);
                             sendGameMove();
-                        }else if(checkWinner() == "tie"){
+                        }else if(checkWinner() == Game.DRAW){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(8);
                             sendGameMove();
-                        }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(8);
-                            myGame.setSymbol("O");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            
+                        }else{                        
+                            myGame.setPlayedMove(currentMove); 
+                            myGame.setPosition(8);  
+                            myGame.setNextMove(Game.O_MOVE); 
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                            
-
                     }
                     else{
                         playerOpositions.add(8);
-                        
-                        if(checkWinner() == "O"){
+                        if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
                             highLightWinner(playerOpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("O");
+                            myGame.setWinner(Game.O_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(8);
                             sendGameMove();
                         }
-                        else if(checkWinner() == "tie"){
+                        else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(8);
                             sendGameMove();
-                            
                         }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(8);
-                            myGame.setSymbol("X");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(8);
+                            myGame.setNextMove(Game.X_MOVE);
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                    }
+                        
+                        
+                    }   
                 }
             }
         
@@ -801,49 +872,61 @@ public class XOBase extends AnchorPane implements Serializable{
         bt9.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                if(mySymbol.equalsIgnoreCase(symbol)){
-                    bt9.setText(symbol);
+                System.out.println("is  game turn " + currentMove + " == " + mySymbol);
+                
+                if(mySymbol.equalsIgnoreCase(currentMove)){
+                    bt9.setText(currentMove);
                     bt9.setDisable(true);
-                    if(symbol.equalsIgnoreCase("X")){
+                    
+                    if(currentMove.equalsIgnoreCase(Game.X_MOVE)){
+                        
                         playerXpositions.add(9);
-                        if(checkWinner() == "X"){
+                        if(checkWinner() == Game.X_MOVE){
                             highLightWinner(playerXpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("X");
+                            myGame.setWinner(Game.X_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(9);
                             sendGameMove();
-                        }else if(checkWinner() == "tie"){
+                        }else if(checkWinner() == Game.DRAW){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(9);
                             sendGameMove();
-                        }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(9);
-                            myGame.setSymbol("O");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            
+                        }else{                        
+                            myGame.setPlayedMove(currentMove); 
+                            myGame.setPosition(9);  
+                            myGame.setNextMove(Game.O_MOVE); 
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                            
-
                     }
                     else{
                         playerOpositions.add(9);
-                        
-                        if(checkWinner() == "O"){
+                        if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
                             highLightWinner(playerOpositions);
-                            myGame.setGameFlag(false);
-                            myGame.setWinner("O");
+                            myGame.setWinner(Game.O_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(9);
                             sendGameMove();
                         }
-                        else if(checkWinner() == "tie"){
+                        else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
                             drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(9);
                             sendGameMove();
                         }else{
-                            myGame.setxAndo(symbol);
-                            myGame.setLocation(9);
-                            myGame.setSymbol("X");
-                            System.out.println("Sending move the next turn is " + myGame.getSymbol() );
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(9);
+                            myGame.setNextMove(Game.X_MOVE);
+                            System.out.println("Sending move the next turn is " + myGame.getNextMove() );
                             sendGameMove();
                         }
-                    }
+                        
+                        
+                    }   
                 }
             }
         

@@ -13,78 +13,79 @@ import java.util.ArrayList;
  * @author abobakr
  */
 public class Game implements Serializable {
-    private String[] position;
-    private boolean gameFlag;
-    private String symbol;
+    
+    public static final String X_MOVE = "X";
+    public static final String O_MOVE = "O";
+    public static final String DRAW = "draw";
+    public static final String GAME_OVER = "gameOver";
+
+    private String[] gamePosition;
+    private String nextMove;
     private String winner;
-    private ArrayList<Integer>  x;
-    private ArrayList<Integer> o;
-    private String xAndo;
-    private int location;
+    private String playedMove;
+    private int position;
+    private ArrayList<Integer>  xPosition;
+    private ArrayList<Integer> oPosition;
+    
+    
 
-    public String getxAndo() {
-        return xAndo;
+    public String getPlayedMove() {
+        return playedMove;
     }
 
-    public int getLocation() {
-        return location;
+    
+    public void setPlayedMove(String playedMove) {
+        this.playedMove = playedMove;
+    }
+    
+    public int getPosition() {
+        return position;
     }
 
-    public void setxAndo(String xAndo) {
-        this.xAndo = xAndo;
-    }
-
-    public void setLocation(int location) {
-        this.location = location;
+    public void setPosition(int position) {
+        this.position = position;
     }
     
 
-    public void setX(ArrayList<Integer> x) {
-        this.x = x;
+    public void setXposition(ArrayList<Integer> xposition) {
+        this.xPosition = xposition;
     }
 
-    public void setO(ArrayList<Integer> o) {
-        this.o = o;
+    public void setOposition(ArrayList<Integer> oposition) {
+        this.oPosition = oposition;
     }
 
-    public ArrayList<Integer> getX() {
-        return x;
+    public ArrayList<Integer> getXposition() {
+        return xPosition;
     }
 
-    public ArrayList<Integer> getO() {
-        return o;
+    public ArrayList<Integer> getOposition() {
+        return oPosition;
     }
 
     
     public Game(){
-        this.position = new String[9]; ;
-        gameFlag = true;
-        symbol = "X";
+        this.gamePosition = new String[9]; ;
+        nextMove = Game.X_MOVE;
     }
     
     public Game(String[] position){
-        this.position = position;
-        gameFlag = true;
-        symbol = "X";
+        this.gamePosition = position;
+        nextMove = Game.X_MOVE;
     }
     public void setGamePosition(String[] position){
-        this.position = position;
+        this.gamePosition = position;
     }
     public String[] getGamePosition(){
-        return position;
+        return gamePosition;
     }
-    public void setGameFlag(boolean gameFlag){
-        this.gameFlag = gameFlag;
-    }
-    public boolean getGameFlag(){
-        return gameFlag;
-    }
-    public String getSymbol() {
-        return symbol;
+    
+    public String getNextMove() {
+        return nextMove;
     }
 
-    public void setSymbol(String symbol) {
-        this.symbol = symbol;
+    public void setNextMove(String nextMove) {
+        this.nextMove = nextMove;
     }
     public void setWinner(String winner) {
         this.winner = winner;

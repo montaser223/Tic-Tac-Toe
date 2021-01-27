@@ -4,12 +4,14 @@
  * and open the template in the editor.
  */
 package servergui;
+import com.google.gson.Gson;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import libs.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.HashMap;
@@ -38,13 +40,12 @@ public class GameHandler extends Thread  implements Serializable{
     private XoDataBase database;
     private volatile boolean connected;
     
-    private  static String symbol = "X";
+    private  static String symbol = Game.X_MOVE;
     
     private Socket socket;
-    private JSONObject obj;
-    private JSONParser parser;
+    
     private DataInputStream inStream;
-    private DataOutputStream outStream;
+    private PrintStream outStream;
     
     
     
@@ -54,42 +55,32 @@ public class GameHandler extends Thread  implements Serializable{
         this.writeObj = writeObj;
         game = new Game();
         
-        if(symbol == "X"){
+        if(symbol == Game.X_MOVE){
             
-            // first player will take the symbol x
-            game.setSymbol(symbol);
+            
+            game.setNextMove(symbol); // first player will take the symbol x
+            
             players.add(this);  // adding player to the list
             
             System.out.println(" game handler: adding the first player" );
-            try {
-                
-                // send the sybol for the player to use it for the rest of the game
-                System.out.println(" sending symbol" + symbol + " to first player");
-                writeObj.writeObject(game);
-                symbol = "O";
-                
-            } catch (IOException ex) {
-                Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            // send the sybol for the player to use it for the rest of the game
+            System.out.println(" sending symbol" + symbol + " to first player");
+            outStream.println(new Gson().toJson(game));
+            symbol = Game.O_MOVE;
             
             
             
         }else{
             // second player will take O
             System.out.println(" game handler: adding the second player" );
-            game.setSymbol(symbol);
+            game.setNextMove(symbol);
             players.add(this);
             
-            try {
-                // send the sybol for the player to use it for the rest of the game
-
-                System.out.println(" sending symbol" + symbol + " to socend player");
-
-                writeObj.writeObject(game);
-                symbol = "X";
-            } catch (IOException ex) {
-                Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            // send the sybol for the player to use it for the rest of the game
+            
+            System.out.println(" sending symbol" + symbol + " to socend player");
+            outStream.println(new Gson().toJson(game));
+            symbol = Game.X_MOVE;
             
             
         }
@@ -105,37 +96,28 @@ public class GameHandler extends Thread  implements Serializable{
     
     GameHandler(Socket socket) {
         this.socket = socket;
-        obj = new JSONObject();
-        parser = new JSONParser();
+        game = new Game();
         System.out.println(" game handler constructor");
         try {
             inStream = new DataInputStream(socket.getInputStream());
-            outStream = new DataOutputStream(socket.getOutputStream());
+            outStream = new PrintStream(socket.getOutputStream());
         } catch (IOException ex) {
             Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         
         
-        if(symbol == "X"){
+        if(symbol == Game.X_MOVE){
             
             // first player will take the symbol x
-//            game.setSymbol(symbol);
-            obj.put("symbol", symbol);
+            game.setNextMove(symbol);
             players.add(this);  // adding player to the list
             
             System.out.println(" game handler: adding the first player" );
-            try {
-                
-                // send the sybol for the player to use it for the rest of the game
-                System.out.println(" sending symbol" + symbol + " to first player");
-                outStream.writeUTF(obj.toString());
-//                writeObj.writeObject(game);
-                symbol = "O";
-                
-            } catch (IOException ex) {
-                Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            // send the sybol for the player to use it for the rest of the game
+            System.out.println(" sending symbol" + symbol + " to first player");
+            outStream.println(new Gson().toJson(game));
+            symbol = Game.O_MOVE;
             
             
             
@@ -143,19 +125,14 @@ public class GameHandler extends Thread  implements Serializable{
             // second player will take O
             System.out.println(" game handler: adding the second player" );
 //            game.setSymbol(symbol);
-            obj.put("symbol", symbol);
+            game.setNextMove(symbol);
             players.add(this);
             
-            try {
-                // send the sybol for the player to use it for the rest of the game
-
-                System.out.println(" sending symbol" + symbol + " to socend player");
-                outStream.writeUTF(obj.toString());
-//                writeObj.writeObject(game);
-                symbol = "X";
-            } catch (IOException ex) {
-                Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            // send the sybol for the player to use it for the rest of the game
+            
+            System.out.println(" sending symbol" + symbol + " to socend player");
+            outStream.println(new Gson().toJson(game));
+            symbol = Game.X_MOVE;
             
             
         }
@@ -172,37 +149,25 @@ public class GameHandler extends Thread  implements Serializable{
             try {
                 
                 System.out.println("inside the thread waiting move ");
-                System.out.println("receved move from player");
-                String x = inStream.readUTF();
-                System.out.println(x);
-                obj = new JSONObject();
-                obj = (JSONObject) parser.parse(x);
-                System.out.println("After parseing");
-                
-//                int location = (int)obj.get("position");
-//                String xAndo = (String) obj.get("xAndo");
-//                System.out.println("location of " + xAndo + " " +  location);
+                String obj = inStream.readLine();
+                System.out.println(obj);
                 sendGameMove(obj);
+                System.out.println("receved move from player");
+
             } catch (IOException ex) {
                 Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
                 connected = false;
-            } catch (ParseException ex) {
-                Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
             
         }
     }
     
-    private void sendGameMove(JSONObject obj){
+    private void sendGameMove(String obj){
         
         for(GameHandler player: players){
-            try {
-                System.out.println("Broadcast to all player");
-                player.outStream.writeUTF(obj.toString());
-                
-            } catch (IOException ex) {
-                Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            
+            System.out.println("Broadcast to all player");
+            player.outStream.println(obj);
         }
     }
     
