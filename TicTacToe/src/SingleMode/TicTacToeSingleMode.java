@@ -27,7 +27,11 @@ public class TicTacToeSingleMode extends Application {
     @Override
     public void start(Stage stage) {
         
-        
+        SingleModeGame.setPlayerName("abobakr");
+        String[] p = new String[9];
+        p[1]= "X";
+        p[2]="O";
+        SingleModeGame.setRecordedPosition(p);
         Parent root = new SingleModeGame();
         
         Scene scene = new Scene(root);

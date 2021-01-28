@@ -40,12 +40,14 @@ public class SingleModeGame extends AnchorPane {
     private int move;
     Button[] buttons;
     private boolean gameFlag;
-    String[] recordedPositions;
+    private static String[] recordedPositions = null;
     
     private int playerScoreCounter;
     private int computerScoreCounter;
     private int index;
-
+    private static String username;
+    
+    
     private String checkWinner() {
         String winner = null;
         //winning conditions
@@ -98,23 +100,23 @@ public class SingleModeGame extends AnchorPane {
         }
     }
 
-    private String[] recordPositions() {
+    private void recordPositions() {
         // save the value of each buttons of the 9'th, X or O or bull
         recordedPositions = new String[9];
         for (int index = 0; index < 9; index++) {
             recordedPositions[index] = buttons[index].getText();
         }
-        return recordedPositions;
     }
 
-    private void drawOldPositions(String[] positions) {
-        // will append symbol, and disable  buttons according to  last saved
+    private void drawOldPositions() {
+        
         for (int index = 0; index < 9; index++) {
 
-            if (positions[index] != null) {
-                buttons[index].setText(positions[index]);
+            if (recordedPositions[index] != null) {
+                buttons[index].setText(recordedPositions[index]);
                 buttons[index].setDisable(true);
-                if(positions[index] == "X")
+                
+                if(recordedPositions[index] == "X")
                     playerXpositions.add(index+1);
                 else
                     playerOpositions.add(index+1);
@@ -177,6 +179,30 @@ public class SingleModeGame extends AnchorPane {
             }
         }
     }
+    
+    private void updateBoard(int buttonPosition){
+        if (gameFlag){
+            bt1.setText(symbol);
+            bt1.setDisable(true);
+            if (symbol == "X") {
+                playerXpositions.add(1);
+                symbol = "O";
+                if (checkWinner() == "X") {
+                    highLightWinner(playerXpositions);
+                    gameFlag = false;
+                    playerScoreCounter++;
+                    updateScore();
+                } else if (checkWinner() == "tie") {
+                    drawTie();
+                    gameFlag = false;
+                    updateScore();
+                }else{
+                    playComputerMove();
+                }
+            }
+        }  
+                
+    }
 
     private void playAgain(){
         recordGame.setText("Record Game");
@@ -184,10 +210,16 @@ public class SingleModeGame extends AnchorPane {
         symbol = "X";
         playerXpositions.clear();
         playerOpositions.clear();
+        
         for(Button btn: buttons){
+            
             btn.setText("");
-            //btn.setStyle("-fx-background-color: #D2691E ");
             btn.setDisable(false);
+            
+            // reset the old style
+            Button tmpButton = new Button();
+            btn.setStyle(tmpButton.getStyle());
+            
         }
     }
     
@@ -197,11 +229,30 @@ public class SingleModeGame extends AnchorPane {
         recordGame.setText("Play Again!");
     }
     
+    public static void setPlayerName(String playerName){
+        
+        username = playerName;
+    }
+    
+    public static void setRecordedPosition(String[] oldGame){
+        recordedPositions = oldGame;
+    }
+    
+    public static String[] getRecordedPosition(){
+        
+        return recordedPositions;
+    }
+    
     public SingleModeGame() {
         
         playerScoreCounter = 0;
         computerScoreCounter = 0;
-        recordedPositions = new String[9];
+        if(recordedPositions == null){
+            System.out.println("null");
+            recordedPositions = new String[9];
+        }
+        
+        
         gameFlag = true;
         symbol = "X";
         buttons = new Button[9];
@@ -225,6 +276,7 @@ public class SingleModeGame extends AnchorPane {
         buttons[6] = bt7;
         buttons[7] = bt8;
         buttons[8] = bt9;
+        
         for (index=0; index<9; index++) {
             buttons[index].setFont(Font.font("MV Boli", FontWeight.BOLD, 24));
         }
@@ -232,7 +284,7 @@ public class SingleModeGame extends AnchorPane {
         bt1.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                if (gameFlag) {
+                if (gameFlag){
                     bt1.setText(symbol);
                     bt1.setDisable(true);
                     if (symbol == "X") {
@@ -252,6 +304,7 @@ public class SingleModeGame extends AnchorPane {
                         }
                     }
                 }
+                
             }
 
         });
@@ -581,7 +634,7 @@ public class SingleModeGame extends AnchorPane {
 
         playerName.setLayoutX(421.0);
         playerName.setLayoutY(58.0);
-        playerName.setText("Playe Name");
+        playerName.setText(username);
 
         computerName.setLayoutX(573.0);
         computerName.setLayoutY(58.0);
@@ -602,6 +655,9 @@ public class SingleModeGame extends AnchorPane {
         computerScore.setLayoutY(101.0);
         computerScore.setText(String.valueOf(computerScoreCounter));
         computerScore.setFont(new Font(19.0));
+        
+        
+        drawOldPositions();
 
         getChildren().add(bt1);
         getChildren().add(bt2);
