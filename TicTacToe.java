@@ -14,6 +14,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -47,6 +51,7 @@ import static javafx.scene.layout.Region.USE_PREF_SIZE;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -131,21 +136,37 @@ public class TicTacToe extends Application implements Serializable {
     Button playBtn4;
     Button backBtn4;
     /***********************************************ScreenSingleMode******************************************************************/
-     ImageView GameImg;
-     Button exit;
-     Button recordGame;
-     Button bt1;
-     Button bt2;
-     Button bt3;
-     Button bt4;
-     Button bt5;
-     Button bt6;
-     Button bt7;
-     Button bt8;
-     Button bt9;
-     Label playerScore;
-     Label computerScore;
+    ImageView GameImg;
+    Button exit;
+    Button recordGame;
+    Button bt1;
+    Button bt2;
+    Button bt3;
+    Button bt4;
+    Button bt5;
+    Button bt6;
+    Button bt7;
+    Button bt8;
+    Button bt9;
      
+    ArrayList<Integer> playerXpositions = new ArrayList<Integer>();
+    ArrayList<Integer> playerOpositions = new ArrayList<Integer>();
+    Label playerName;
+    Label computerName;
+    Label playerScore;
+    Label computerScore;
+    Label scoreSeperator;//remove
+    Button[] buttons;
+    String[] recordedPositions;
+    String symbol;
+    boolean gameFlag;
+    int move;
+    int playerScoreCounter;
+    int computerScoreCounter;
+    int index;
+
+    private static String username;
+    /******************************************************************************************************************/
      @Override
    public void init() {
          p=new Player("","");
@@ -200,7 +221,7 @@ public class TicTacToe extends Application implements Serializable {
     /************************************Screens methods********************************************************************************/
         public AnchorPane ScreenOne()
     {
-
+        ScreenOne = new AnchorPane();
         LoginImg = new ImageView();
         LoginLabel = new Label();
         usrName1 = new Label();
@@ -327,10 +348,7 @@ public class TicTacToe extends Application implements Serializable {
                 else
                 {
                     Player newPlayer = new Player(userText1.getText(), passText1.getText());
-                    SingleModeGame.setPlayerName( userText1.getText() );
-                    usernameDislay3.setText(userName3);
-                    single = new SingleModeGame () ;
-                    getusername() ;
+                    setPlayerName( userText1.getText() );
                     
                     try
                     {
@@ -360,6 +378,7 @@ public class TicTacToe extends Application implements Serializable {
     
      public AnchorPane ScreenTwo()
     {
+        ScreenTwo = new AnchorPane();
         GridOfImageAndForm = new GridPane();
         columnConstraints = new ColumnConstraints();
         columnConstraints0 = new ColumnConstraints();
@@ -570,6 +589,7 @@ public class TicTacToe extends Application implements Serializable {
      
      public AnchorPane ScreenThree()
     {
+        ScreenThree = new AnchorPane();
         GridOfPlay = new GridPane();
         tableColumnConstraints = new ColumnConstraints();
         tableRowConstraints = new RowConstraints();
@@ -611,7 +631,7 @@ public class TicTacToe extends Application implements Serializable {
             PlayImg.setImage(image);
             
         } catch (FileNotFoundException ex) {
-            System.out.println("tictactoe.TicTacToe.ScreenThree()");
+            System.out.println("Fsild to load menu image");
         }
 
         PlayLable.setAlignment(javafx.geometry.Pos.CENTER);
@@ -699,8 +719,8 @@ public class TicTacToe extends Application implements Serializable {
             @Override
             public void handle(ActionEvent event) {
 
-                SingleModeGame singleNew = new  SingleModeGame();
-                singleBtn3.getScene().setRoot(singleNew.SingleMode());
+                ScreenSingleMode().getChildren().clear();
+                singleBtn3.getScene().setRoot(ScreenSingleMode());
                 
             }
 
@@ -711,6 +731,7 @@ public class TicTacToe extends Application implements Serializable {
      
      public AnchorPane ScreenFour()
      {
+        ScreenFour = new AnchorPane();
         TableImg = new ImageView();
 //        PlayerTable = new TableView();
         TableView<Player> PlayerTable = new TableView<Player>();
@@ -853,7 +874,8 @@ public class TicTacToe extends Application implements Serializable {
      
     public AnchorPane ScreenSingleMode()
     {
-         GameImg = new ImageView();
+        ScreenSingleMode = new AnchorPane();
+        GameImg = new ImageView();
         exit = new Button();
         recordGame = new Button();
         bt1 = new Button();
@@ -867,6 +889,13 @@ public class TicTacToe extends Application implements Serializable {
         bt9 = new Button();
         playerScore = new Label();
         computerScore = new Label();
+        
+        playerName = new Label();
+        computerName = new Label();
+        scoreSeperator = new Label();
+        username = getusername();
+        
+        
 
         ScreenSingleMode.setMaxHeight(USE_PREF_SIZE);
         ScreenSingleMode.setMaxWidth(USE_PREF_SIZE);
@@ -879,7 +908,6 @@ public class TicTacToe extends Application implements Serializable {
         GameImg.setFitHeight(540.0);
         GameImg.setFitWidth(642.0);
         GameImg.setPickOnBounds(true);
-//        GameImg.setImage(new Image(getClass().getResource("../../../Project/Img/image123.jpg").toExternalForm()));
         try {
             FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\image.jpg");
             Image image = new Image(stream);
@@ -965,17 +993,36 @@ public class TicTacToe extends Application implements Serializable {
         bt9.setPrefHeight(89.0);
         bt9.setPrefWidth(95.0);
 
-        playerScore.setLayoutX(122.0);
-        playerScore.setLayoutY(14.0);
-        playerScore.setText("Player Name");
-        playerScore.setTextFill(javafx.scene.paint.Color.WHITE);
-        playerScore.setFont(new Font(18.0));
+        playerName.setLayoutX(122.0);
+        playerName.setLayoutY(5.0);
+        playerName.setText(username);
+        playerName.setTextFill(javafx.scene.paint.Color.WHITE);
+        playerName.setFont(Font.font("Javanese Text", FontWeight.BOLD, 20));
 
-        computerScore.setLayoutX(390.0);
-        computerScore.setLayoutY(14.0);
-        computerScore.setText("Computer");
+        computerName.setLayoutX(390.0);
+        computerName.setLayoutY(5.0);
+        computerName.setText("Computer");
+        computerName.setTextFill(javafx.scene.paint.Color.WHITE);
+        computerName.setFont(Font.font("Javanese Text", FontWeight.BOLD, 20));
+        
+        playerScore.setLayoutX(140.0);
+        playerScore.setLayoutY(50.0);
+        playerScore.setText(String.valueOf(playerScoreCounter));
+        playerScore.setTextFill(javafx.scene.paint.Color.WHITE);
+        playerScore.setFont(Font.font("Engravers MT", FontWeight.BOLD, 36));
+
+        scoreSeperator.setLayoutX(300.0);
+        scoreSeperator.setLayoutY(14.0);
+        scoreSeperator.setPrefWidth(28.0);
+        scoreSeperator.setText(":");
+        scoreSeperator.setTextFill(javafx.scene.paint.Color.WHITE);
+        scoreSeperator.setFont(Font.font("Engravers MT", FontWeight.BOLD, 36));
+
+        computerScore.setLayoutX(410.0);
+        computerScore.setLayoutY(50.0);
+        computerScore.setText(String.valueOf(computerScoreCounter));
+        computerScore.setFont(Font.font("Engravers MT", FontWeight.BOLD, 36));
         computerScore.setTextFill(javafx.scene.paint.Color.WHITE);
-        computerScore.setFont(new Font(18.0));
 
         ScreenSingleMode.getChildren().add(GameImg);
         ScreenSingleMode.getChildren().add(exit);
@@ -991,9 +1038,313 @@ public class TicTacToe extends Application implements Serializable {
         ScreenSingleMode.getChildren().add(bt9);
         ScreenSingleMode.getChildren().add(playerScore);
         ScreenSingleMode.getChildren().add(computerScore);
+        ScreenSingleMode.getChildren().add(playerName);
+        ScreenSingleMode.getChildren().add(computerName);
+        ScreenSingleMode.getChildren().add(scoreSeperator);
+        
+        
+        playerScoreCounter = 0;
+        computerScoreCounter = 0;
+        recordedPositions = new String[9];
+        gameFlag = true;
+        symbol = "X";
+        buttons = new Button[9];
+        
+        buttons[0] = bt1;
+        buttons[1] = bt2;
+        buttons[2] = bt3;
+        buttons[3] = bt4;
+        buttons[4] = bt5;
+        buttons[5] = bt6;
+        buttons[6] = bt7;
+        buttons[7] = bt8;
+        buttons[8] = bt9;
+        for (index = 0; index < 9; index++) {
+            buttons[index].setFont(Font.font("Engravers MT", FontWeight.BOLD, 36));
+        }
+
+        bt1.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if (gameFlag) {
+                    bt1.setText(symbol);
+                    bt1.setDisable(true);
+                    if (symbol == "X") {
+                        playerXpositions.add(1);
+                        symbol = "O";
+                        if (checkWinner() == "X") {
+                            highLightWinner(playerXpositions);
+                            gameFlag = false;
+                            playerScoreCounter++;
+                            updateScore();
+                        } else if (checkWinner() == "tie") {
+                            drawTie();
+                            gameFlag = false;
+                            updateScore();
+                        } else {
+                            playComputerMove();
+                        }
+                    }
+                }
+            }
+
+        });
+        bt2.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if (gameFlag) {
+                    bt2.setText(symbol);
+                    bt2.setDisable(true);
+                    if (symbol == "X") {
+
+                        playerXpositions.add(2);
+                        symbol = "O";
+                        if (checkWinner() == "X") {
+                            highLightWinner(playerXpositions);
+                            gameFlag = false;
+                            playerScoreCounter++;
+                            updateScore();
+                        } else if (checkWinner() == "tie") {
+                            drawTie();
+                            gameFlag = false;
+                            updateScore();
+                        } else {
+                            playComputerMove();
+                        }
+                    }
+                }
+            }
+
+        });
+        bt3.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if (gameFlag) {
+                    bt3.setText(symbol);
+                    bt3.setDisable(true);
+                    if (symbol == "X") {
+                        playerXpositions.add(3);
+                        symbol = "O";
+                        if (checkWinner() == "X") {
+                            highLightWinner(playerXpositions);
+                            gameFlag = false;
+                            playerScoreCounter++;
+                            updateScore();
+                        } else if (checkWinner() == "tie") {
+                            bt3.setText("Tie");
+                            drawTie();
+                            gameFlag = false;
+                            updateScore();
+                        } else {
+                            playComputerMove();
+                        }
+                    }
+                }
+            }
+
+        });
+        bt4.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if (gameFlag) {
+                    bt4.setText(symbol);
+                    bt4.setDisable(true);
+                    if (symbol == "X") {
+
+                        playerXpositions.add(4);
+                        symbol = "O";
+                        if (checkWinner() == "X") {
+                            highLightWinner(playerXpositions);
+                            gameFlag = false;
+                            playerScoreCounter++;
+                            updateScore();
+                        } else if (checkWinner() == "tie") {
+                            bt4.setText("Tie");
+                            drawTie();
+                            gameFlag = false;
+                            updateScore();
+                        } else {
+                            playComputerMove();
+                        }
+                    }
+                }
+            }
+
+        });
+        bt5.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if (gameFlag) {
+                    bt5.setText(symbol);
+                    bt5.setDisable(true);
+                    if (symbol == "X") {
+
+                        playerXpositions.add(5);
+                        symbol = "O";
+                        if (checkWinner() == "X") {
+                            highLightWinner(playerXpositions);
+                            gameFlag = false;
+                            playerScoreCounter++;
+                            updateScore();
+                        } else if (checkWinner() == "tie") {
+                            bt5.setText("Tie");
+                            drawTie();
+                            updateScore();
+                        } else {
+                            playComputerMove();
+                        }
+                    }
+                }
+            }
+
+        });
+        bt6.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if (gameFlag) {
+                    bt6.setText(symbol);
+                    bt6.setDisable(true);
+                    if (symbol == "X") {
+
+                        playerXpositions.add(6);
+                        symbol = "O";
+                        if (checkWinner() == "X") {
+                            highLightWinner(playerXpositions);
+                            gameFlag = false;
+                            playerScoreCounter++;
+                            updateScore();
+                        } else if (checkWinner() == "tie") {
+                            bt6.setText("Tie");
+                            drawTie();
+                            gameFlag = false;
+                            updateScore();
+                        } else {
+                            playComputerMove();
+                        }
+                    }
+                }
+            }
+
+        });
+        bt7.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if (gameFlag) {
+                    bt7.setText(symbol);
+                    bt7.setDisable(true);
+                    if (symbol == "X") {
+
+                        playerXpositions.add(7);
+                        symbol = "O";
+                        if (checkWinner() == "X") {
+                            highLightWinner(playerXpositions);
+                            gameFlag = false;
+                            playerScoreCounter++;
+                            updateScore();
+                        } else if (checkWinner() == "tie") {
+                            bt7.setText("Tie");
+                            drawTie();
+                            gameFlag = false;
+                            updateScore();
+                        } else {
+                            playComputerMove();
+                        }
+                    }
+                }
+            }
+
+        });
+        bt8.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if (gameFlag) {
+                    bt8.setText(symbol);
+                    bt8.setDisable(true);
+                    if (symbol == "X") {
+
+                        playerXpositions.add(8);
+                        symbol = "O";
+                        if (checkWinner() == "X") {
+                            highLightWinner(playerXpositions);
+                            gameFlag = false;
+                            playerScoreCounter++;
+                            updateScore();
+                        } else if (checkWinner() == "tie") {
+                            bt8.setText("Tie");
+                            drawTie();
+                            gameFlag = false;
+                            updateScore();
+                        } else {
+                            playComputerMove();
+                        }
+                    }
+                }
+            }
+
+        });
+        bt9.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if (gameFlag) {
+                    bt9.setText(symbol);
+                    bt9.setDisable(true);
+                    if (symbol == "X") {
+
+                        playerXpositions.add(9);
+                        symbol = "O";
+                        if (checkWinner() == "X") {
+                            highLightWinner(playerXpositions);
+                            gameFlag = false;
+                            playerScoreCounter++;
+                            updateScore();
+                        } else if (checkWinner() == "tie") {
+                            bt9.setText("Tie");
+                            drawTie();
+                            gameFlag = false;
+                            updateScore();
+
+                        } else {
+                            playComputerMove();
+                        }
+                    }
+                }
+            }
+
+        });
+
+
+        recordGame.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if (!gameFlag) {
+                    playAgain();
+                } else {
+                    recordPositions();
+                    drawXO();
+                }
+
+            }
+
+        });
+        
+                exit.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+              
+               ScreenThree().getChildren().clear();
+               exit.getScene().setRoot(ScreenThree()); 
+;
+            }
+
+        });
+
+        playerName.setText(username);       
         
         return ScreenSingleMode;
     }
+
+
      
     public void messageHandelr(Player p) {
         
@@ -1081,6 +1432,173 @@ public class TicTacToe extends Application implements Serializable {
         }
     }
     
+    /************************************Game methods********************************************************************************/
+        String checkWinner() {
+        String winner = null;
+        //winning conditions
+        List topRow = Arrays.asList(1, 2, 3);
+        List midRow = Arrays.asList(4, 5, 6);
+        List botRow = Arrays.asList(7, 8, 9);
+
+        List liftCol = Arrays.asList(1, 4, 7);
+        List midtCol = Arrays.asList(2, 5, 8);
+        List righCol = Arrays.asList(3, 6, 9);
+
+        List cross1 = Arrays.asList(1, 5, 9);
+        List cross2 = Arrays.asList(3, 5, 7);
+
+        List<List> winning = new ArrayList<List>();
+
+        winning.add(topRow);
+        winning.add(midRow);
+        winning.add(botRow);
+        winning.add(liftCol);
+        winning.add(midtCol);
+        winning.add(righCol);
+        winning.add(cross1);
+        winning.add(cross2);
+
+        for (List winningComp : winning) {
+
+            if (playerXpositions.containsAll(winningComp)) {
+                winner = "X";
+                playerXpositions.clear();
+                playerXpositions.addAll(winningComp);
+            } else if (playerOpositions.containsAll(winningComp)) {
+                winner = "O";
+                playerOpositions.clear();
+                playerOpositions.addAll(winningComp);
+            } else if (playerXpositions.size() + playerOpositions.size() == 9) {
+                winner = "tie";
+            }
+        }
+        return winner;
+    }
+
+    void highLightWinner(ArrayList<Integer> winner) {
+        // will take the winner position and highlight each button equl to this position
+
+        for (int i = 0; i < 9; i++) {
+            if (i + 1 == (int) winner.get(0) || i + 1 == (int) winner.get(1) || i + 1 == (int) winner.get(2)) {
+                buttons[i].setStyle("-fx-background-color: #128dba");
+            }
+        }
+    }
+
+    String[] recordPositions() {
+        // save the value of each buttons of the 9'th, X or O or bull
+        recordedPositions = new String[9];
+        for (int index = 0; index < 9; index++) {
+            recordedPositions[index] = buttons[index].getText();
+        }
+        return recordedPositions;
+    }
+
+    void drawOldPositions(String[] positions) {
+        // will append symbol, and disable  buttons according to  last saved
+        for (int index = 0; index < 9; index++) {
+
+            if (positions[index] != null) {
+                buttons[index].setText(positions[index]);
+                buttons[index].setDisable(true);
+                if (positions[index] == "X") {
+                    playerXpositions.add(index + 1);
+                } else {
+                    playerOpositions.add(index + 1);
+                }
+            }
+        }
+
+        //change the symbol to the right turn
+        if (playerXpositions.size() > playerOpositions.size()) {
+            symbol = "O";
+            playComputerMove();
+        }
+
+    }
+
+    void drawTie() {
+        for (Button btn : buttons) {
+            btn.setText("Tie");
+        }
+    }
+
+    void drawXO() {
+        for (String str : recordedPositions) {
+            System.out.println(str);
+        }
+    }
+
+    int computerMove() {
+        Random random = new Random();
+        int cpuPosition = random.nextInt(9) + 1;
+        // make sure that this position is not taken before
+        while (playerXpositions.contains(cpuPosition) || playerOpositions.contains(cpuPosition)) {
+            cpuPosition = random.nextInt(9) + 1;
+        }
+        return cpuPosition;
+    }
+
+    void drawCpuMove(int movePosition) {
+        movePosition--; // to indecate the index of the button
+        for (int index = 0; index < 9; index++) {
+            if (index == movePosition) {
+                buttons[index].setText(symbol);
+                buttons[index].setDisable(true);
+            }
+        }
+    }
+
+    void playComputerMove() {
+        if (gameFlag) {
+            move = computerMove();
+            playerOpositions.add(move);
+            drawCpuMove(move);
+            symbol = "X";
+            if (checkWinner() == "O") {
+                highLightWinner(playerOpositions);
+                gameFlag = false;
+                computerScoreCounter++;
+                updateScore();
+            } else if (checkWinner() == "tie") {
+                drawTie();
+                updateScore();
+            }
+        }
+    }
+
+    private void playAgain() {
+        recordGame.setText("Record Game");
+        gameFlag = true;
+        symbol = "X";
+        playerXpositions.clear();
+        playerOpositions.clear();
+        for (Button btn : buttons) {
+            btn.setText("");
+            //btn.setStyle("-fx-background-color: #D2691E ");
+            btn.setDisable(false);
+
+            // reset the old style
+            Button tmpButton = new Button();
+            btn.setStyle(tmpButton.getStyle());
+        }
+    }
+
+    public static void setPlayerName(String playerName) {
+
+        username = playerName;
+    }
+
+    public static String getPlayerName() {
+
+        return username;
+    }
+
+    private void updateScore() {
+        playerScore.setText(String.valueOf(playerScoreCounter));
+        computerScore.setText(String.valueOf(computerScoreCounter));
+        recordGame.setText("Play Again!");
+    }
    
     
     @Override
@@ -1093,7 +1611,7 @@ public class TicTacToe extends Application implements Serializable {
 
             try {
                 //creating the image object
-                InputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\icon.png");
+                InputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\xo.png");
                 Image image = new Image(stream);
                 //Creating the image view
                 ImageView imageView = new ImageView();
