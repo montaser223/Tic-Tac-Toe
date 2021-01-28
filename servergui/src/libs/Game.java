@@ -12,39 +12,38 @@ import java.util.ArrayList;
  *
  * @author abobakr
  */
-public class Game implements Serializable {
+public class Game  implements Serializable {
     
     public static final String X_MOVE = "X";
     public static final String O_MOVE = "O";
     public static final String DRAW = "draw";
     public static final String GAME_OVER = "gameOver";
-    private String gameRequest;
+    
 
-    private String[] gamePosition;
+    private String[] recordedgamePosition;
     private String nextMove;
     private String winner;
     private String playedMove;
-    private int position;
+    private Long position;
+    private String request;
+    private String message;
+    
    
 
     
     
 
   
-    public Game(){
-        this.gamePosition = new String[9]; ;
-        nextMove = Game.X_MOVE;
-    }
+    public Game(){}
     
     public Game(String[] position){
-        this.gamePosition = position;
-        nextMove = Game.X_MOVE;
+        this.recordedgamePosition = position;
     }
-    public void setGamePosition(String[] position){
-        this.gamePosition = position;
+    public void setRecordedGamePosition(String[] position){
+        this.recordedgamePosition = position;
     }
-    public String[] getGamePosition(){
-        return gamePosition;
+    public String[] getRecordedGamePosition(){
+        return recordedgamePosition;
     }
     
     public String getNextMove() {
@@ -63,12 +62,12 @@ public class Game implements Serializable {
     }
     
     
-    public String getGameRequest() {
-        return gameRequest;
+    public String getRequest() {
+        return request;
     }
 
-    public void setGameRequest(String gameRequest) {
-        this.gameRequest = gameRequest;
+    public void setRequest(String request) {
+        this.request = request;
     }
     
     
@@ -82,12 +81,22 @@ public class Game implements Serializable {
         this.playedMove = playedMove;
     }
     
-    public int getPosition() {
+    public Long getPosition() {
         return position;
     }
 
-    public void setPosition(int position) {
+    public void setPosition(Long position) {
         this.position = position;
     }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+    
+    
     
 }

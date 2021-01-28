@@ -18,7 +18,9 @@ import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import org.json.simple.*;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  *
@@ -28,13 +30,15 @@ public class ClientHandler extends Thread implements Serializable {
 
 
     private static Vector<ClientHandler> clients = new Vector<ClientHandler>();
-    private ObjectInputStream readObj;
-    private ObjectOutputStream writeObj;
+    private DataInputStream inStream;
+    private PrintStream outStream;
     private XoDataBase database;
     private volatile boolean connected;
+    private JSONObject obj;
+    private JSONParser parser;
 
     public static HashMap<String, ClientHandler> connectedPlayers = new HashMap<String, ClientHandler>();
-    
+    public static Game gameHandlerRequest = null;
     
     ClientHandler(Socket socket) {
         
@@ -42,12 +46,13 @@ public class ClientHandler extends Thread implements Serializable {
             
             System.out.println("Player connected");
             database = new XoDataBase();
-            writeObj = new ObjectOutputStream(socket.getOutputStream());
-            readObj = new ObjectInputStream(socket.getInputStream());
+            outStream = new PrintStream(socket.getOutputStream());
+            inStream = new DataInputStream(socket.getInputStream());
+            parser = new JSONParser();
             connected = true;
             start();
-            System.out.println("Sending the object to the game handler");
-            new GameHandler(readObj, writeObj);
+            
+            
 
         } catch (IOException ex) {
             Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
@@ -56,19 +61,78 @@ public class ClientHandler extends Thread implements Serializable {
         }
     }
 
-    private void messageHandler(Player newPlayer) {
+    @Override
+    public void run() {
         
-        switch (newPlayer.getRequest()) {
-            case "login":
-                login(newPlayer);
+        while (connected) {
+            try {
+                
+                obj = (JSONObject) parser.parse(inStream.readLine());
+                System.out.println("Clinet hander receved a move");
+                messageHandler(obj);
+                
+                
+            } catch (IOException ex) {
+                System.out.println(ex.getMessage());
+            } catch (ParseException ex) {
+                Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    private void messageHandler(JSONObject message) {
+        
+        System.out.println("Message Hanlder receve: " + (String) message.get("request"));
+        switch ((String) message.get("request")) {
+            case Request.LOGIN:
+                
+                login(JsonConverter.fromJsonToPlayer(message));
                 break;
-            case "logout":
-                logout(newPlayer);
+            case Request.LOGOUT:
+                logout(JsonConverter.fromJsonToPlayer(message));
+                break;
+            case Request.START_GAME:
+                startGame();
+                break;
+               
+            case Request.GAME_MOVE:
+            case Request.GAME_PLAYAGAIN:
+            case Request.Chat_Message:
+                System.out.println(message);
+                sendRequestToGameHandler(JsonConverter.fromJsonToGame(message));
                 break;
 
         }
     }
 
+    private void startGame(){
+        System.out.println("Sending start game to game handler");
+        new GameHandler(this);
+    }
+    
+    
+    private void sendRequestToGameHandler(Game newGame){
+        
+        System.out.println("Sending  gameMove to game handler");
+        gameHandlerRequest = newGame;
+        
+    }
+    
+//    public JSONObject getForwardedRequest(){
+//        JSONObject result = forwardedRequest;
+//        forwardedRequest = null;
+//        return result;
+//    }
+    
+    public static Game getGameHandlerRequest(){
+        Game tmp = gameHandlerRequest;
+        gameHandlerRequest = null;
+        return tmp;
+    }
+    
+    public static void setGameHandlerRequest(Game game){
+        gameHandlerRequest = game;
+    }
     void logOut(String _un) {
 //        int index = getIndex(_un);
 //        if (index > -1) {
@@ -100,11 +164,12 @@ public class ClientHandler extends Thread implements Serializable {
 
     private void sendMsg(Player player){
         
-        try {
-            this.writeObj.writeObject(player);
-        } catch (IOException ex) {
-            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        this.outStream.println(player);
+    }
+    
+    public void sendMsg(String game){
+        
+        this.outStream.println(game);
     }
     
     private void login(Player newPlayer) {
@@ -142,22 +207,5 @@ public class ClientHandler extends Thread implements Serializable {
         
     }
 
-    @Override
-    public void run() {
-        
-        while (connected) {
-            try {
-                
-                Player p2 = (Player) readObj.readObject();
-                
-                messageHandler(p2);
-                
-                
-            } catch (IOException ex) {
-                System.out.println(ex.getMessage());
-            } catch (ClassNotFoundException ex) {
-                System.out.println(ex.getMessage());
-            }
-        }
-    }
+    
 }

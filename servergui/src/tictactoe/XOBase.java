@@ -74,7 +74,7 @@ public class XOBase extends AnchorPane implements Serializable{
     private Button[] buttons;
     private String[] recordedPositions;
     
-    
+    private Game gameMessages;
     private Game myGame;
     private String mySymbol;
     private volatile boolean connected;
@@ -206,13 +206,12 @@ public class XOBase extends AnchorPane implements Serializable{
     }
     
    
-    private void updateBoard(int buttonsPosition){
+    private void updateBoard(Long buttonsPosition){
         
         System.out.println("is  game turn " + currentMove + " == " + mySymbol);
                 
                 if(mySymbol.equalsIgnoreCase(currentMove)){
-                    
-                    buttons[buttonsPosition-1].setDisable(true);
+                    buttons[buttonsPosition.intValue()-1].setDisable(true);
                     
                     if(currentMove.equalsIgnoreCase(Game.X_MOVE)){
                         
@@ -223,6 +222,7 @@ public class XOBase extends AnchorPane implements Serializable{
                             myGame.setNextMove(Game.GAME_OVER); 
                             myGame.setPosition(buttonsPosition);
                             sendGameMove(Request.GAME_MOVE);
+                            
                         }else if(checkWinner() == Game.DRAW){
                             drawTie();
                             myGame.setPlayedMove(currentMove);
@@ -237,6 +237,7 @@ public class XOBase extends AnchorPane implements Serializable{
                         }
                     }
                     else{
+                        
                         if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
                             myGame.setWinner(Game.O_MOVE);
                             myGame.setPlayedMove(currentMove);
@@ -261,60 +262,98 @@ public class XOBase extends AnchorPane implements Serializable{
                 }
     }
     
-    private void sendGameMove(String gameRequest){
+    private void sendGameMessage(String gameMessage){
         
-        
-        int position = myGame.getPosition();
-        String playedMove = myGame.getPlayedMove(); //myGame.getSymbol();
-        System.out.println("Sending->" + playedMove + " to position " + position);
-        
-        myGame.setGameRequest(gameRequest);
-        this.outStream.println(new Gson().toJson(myGame));
+        gameMessages.setRequest(gameMessage);
+        JSONObject obj = JsonConverter.fromGameToJson(gameMessages);
+        this.outStream.println(obj.toString());
     }
     
-    private void receiveGameMove(){
+    private void sendGameMove(String gameRequest){
         
-        if(myGame.getGameRequest().equalsIgnoreCase(Request.GAME_PLAYAGAIN)){
-            resetBoard();
-        }else{
-            System.out.println("game receved");
-            drawAndSaveMove(myGame.getPosition(), myGame.getPlayedMove());
+        myGame.setRequest(gameRequest);
+        JSONObject obj = JsonConverter.fromGameToJson(myGame);
+        System.out.println("Sending move to handlers " + "+ chat message: ");
+        this.outStream.println(obj.toString());
+    }
+    
+    private void receiveGameMove(Game gameMove){
+        
+        
+        if(gameMove.getRequest().equalsIgnoreCase(Request.Chat_Message)){
+            gameMessages = gameMove;
+            appendMessage();
+        }
+        else{
+            myGame = gameMove;
+            
+            if(myGame.getRequest().equalsIgnoreCase(Request.GAME_PLAYAGAIN)){
+                resetBoard();
+            }else{
+            
+                drawAndSaveMove(myGame.getPosition(), myGame.getPlayedMove());
+                currentMove = myGame.getNextMove();
+            
+             if(checkWinner().equalsIgnoreCase(Game.X_MOVE)){
+                    highLightWinner(playerXpositions);
+                    updateScore();
+                }else if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
+                    highLightWinner(playerOpositions);
+                    updateScore();
+                }else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
+                    drawTie();
+                    updateScore();
+                }
+            
+        }
+            
+            
+            
+            
         }
         
         
         
-        if(checkWinner().equalsIgnoreCase(Game.X_MOVE)){
-            highLightWinner(playerXpositions);
-            updateScore();
-        }else if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
-             highLightWinner(playerOpositions);
-             updateScore();
-        }else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
-            drawTie();
-            updateScore();
-        }
+        
+        
+        
         
         // should send the updated score??? i think no because this is broad cast
     }
     
-    private void drawAndSaveMove(int position,String playedMove){
+    private void drawAndSaveMove(Long position,String playedMove){
         
-        buttons[position-1].setText(playedMove);
-        buttons[position-1].setDisable(true);
+        buttons[position.intValue()-1].setText(playedMove);
+        buttons[position.intValue()-1].setDisable(true);
         
         if(playedMove.equalsIgnoreCase(Game.X_MOVE)){
             
-            playerXpositions.add(position);
-            System.out.println("adding x int posi " + position);
+            System.out.println("adding position in x " + position.intValue());
+            playerXpositions.add(position.intValue());
             
         }else{
-            
-            playerOpositions.add(position);
-            System.out.println("adding o int posi " + position);
+            System.out.println("adding position in o " + position.intValue());
+            playerOpositions.add(position.intValue());
         }
         
         
         
+    }
+    
+    private void sendChat(){
+        
+        gameMessages = new Game();
+        gameMessages.setMessage(messageField.getText());
+        sendGameMessage(Request.Chat_Message);
+        messageField.clear();
+        
+    }
+    
+    private void appendMessage(){
+        
+        if(!gameMessages.getMessage().equalsIgnoreCase(null)){
+            chatArea.appendText(gameMessages.getMessage() + "\n");
+        }
     }
     
     private void startGame(){
@@ -328,6 +367,13 @@ public class XOBase extends AnchorPane implements Serializable{
                     socket = new Socket("127.0.0.1", 5005);
                     outStream = new PrintStream(socket.getOutputStream());
                     inStream = new DataInputStream(socket.getInputStream());
+                    
+//                    JSONObject obj = new JSONObject();
+//                    obj.put("request", Request.START_GAME );
+////                    obj.put("object", myGame);
+//                      outStream.println(obj.toString());
+                    sendGameMove(Request.START_GAME);
+                    
                     
                     // receve the symbol 
                     myGame =  new Gson().fromJson(inStream.readLine(), Game.class);
@@ -346,22 +392,14 @@ public class XOBase extends AnchorPane implements Serializable{
                     try {
                         
                         
-                        System.out.println("While: waiting for obj from gameHandler");
-                        String obj = inStream.readLine();
-                        myGame =  new Gson().fromJson(obj, Game.class);
+//                        String obj = inStream.readLine();
 
-                        System.out.println("receving game obj from game Handler");
+                        Game tmp = new Gson().fromJson(inStream.readLine(), Game.class);
                         
-                        currentMove = myGame.getNextMove();
-                        System.out.println(" this is " + currentMove + " turn");
-                        
-                        int position = myGame.getPosition();
-                        String playedMove  = myGame.getPlayedMove();
-                        System.out.println("location of " + playedMove + " = " +  position);
-
-                          Platform.runLater(() -> {
-                              receiveGameMove();
+                        Platform.runLater(() -> {
+                              receiveGameMove(tmp);
                           });
+                        
                         
                     } catch (IOException ex) {
                         System.out.println(ex.getMessage());
@@ -373,6 +411,8 @@ public class XOBase extends AnchorPane implements Serializable{
         th.start();
         
     }
+    
+    
     
     public XOBase() {
         
@@ -425,15 +465,16 @@ public class XOBase extends AnchorPane implements Serializable{
         bt1.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                
-                updateBoard(1);
+                Long buttonPosition = 1l;
+                updateBoard(buttonPosition);
             }
         
         });
         bt2.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                updateBoard(2);
+                Long buttonPosition = 2l;
+                updateBoard(buttonPosition);
             }
             
         
@@ -442,7 +483,8 @@ public class XOBase extends AnchorPane implements Serializable{
         bt3.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                updateBoard(3);
+                Long buttonPosition = 3l;
+                updateBoard(buttonPosition);
             }
         
         
@@ -450,7 +492,8 @@ public class XOBase extends AnchorPane implements Serializable{
         bt4.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                updateBoard(4);
+                Long buttonPosition = 4l;
+                updateBoard(buttonPosition);
             }
         
         
@@ -458,7 +501,8 @@ public class XOBase extends AnchorPane implements Serializable{
         bt5.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                updateBoard(5);
+                Long buttonPosition = 5l;
+                updateBoard(buttonPosition);
             }
         
         
@@ -466,7 +510,8 @@ public class XOBase extends AnchorPane implements Serializable{
         bt6.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                updateBoard(6);
+                Long buttonPosition = 6l;
+                updateBoard(buttonPosition);
             }
         
         
@@ -474,7 +519,8 @@ public class XOBase extends AnchorPane implements Serializable{
         bt7.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                updateBoard(7);
+                Long buttonPosition = 7l;
+                updateBoard(buttonPosition);
             }
         
         
@@ -482,7 +528,8 @@ public class XOBase extends AnchorPane implements Serializable{
         bt8.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                updateBoard(8);
+                Long buttonPosition = 8l;
+                updateBoard(buttonPosition);
             }
         
         
@@ -490,7 +537,8 @@ public class XOBase extends AnchorPane implements Serializable{
         bt9.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
-                updateBoard(9);
+                Long buttonPosition = 9l;
+                updateBoard(buttonPosition);
             }
         
         
@@ -654,10 +702,19 @@ public class XOBase extends AnchorPane implements Serializable{
         sendMsg.setMnemonicParsing(false);
         sendMsg.setText("Send");
 
+        sendMsg.setOnAction(new EventHandler<ActionEvent> () {
+            @Override
+            public void handle(ActionEvent event) {
+                sendChat();
+            }
+        
+        });
+        
         recordGame.setLayoutX(14.0);
         recordGame.setLayoutY(545.0);
         recordGame.setMnemonicParsing(false);
         recordGame.setText("Record Game");
+        
         recordGame.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
@@ -684,7 +741,6 @@ public class XOBase extends AnchorPane implements Serializable{
             
             @Override
             public void handle(ActionEvent event) {
-            System.out.println("inside exit button");   
              try {
                     socket.close();
                     inStream.close();

@@ -14,6 +14,26 @@ import java.io.Serializable;
 public class Player implements Serializable{
 
     String username, password, firstname, lastname, state, scour, request, respond;
+    
+    
+    
+    public Player() {
+         
+    }
+    public Player(String _username, String _password) {
+        username = _username;
+        password = _password;
+        request = Request.LOGIN;
+    }
+    
+    public Player(String _username, String _password, String _firstname, String _lastname) {
+        username = _username;
+        password = _password;
+        firstname = _firstname;
+        lastname = _lastname;
+        request = Request.SIGNUP;
+    }
+    
 
     public String getFirstname() {
         return firstname;
@@ -23,11 +43,7 @@ public class Player implements Serializable{
         return lastname;
     }
 
-     public Player(String _username, String _password) {
-        username = _username;
-        password = _password;
-        request = Request.LOGIN;
-    }
+     
 
     public void setFirstname(String firstname) {
         this.firstname = firstname;
@@ -37,13 +53,7 @@ public class Player implements Serializable{
         this.lastname = lastname;
     }
 
-    public Player(String _username, String _password, String _firstname, String _lastname) {
-        username = _username;
-        password = _password;
-        firstname = _firstname;
-        lastname = _lastname;
-        request = Request.SIGNUP;
-    }
+    
 
     public void setUsername(String username) {
         this.username = username;

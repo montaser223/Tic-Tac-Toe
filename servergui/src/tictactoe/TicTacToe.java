@@ -18,29 +18,25 @@ import javafx.stage.Stage;
  *
  * @author abobakr
  */
-public class TicTacToe extends Application implements Serializable{
+public class TicTacToe extends Application implements Serializable {
 
     BorderPane border;
-    Button[] buttos;   
-    
-    
-    
-    
+    Button[] buttos;
+
     @Override
     public void start(Stage stage) {
         Parent root = new XOBase();
         Scene scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
-        
+
     }
 
     /**
      * @param args the command line arguments
      */
-    
     public static void main(String[] args) {
         launch(args);
     }
-    
+
 }

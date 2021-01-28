@@ -29,16 +29,16 @@ import org.json.simple.parser.ParseException;
 
 public class GameHandler extends Thread  implements Serializable{
     
-
-    private static Vector<GameHandler> players = new Vector<GameHandler>();
-    
-    private Game game;
-    
-    private ObjectInputStream readObj;
-    private ObjectOutputStream writeObj;
     
     private XoDataBase database;
-    private volatile boolean connected;
+
+    private static Vector<ClientHandler> players = new Vector<ClientHandler>();
+    
+    private  volatile Game gameRequest;
+    
+   
+    
+    private volatile boolean isGameRunning;
     
     private  static String symbol = Game.X_MOVE;
     
@@ -49,74 +49,24 @@ public class GameHandler extends Thread  implements Serializable{
     
     
     
-    GameHandler(ObjectInputStream readObj, ObjectOutputStream writeObj) {
+    
+    GameHandler(ClientHandler player) {
+        
+        gameRequest = new Game();
         System.out.println(" game handler constructor");
-        this.readObj = readObj;
-        this.writeObj = writeObj;
-        game = new Game();
-        
-        if(symbol == Game.X_MOVE){
-            
-            
-            game.setNextMove(symbol); // first player will take the symbol x
-            
-            players.add(this);  // adding player to the list
-            
-            System.out.println(" game handler: adding the first player" );
-            // send the sybol for the player to use it for the rest of the game
-            System.out.println(" sending symbol" + symbol + " to first player");
-            outStream.println(new Gson().toJson(game));
-            symbol = Game.O_MOVE;
-            
-            
-            
-        }else{
-            // second player will take O
-            System.out.println(" game handler: adding the second player" );
-            game.setNextMove(symbol);
-            players.add(this);
-            
-            // send the sybol for the player to use it for the rest of the game
-            
-            System.out.println(" sending symbol" + symbol + " to socend player");
-            outStream.println(new Gson().toJson(game));
-            symbol = Game.X_MOVE;
-            
-            
-        }
-        
-        connected = true;
-        System.out.println("start thread");
-        start();
-    }
-    
-    
-    
-    
-    
-    GameHandler(Socket socket) {
-        this.socket = socket;
-        game = new Game();
-        System.out.println(" game handler constructor");
-        try {
-            inStream = new DataInputStream(socket.getInputStream());
-            outStream = new PrintStream(socket.getOutputStream());
-        } catch (IOException ex) {
-            Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
+//        
         
         
         if(symbol == Game.X_MOVE){
             
             // first player will take the symbol x
-            game.setNextMove(symbol);
-            players.add(this);  // adding player to the list
+            gameRequest.setNextMove(symbol);
+            players.add(player);  // adding player to the list
             
             System.out.println(" game handler: adding the first player" );
             // send the sybol for the player to use it for the rest of the game
             System.out.println(" sending symbol" + symbol + " to first player");
-            outStream.println(new Gson().toJson(game));
+            player.sendMsg(new Gson().toJson(gameRequest));
             symbol = Game.O_MOVE;
             
             
@@ -124,73 +74,79 @@ public class GameHandler extends Thread  implements Serializable{
         }else{
             // second player will take O
             System.out.println(" game handler: adding the second player" );
-//            game.setSymbol(symbol);
-            game.setNextMove(symbol);
-            players.add(this);
+            System.out.println("The symol is = " + symbol);
+            gameRequest.setNextMove(symbol);
+            System.out.println("The symol inside the object  = " + gameRequest.getNextMove());
+            players.add(player);
             
             // send the sybol for the player to use it for the rest of the game
             
             System.out.println(" sending symbol" + symbol + " to socend player");
-            outStream.println(new Gson().toJson(game));
+            player.sendMsg(new Gson().toJson(gameRequest));
             symbol = Game.X_MOVE;
             
             
         }
         
-        connected = true;
+        isGameRunning = true;
+        gameRequest = null;
         System.out.println("start thread");
         start();
     }
-   
+    
     @Override
     public void run() {
 //        super.run(); //To change body of generated methods, choose Tools | Templates.
 
-        while(connected){
+        while(isGameRunning){
             
+            
+                System.out.print("");
+                gameRequest = ClientHandler.getGameHandlerRequest();
                 
-                System.out.println("inside the thread waiting move ");
-                String obj;
-            try {
-                
-                
-                obj = inStream.readLine();
-                System.out.println("receved move from player");
-                if(obj == null){
-                    
-                    System.out.println("breaking the loop");
-                    connected = false;
-                    inStream.close();
-                    outStream.close();
-                    outStream.println("wlecom");
-                    break;
-                }else{
-                    System.out.println(obj);
-                    sendGameMove(obj);
+                if(gameRequest != null){
+                    System.out.println(" Game Handler receved a move ");
+                    sendGameMove(JsonConverter.fromGameToJson(gameRequest).toString());
+//                    resetGameRequests();
                 }
-                
-                System.out.println("11111");
-                
-            } catch (IOException ex) {
-                Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
-                connected = false;
-            }
-                
-                
-
-            
-                
-            
-            
+        }
+       
+    }
+    
+    private void getGameRequest(){
+        
+        gameRequest = ClientHandler.getGameHandlerRequest();
+        
+    }
+    
+    public static void setGameHandlerRequest(Game newGame){
+        
+    }
+     private void resetGameRequests(){
+        while(gameRequest != null){
+            ClientHandler.setGameHandlerRequest(null);
+            gameRequest = null;
         }
     }
     
-    private void sendGameMove(String obj){
+    
+    private void disConnect(){
+        System.out.println("breaking the loop");
+        isGameRunning = false;
+        try {
+            inStream.close();
+        } catch (IOException ex) {
+            Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+                    outStream.close();
+    }
+    
+    public void sendGameMove(String obj){
         
-        for(GameHandler player: players){
+        for(ClientHandler player: players){
             
             System.out.println("Broadcast to all player");
-            player.outStream.println(obj);
+            player.sendMsg(obj);
         }
     }
     
