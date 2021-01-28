@@ -27,6 +27,9 @@ public class Game  implements Serializable {
     private Long position;
     private String request;
     private String message;
+    private String respond;
+    private String playerX;
+    private String playerO;
     
    
 
@@ -96,6 +99,31 @@ public class Game  implements Serializable {
     public String getMessage() {
         return message;
     }
+
+    public void setRespond(String respond) {
+        this.respond = respond;
+    }
+
+    public String getRespond() {
+        return respond;
+    }
+
+    public void setPlayerX(String playerX) {
+        this.playerX = playerX;
+    }
+
+    public void setPlayerO(String playerO) {
+        this.playerO = playerO;
+    }
+
+    public String getPlayerX() {
+        return playerX;
+    }
+
+    public String getPlayerO() {
+        return playerO;
+    }
+    
     
     
     

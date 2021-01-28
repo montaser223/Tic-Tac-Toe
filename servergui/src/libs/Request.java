@@ -22,4 +22,5 @@ public class Request {
     public static final String START_GAME = "startGame";
     public static final String END_GAME = "endGame";
     public static final String Chat_Message = "chatMessage";
+    public static final String RECORD_GAME = "recordGame";
 }

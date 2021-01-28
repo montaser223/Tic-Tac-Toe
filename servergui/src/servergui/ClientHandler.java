@@ -68,7 +68,6 @@ public class ClientHandler extends Thread implements Serializable {
             try {
                 
                 obj = (JSONObject) parser.parse(inStream.readLine());
-                System.out.println("Clinet hander receved a move");
                 messageHandler(obj);
                 
                 
@@ -82,7 +81,6 @@ public class ClientHandler extends Thread implements Serializable {
     
     private void messageHandler(JSONObject message) {
         
-        System.out.println("Message Hanlder receve: " + (String) message.get("request"));
         switch ((String) message.get("request")) {
             case Request.LOGIN:
                 
@@ -101,6 +99,8 @@ public class ClientHandler extends Thread implements Serializable {
                 System.out.println(message);
                 sendRequestToGameHandler(JsonConverter.fromJsonToGame(message));
                 break;
+            case Request.RECORD_GAME:
+                recordGamePosition(JsonConverter.fromJsonToGame(message));
 
         }
     }
@@ -110,19 +110,12 @@ public class ClientHandler extends Thread implements Serializable {
         new GameHandler(this);
     }
     
-    
     private void sendRequestToGameHandler(Game newGame){
         
         System.out.println("Sending  gameMove to game handler");
         gameHandlerRequest = newGame;
         
     }
-    
-//    public JSONObject getForwardedRequest(){
-//        JSONObject result = forwardedRequest;
-//        forwardedRequest = null;
-//        return result;
-//    }
     
     public static Game getGameHandlerRequest(){
         Game tmp = gameHandlerRequest;
@@ -133,6 +126,24 @@ public class ClientHandler extends Thread implements Serializable {
     public static void setGameHandlerRequest(Game game){
         gameHandlerRequest = game;
     }
+    
+    private void recordGamePosition(Game game){
+        
+        if(game.getRecordedGamePosition().equals(null)){
+            game.setRespond(Respond.FAILURE);
+            sendMsg(JsonConverter.fromGameToJson(game).toString());
+        }else{
+            /*
+            will send to dataBase these information
+            game.getPlayerX();
+            game.getPlayerO();
+            game.getRecordedGamePosition();
+            */
+            game.setRespond(Respond.SUCCESS);
+            sendMsg(JsonConverter.fromGameToJson(game).toString());
+        }
+    }
+    
     void logOut(String _un) {
 //        int index = getIndex(_un);
 //        if (index > -1) {
