@@ -18,6 +18,7 @@ import libs.Player;
 import libs.Respond;
 import libs.Player;
 import java.io.Serializable;
+import javax.swing.JOptionPane;
 
 
 /**
@@ -68,7 +69,7 @@ public class XoDataBase implements Serializable{
                 System.out.println(rs.getString("lastname"));
                 System.out.println(rs.getString("username"));
                 System.out.println(rs.getString("password"));
-                System.out.println(rs.getInt("score"));
+                System.out.println(rs.getString("score"));
             }
         } catch (SQLException ex) {
             Logger.getLogger(XoDataBase.class.getName()).log(Level.SEVERE, null, ex);
@@ -170,7 +171,7 @@ public class XoDataBase implements Serializable{
               
                 
                 NewPlayer.setUsername(rs.getString("username"));
-                NewPlayer.setScour((rs.getInt("score")));
+                NewPlayer.setScour((rs.getString("score")));
                 NewPlayer.setState(rs.getString("state"));
                 NewPlayer.setRespond(Respond.SUCCESS);
                 
@@ -207,6 +208,7 @@ public class XoDataBase implements Serializable{
         }
 
     }
+   
 
  
 
@@ -218,11 +220,13 @@ public class XoDataBase implements Serializable{
      // p.setUsername("emansol");
       //p.setPassword("123");
       XoDataBase c=new XoDataBase();
-      p=c.check_username_password("emansolk","123");
+      p=c.check_username_password("emansol","123");
         System.out.println(p.getUsername());
         System.out.println(p.getRespond());
         System.out.println(p.getScour());
         System.out.println(p.getState());
+       c.selectplayer();
+       
         
         
 
