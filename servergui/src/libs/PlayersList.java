@@ -19,7 +19,7 @@ public abstract class PlayersList {
         players = _players;
     }
 
-    public static ArrayList<Player> getPlayersList() {
+    public static  ArrayList<Player> getPlayersList() {
         return players;
     }
 }

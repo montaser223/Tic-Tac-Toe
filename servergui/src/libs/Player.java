@@ -4,38 +4,44 @@
  * and open the template in the editor.
  */
 package libs;
- 
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author Eman
  */
-
-
-
 /**
  *
  * @author black horse
- * 
+ *
  */
- public class Player implements Serializable{
-  
+public class Player implements Serializable {
 
-    String username, password, firstname, lastname, state,  request, respond,buttonerespond,player2;
+    ArrayList<Player> players = new ArrayList<Player>();
+
+//    ArrayList<PlayerList> players;
+//    = new ArrayList<>();
+    String username, password, firstname, lastname, status, request, respond, buttonerespond, player2;
     int scour;
 
-    public Player()
-    {
-    }
-     public Player(String _username, String _password) {
+    public Player(String _username, String _password) {
         username = _username;
         password = _password;
         request = Request.LOGIN;
     }
 
-     
+    public Player() {
+
+    }
+
+    public Player(String _username, int _scour, String _status) {
+        username = _username;
+        scour = _scour;
+        status = _status;
+    }
 
     public void setFirstname(String firstname) {
         this.firstname = firstname;
@@ -61,8 +67,8 @@ import java.io.Serializable;
         this.password = password;
     }
 
-    public void setState(String state) {
-        this.state = state;
+    public void setState(String _status) {
+        status = _status;
     }
 
     public void setScour(int scour) {
@@ -86,7 +92,7 @@ import java.io.Serializable;
     }
 
     public String getState() {
-        return state;
+        return status;
     }
 
     public int getScour() {
@@ -100,18 +106,30 @@ import java.io.Serializable;
     public String getRespond() {
         return respond;
     }
-    
-     public String getButtoneRespond() {
+
+    public String getButtoneRespond() {
         return buttonerespond;
     }
-     
-       public void  setButtoneRespond(String bntrespond) {
-           this.buttonerespond=bntrespond;
-        
+
+    public void setButtoneRespond(String bntrespond) {
+        this.buttonerespond = bntrespond;
+
     }
-     
-     
-     
-    
+
+    public void setPlayerList(ArrayList<Player> _players) {
+        players = _players;
+    }
+
+    public ArrayList<Player> getPlayersList() {
+        return players;
+    }
+
+//    public static class PlayerList {
+//
+//        Player players ;
+//        public PlayerList(Player _player)
+//        {
+//            players = _player;
+//        }
+//    }
 }
- 

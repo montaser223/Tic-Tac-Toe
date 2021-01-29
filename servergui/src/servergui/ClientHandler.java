@@ -7,23 +7,17 @@ package servergui;
 
 import libs.*;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.PrintStream;
 import java.io.Serializable;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static java.util.logging.Logger.global;
-import jdk.nashorn.internal.ir.debug.JSONWriter;
-import jdk.nashorn.internal.parser.JSONParser;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  *
@@ -32,26 +26,27 @@ import org.json.simple.JSONObject;
 public class ClientHandler extends Thread implements Serializable {
 
     static ArrayList<Player> players = new ArrayList<Player>();
-    private static Vector<ClientHandler> clients = new Vector<ClientHandler>();
-    private ObjectInputStream readObj;
-    private ObjectOutputStream writeObj;
     private XoDataBase database;
     private volatile boolean connected;
-
+    DataOutputStream outStream;
+    DataInputStream inStream;
+    JSONParser parser;
+    JsonConverter convert;
     public static HashMap<String, ClientHandler> connectedPlayers = new HashMap<String, ClientHandler>();
 
     ClientHandler(Socket socket) {
         try {
 
             database = new XoDataBase();
-            writeObj = new ObjectOutputStream(socket.getOutputStream());
-            readObj = new ObjectInputStream(socket.getInputStream());
+            outStream = new DataOutputStream(socket.getOutputStream());
+            inStream = new DataInputStream(socket.getInputStream());
             connected = true;
-//            writeObj.wr
+            parser = new JSONParser();
+            convert = new JsonConverter();
             start();
 
         } catch (IOException ex) {
-            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println(ex.getMessage());
             System.out.println("Clinet socket is not work");
             connected = false;
         }
@@ -59,28 +54,30 @@ public class ClientHandler extends Thread implements Serializable {
 
     private void messageHandler(Player newPlayer) {
         switch (newPlayer.getRequest()) {
-            case "login":
+            case Request.LOGIN:
                 login(newPlayer);
                 break;
-            case "logout":
+            case Request.LOGOUT:
                 logout(newPlayer);
                 break;
-
+            case Request.SIGNUP:
+                sginUp(newPlayer);
+                break;
         }
     }
 
     private void sendMsg(Player player) {
-
         try {
-            this.writeObj.writeObject(player);
+            JSONObject obj = convert.fromPlayerToJson(player, convert.fromPlayerListToJSONArray(player.getPlayersList()));
+            outStream.writeUTF(obj.toString());
         } catch (IOException ex) {
             Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     private void login(Player newPlayer) {
-        int isCorrect = database.check_username_password(newPlayer.getPassword(), newPlayer.getUsername());
-        if (isCorrect == 1) {
+        Player isExist = database.check_username_password(newPlayer.getUsername(), newPlayer.getPassword());
+        if (isExist.getRespond().equals(Respond.SUCCESS)) {
             int isOnline = database.updateStatus(Status.ONLINE, newPlayer.getUsername());
             if (isOnline == 1) {
                 newPlayer.setRespond(Respond.SUCCESS);
@@ -102,6 +99,7 @@ public class ClientHandler extends Thread implements Serializable {
         players = database.selectplayer();
         PlayersList.setPlayerList(players);
         for (Player player : players) {
+            System.out.println("Player :" + player.getUsername() + " Status= " + player.getState());
             if (player.getState().equals(Status.ONLINE)) {
                 player.setRequest(Request.USERS);
                 player.setPlayerList(PlayersList.getPlayersList());
@@ -121,9 +119,10 @@ public class ClientHandler extends Thread implements Serializable {
                     newPlayer.setRespond(Respond.SUCCESS);
                     newPlayer.setState(Status.OFFLINE);
                     sendMsg(newPlayer);
+                    updatePlayerList();
                     connected = false;
-                    readObj.close();
-                    writeObj.close();
+                    inStream.close();
+                    outStream.close();
                 } catch (IOException ex) {
                     System.out.println(ex.getMessage());
                 }
@@ -156,16 +155,17 @@ public class ClientHandler extends Thread implements Serializable {
     @Override
     public void run() {
         while (connected) {
+
             try {
-                Player p2 = (Player) readObj.readObject();
-//                JSONParser p3 = new JSONParser(p2, global,true);
-//                JSONO p3 = new JSONWriter(p2
-//                System.out.println("Line 180 : " + p2);
-//                System.out.println("Line 18 : " + p2.get(p2.keySet()));
-                messageHandler(p2);
-            } catch (IOException ex) {
-                System.out.println(ex.getMessage());
-            } catch (ClassNotFoundException ex) {
+                try {
+                    JSONObject obj = (JSONObject) parser.parse(inStream.readUTF());
+//                 , convert.jSONArrayToPlayerList((JSONArray) obj.get("playersList"))
+                    Player newPlayer = convert.fromJsonToPlayer(obj);
+                    messageHandler(newPlayer);
+                } catch (IOException ex) {
+                    System.out.println(ex.getMessage());
+                }
+            } catch (ParseException ex) {
                 System.out.println(ex.getMessage());
             }
         }
