@@ -7,6 +7,7 @@ package libs;
  
 
 import java.io.Serializable;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -23,8 +24,8 @@ import java.io.Serializable;
  public class Player implements Serializable{
   
 
-    String username, password, firstname, lastname, state,  request, respond,buttonerespond,player2;
-    int scour;
+    String username, password, firstname, lastname, state,  request, respond,buttonerespond,player2_username,scour;
+    int respond_massage;
 
     public Player()
     {
@@ -65,7 +66,7 @@ import java.io.Serializable;
         this.state = state;
     }
 
-    public void setScour(int scour) {
+    public void setScour(String scour) {
         this.scour = scour;
     }
 
@@ -89,7 +90,7 @@ import java.io.Serializable;
         return state;
     }
 
-    public int getScour() {
+    public String getScour() {
         return scour;
     }
 
@@ -109,8 +110,29 @@ import java.io.Serializable;
            this.buttonerespond=bntrespond;
         
     }
+       
+       public void setDestination(String Player2_Username){
+       
+       player2_username=Player2_Username;
+       }
      
+         public String getDestination(){
+       
+      return  player2_username;
+       }
+         
+           public void  Requestgame(){
+        
+               respond_massage=JOptionPane.showConfirmDialog(null,"do you want playing with me ?"); 
+               
+       }
      
+               
+           public int Respondgame(){
+        
+               return respond_massage;
+               
+       }
      
     
 }
