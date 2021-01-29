@@ -22,8 +22,7 @@ public class Player implements Serializable {
 
     ArrayList<Player> players = new ArrayList<Player>();
 
-    String username, password, firstname, lastname, status, request, respond, buttonerespond, player2;
-    int scour;
+    String username, password, firstname, lastname, status, request, respond, buttonerespond, player2, scour;
 
     public Player(String _username, String _password) {
         username = _username;
@@ -31,11 +30,9 @@ public class Player implements Serializable {
         request = Request.LOGIN;
     }
 
-    public Player() {
+    public Player() {}
 
-    }
-
-    public Player(String _username, int _scour, String _status) {
+    public Player(String _username, String _scour, String _status) {
         username = _username;
         scour = _scour;
         status = _status;
@@ -44,9 +41,17 @@ public class Player implements Serializable {
     public void setFirstname(String firstname) {
         this.firstname = firstname;
     }
-
+    
     public void setLastname(String lastname) {
         this.lastname = lastname;
+    }
+    
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public String getLastname() {
+        return lastname;
     }
 
     public Player(String _username, String _password, String _firstname, String _lastname) {
@@ -69,7 +74,7 @@ public class Player implements Serializable {
         status = _status;
     }
 
-    public void setScour(int scour) {
+    public void setScour(String scour) {
         this.scour = scour;
     }
 
@@ -93,7 +98,7 @@ public class Player implements Serializable {
         return status;
     }
 
-    public int getScour() {
+    public String getScour() {
         return scour;
     }
 
@@ -121,4 +126,5 @@ public class Player implements Serializable {
     public ArrayList<Player> getPlayersList() {
         return players;
     }
+    
 }

@@ -72,7 +72,7 @@ public class XOBase extends AnchorPane implements Serializable{
     
     private String currentMove; 
     private Button[] buttons;
-    private String[] recordedPositions;
+    private static String[] recordedPositions;
     
     private Game gameMessages;
     private Game myGame;
@@ -82,6 +82,8 @@ public class XOBase extends AnchorPane implements Serializable{
     
     private DataInputStream inStream;
     private PrintStream outStream;
+    private JSONObject obj;
+    private JsonConverter convert;
     private boolean recordGameFlag;
     private Socket socket;
     private Thread th; 
@@ -151,11 +153,26 @@ public class XOBase extends AnchorPane implements Serializable{
          for(int index = 0; index <9; index++){
              
             if( recordedPositions[index].equalsIgnoreCase(Game.X_MOVE) || 
-                recordedPositions[index].equalsIgnoreCase(Game.O_MOVE))
-            {
+                recordedPositions[index].equalsIgnoreCase(Game.O_MOVE)){
+                
+                
                 buttons[index].setText(recordedPositions[index]);
                 buttons[index].setDisable(true);
+                
+                if(recordedPositions[index] == "X"){
+                    playerXpositions.add(index+1);
+                }else{
+                    playerOpositions.add(index+1);
+                }
+                    
             }
+        }
+        //change the current move to the right turn
+        // the defualt move at the begining is x,
+        // so we need to check if it correct or no
+        if(playerXpositions.size() > playerOpositions.size()){
+            currentMove = Game.O_MOVE;
+            
         }
     }
     
@@ -167,9 +184,11 @@ public class XOBase extends AnchorPane implements Serializable{
         recordGame.setText("Record Game");
         recordGameFlag = true;
         
+        Button tmpButton = new Button();
         for(Button btn: buttons){
             
             // reset the old style
+//            btn.setStyle(tmpButton.getStyle());
             btn.setStyle("-fx-background-color: 0");
             btn.setFont(Font.font("MV Boli", FontWeight.BOLD, 24));
             btn.setText(null);
@@ -265,14 +284,14 @@ public class XOBase extends AnchorPane implements Serializable{
     private void sendGameMessage(String gameMessage){
         
         gameMessages.setRequest(gameMessage);
-        JSONObject obj = JsonConverter.fromGameToJson(gameMessages);
+        obj = convert.fromGameToJson(gameMessages);
         this.outStream.println(obj.toString());
     }
     
     private void sendGameMove(String gameRequest){
         
         myGame.setRequest(gameRequest);
-        JSONObject obj = JsonConverter.fromGameToJson(myGame);
+        JSONObject obj = convert.fromGameToJson(myGame);
         System.out.println("Sending move to handlers " + "+ chat message: ");
         this.outStream.println(obj.toString());
     }
@@ -285,25 +304,41 @@ public class XOBase extends AnchorPane implements Serializable{
             appendMessage();
         }
         else{
+            
             myGame = gameMove;
             
-            if(myGame.getRequest().equalsIgnoreCase(Request.GAME_PLAYAGAIN)){
-                resetBoard();
-            }else{
+            switch(myGame.getRequest()){
+                
+                case Request.RECORD_GAME:
+                    checkRecordGameRespond();
+                    break;
+                case Request.GET_RECORDEDGAME:
+                    drawOldPositions();
+                    break;
+                case Request.GAME_PLAYAGAIN:
+                    resetBoard();
+                    break;
+                    
+                default:
+                    
+                    drawAndSaveMove(myGame.getPosition(), myGame.getPlayedMove());
+                    currentMove = myGame.getNextMove();
             
-                drawAndSaveMove(myGame.getPosition(), myGame.getPlayedMove());
-                currentMove = myGame.getNextMove();
+                    if(checkWinner().equalsIgnoreCase(Game.X_MOVE)){
+                        highLightWinner(playerXpositions);
+                        updateScore();
+                    }else if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
+                        highLightWinner(playerOpositions);
+                        updateScore();
+                    }else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
+                        drawTie();
+                        updateScore();
+                    }
+                break;
+            }
+           
             
-             if(checkWinner().equalsIgnoreCase(Game.X_MOVE)){
-                    highLightWinner(playerXpositions);
-                    updateScore();
-                }else if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
-                    highLightWinner(playerOpositions);
-                    updateScore();
-                }else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
-                    drawTie();
-                    updateScore();
-                }
+                
             
         }
             
@@ -311,27 +346,25 @@ public class XOBase extends AnchorPane implements Serializable{
             
             
         }
-        
-        
-        
-        
-        
-        
-        
-        // should send the updated score??? i think no because this is broad cast
-    }
     
     private void drawAndSaveMove(Long position,String playedMove){
         
-        buttons[position.intValue()-1].setText(playedMove);
-        buttons[position.intValue()-1].setDisable(true);
+        
         
         if(playedMove.equalsIgnoreCase(Game.X_MOVE)){
+            buttons[position.intValue()-1].setTextFill(javafx.scene.paint.Color.rgb(255, 157, 10));
+            buttons[position.intValue()-1].setText(playedMove);
+            buttons[position.intValue()-1].setDisable(true);
             
             System.out.println("adding position in x " + position.intValue());
             playerXpositions.add(position.intValue());
             
         }else{
+            
+            buttons[position.intValue()-1].setTextFill(javafx.scene.paint.Color.rgb(5, 112, 255));
+            buttons[position.intValue()-1].setText(playedMove);
+            buttons[position.intValue()-1].setDisable(true);
+            
             System.out.println("adding position in o " + position.intValue());
             playerOpositions.add(position.intValue());
         }
@@ -390,9 +423,6 @@ public class XOBase extends AnchorPane implements Serializable{
                 while (connected) {
                     
                     try {
-                        
-                        
-//                        String obj = inStream.readLine();
 
                         Game tmp = new Gson().fromJson(inStream.readLine(), Game.class);
                         
@@ -412,12 +442,58 @@ public class XOBase extends AnchorPane implements Serializable{
         
     }
     
+    public static void setRecordedPosition(String[] oldGame){
+        recordedPositions = oldGame;
+    }
     
+    public static String[] getRecordedPosition(){
+        
+        return recordedPositions;
+    }
+    
+    private void sendRecordedPosition(){
+        recordPositions();
+        sendGamePosition(Request.RECORD_GAME);
+    }
+    
+    private void sendGamePosition(String request){
+        JSONArray positions = new JSONArray();
+        positions = convert.fromRecordedGamePositionTOJsonArray(recordedPositions);
+        myGame.setRequest(request);
+        obj = convert.fromGameToJsonWithArray(myGame, positions);
+        this.outStream.println(obj.toString());
+    }
+    private void checkRecordGameRespond(){
+        System.out.println(myGame.getRespond());
+        if(myGame.getRespond().equalsIgnoreCase(Respond.SUCCESS)){
+            System.out.println("Record game success");
+            drawXO();
+        }else if(myGame.getRespond().equalsIgnoreCase(Respond.FAILURE)){
+            System.out.println("Record game faliure");
+        }
+    }
+    
+    private void sendExitGameRequest(){
+        
+        sendGameMove(Request.END_GAME);
+        connected = false;
+        try {
+            socket.close();
+            inStream.close();
+            outStream.close();
+            th.stop();
+            Platform.exit();
+        } catch (IOException ex) {
+            Logger.getLogger(XOBase.class.getName()).log(Level.SEVERE, null, ex);
+        }
+                    
+    }
     
     public XOBase() {
+
         
         myGame = new Game();
-        
+        convert = new JsonConverter();
         startGame();
         currentMove = Game.X_MOVE;
         recordGameFlag = true;
@@ -720,9 +796,8 @@ public class XOBase extends AnchorPane implements Serializable{
             public void handle(ActionEvent event) {
                 
                 if(recordGameFlag){
-                    recordPositions();
+                    sendRecordedPosition();
                     drawXO();
-
                 }else{
                     playAgain();
                 }
@@ -741,18 +816,7 @@ public class XOBase extends AnchorPane implements Serializable{
             
             @Override
             public void handle(ActionEvent event) {
-             try {
-                    socket.close();
-                    inStream.close();
-                    outStream.close();
-                    th.stop();
-                    Platform.exit();
-                    
-                } catch (IOException ex) {
-    //                Logger.getLogger(XOBase.class.getName()).log(Level.SEVERE, null, ex);
-                      System.out.println("cant close in stream in game");
-                }
-            
+                sendExitGameRequest(); 
             }
             
                 
@@ -788,7 +852,6 @@ public class XOBase extends AnchorPane implements Serializable{
         splitPane.getItems().add(anchorPane0);
         getChildren().add(splitPane);
 
+
     }
-    
-    
 }

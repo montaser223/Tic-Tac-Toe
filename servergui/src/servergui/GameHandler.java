@@ -46,13 +46,14 @@ public class GameHandler extends Thread  implements Serializable{
     
     private DataInputStream inStream;
     private PrintStream outStream;
-    
+    private JsonConverter convert;
     
     
     
     GameHandler(ClientHandler player) {
         
         gameRequest = new Game();
+        convert = new JsonConverter();
         System.out.println(" game handler constructor");
 //        
         
@@ -103,10 +104,9 @@ public class GameHandler extends Thread  implements Serializable{
             
                 System.out.print("");
                 gameRequest = ClientHandler.getGameHandlerRequest();
-                
                 if(gameRequest != null){
                     System.out.println(" Game Handler receved a move ");
-                    sendGameMove(JsonConverter.fromGameToJson(gameRequest).toString());
+                    sendGameMove(convert.fromGameToJson(gameRequest).toString());
 //                    resetGameRequests();
                 }
         }

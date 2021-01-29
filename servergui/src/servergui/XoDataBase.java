@@ -5,7 +5,7 @@
  */
 package servergui;
 
-import com.mysql.jdbc.Driver;
+//import com.mysql.jdbc.Driver;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -43,7 +43,7 @@ public class XoDataBase implements Serializable {
 
         try {
             // String q = new String("select * from student");
-            DriverManager.registerDriver(new com.mysql.jdbc.Driver());
+//            DriverManager.registerDriver(new com.mysql.jdbc.Driver());
 
             con = DriverManager.getConnection("jdbc:mysql://localhost:3306/xo_db", "root", "");
             stmt = con.createStatement();
@@ -62,7 +62,7 @@ public class XoDataBase implements Serializable {
             //rs.first();
 
             while (rs.next()) {
-                Player newPlayer = new Player(rs.getString("username"), rs.getInt("score"), rs.getString("status"));
+                Player newPlayer = new Player(rs.getString("username"), rs.getString("score"), rs.getString("status"));
                 players.add(newPlayer);
                 ID = rs.getInt("ID");
 //                System.out.println(rs.getInt("ID"));
@@ -181,7 +181,7 @@ public class XoDataBase implements Serializable {
                     while (rs.next()) {
 
                         NewPlayer.setUsername(rs.getString("username"));
-                        NewPlayer.setScour((rs.getInt("score")));
+                        NewPlayer.setScour((rs.getString("score")));
                         NewPlayer.setState(rs.getString("status"));
                         NewPlayer.setRespond(Respond.SUCCESS);
 
