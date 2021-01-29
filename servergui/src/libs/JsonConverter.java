@@ -15,6 +15,9 @@ import org.json.simple.JSONObject;
  */
 public class JsonConverter {
 
+    private static JSONObject obj;
+//    private static Game game;
+
     public Player fromJsonToPlayer(JSONObject obj) {
         Player newPlayer = new Player();
         newPlayer.setUsername((String) obj.get("username"));
@@ -26,8 +29,8 @@ public class JsonConverter {
         newPlayer.setPassword((String) obj.get("password"));
         return newPlayer;
     }
-    
-    public Player fromJsonToPlayer(JSONObject obj,ArrayList<Player> players) {
+
+    public Player fromJsonToPlayer(JSONObject obj, ArrayList<Player> players) {
         Player newPlayer = new Player();
         newPlayer.setUsername((String) obj.get("username"));
         newPlayer.setFirstname((String) obj.get("firstname"));
@@ -41,24 +44,24 @@ public class JsonConverter {
     }
 
     public JSONObject fromPlayerToJson(Player newPlayer) {
-        JSONObject obj = new JSONObject();
-        obj.put("username", newPlayer.getUsername());
-        obj.put("request", newPlayer.getRequest());
-        obj.put("status", newPlayer.getState());
-        obj.put("respond", newPlayer.getRespond());
-        obj.put("password", newPlayer.getPassword());
-        return obj;
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("username", newPlayer.getUsername());
+        jsonObj.put("request", newPlayer.getRequest());
+        jsonObj.put("status", newPlayer.getState());
+        jsonObj.put("respond", newPlayer.getRespond());
+        jsonObj.put("password", newPlayer.getPassword());
+        return jsonObj;
     }
-    
-    public JSONObject fromPlayerToJson(Player newPlayer,JSONArray players) {
-        JSONObject obj = new JSONObject();
-        obj.put("username", newPlayer.getUsername());
-        obj.put("request", newPlayer.getRequest());
-        obj.put("status", newPlayer.getState());
-        obj.put("respond", newPlayer.getRespond());
-        obj.put("password", newPlayer.getPassword());
-        obj.put("playersList", players);
-        return obj;
+
+    public JSONObject fromPlayerToJson(Player newPlayer, JSONArray players) {
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("username", newPlayer.getUsername());
+        jsonObj.put("request", newPlayer.getRequest());
+        jsonObj.put("status", newPlayer.getState());
+        jsonObj.put("respond", newPlayer.getRespond());
+        jsonObj.put("password", newPlayer.getPassword());
+        jsonObj.put("playersList", players);
+        return jsonObj;
     }
 
     public ArrayList<Player> fromJSONArrayToPlayerList(JSONArray playerList) {
@@ -78,4 +81,31 @@ public class JsonConverter {
 
         return jsonPlayersList;
     }
+
+//    public static Game fromJsonToGame(JSONObject obj) {
+//        game = new Game();
+//        game.setRecordedGamePosition((String[]) obj.get("recordedgamePosition"));
+//        game.setWinner((String) obj.get("sinner"));
+//        game.setRequest((String) obj.get("request"));
+//        game.setPlayedMove((String) obj.get("playedMove"));
+//        game.setPosition((Long) obj.get("position"));
+//        game.setNextMove((String) obj.get("nextMove"));
+//        game.setMessage((String) obj.get("message"));
+//
+//        return game;
+//    }
+//
+//    public static JSONObject fromGameToJson(Game game) {
+//
+//        obj = new JSONObject();
+////        obj.put("recordedgamePosition", game.getRecordedGamePosition());
+//        obj.put("winner", game.getWinner());
+//        obj.put("request", game.getRequest());
+//        obj.put("playedMove", game.getPlayedMove());
+//        obj.put("position", game.getPosition());
+//        obj.put("nextMove", game.getNextMove());
+//        obj.put("message", game.getMessage());
+//
+//        return obj;
+//    }
 }
