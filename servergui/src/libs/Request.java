@@ -16,4 +16,12 @@ public class Request {
     public static final String GAME = "game";
     public static final String SIGNUP = "signup";
     public static final String USERS = "getall";
+    
+    public static final String GAME_MOVE = "gameMove";
+    public static final String GAME_PLAYAGAIN = "playAgain";
+    
+    public static final String START_GAME = "startGame";
+    public static final String END_GAME = "endGame";
+    public static final String Chat_Message = "chatMessage";
+    public static final String RECORD_GAME = "recordGame";
 }

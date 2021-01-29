@@ -16,7 +16,7 @@ import org.json.simple.JSONObject;
 public class JsonConverter {
 
     private static JSONObject obj;
-//    private static Game game;
+   private static Game game;
 
     public Player fromJsonToPlayer(JSONObject obj) {
         Player newPlayer = new Player();
@@ -82,30 +82,30 @@ public class JsonConverter {
         return jsonPlayersList;
     }
 
-//    public static Game fromJsonToGame(JSONObject obj) {
-//        game = new Game();
-//        game.setRecordedGamePosition((String[]) obj.get("recordedgamePosition"));
-//        game.setWinner((String) obj.get("sinner"));
-//        game.setRequest((String) obj.get("request"));
-//        game.setPlayedMove((String) obj.get("playedMove"));
-//        game.setPosition((Long) obj.get("position"));
-//        game.setNextMove((String) obj.get("nextMove"));
-//        game.setMessage((String) obj.get("message"));
-//
-//        return game;
-//    }
-//
-//    public static JSONObject fromGameToJson(Game game) {
-//
-//        obj = new JSONObject();
-////        obj.put("recordedgamePosition", game.getRecordedGamePosition());
-//        obj.put("winner", game.getWinner());
-//        obj.put("request", game.getRequest());
-//        obj.put("playedMove", game.getPlayedMove());
-//        obj.put("position", game.getPosition());
-//        obj.put("nextMove", game.getNextMove());
-//        obj.put("message", game.getMessage());
-//
-//        return obj;
-//    }
+   public static Game fromJsonToGame(JSONObject obj) {
+       game = new Game();
+       game.setRecordedGamePosition((String[]) obj.get("recordedgamePosition"));
+       game.setWinner((String) obj.get("sinner"));
+       game.setRequest((String) obj.get("request"));
+       game.setPlayedMove((String) obj.get("playedMove"));
+       game.setPosition((Long) obj.get("position"));
+       game.setNextMove((String) obj.get("nextMove"));
+       game.setMessage((String) obj.get("message"));
+
+       return game;
+   }
+
+   public static JSONObject fromGameToJson(Game game) {
+
+       obj = new JSONObject();
+//        obj.put("recordedgamePosition", game.getRecordedGamePosition());
+       obj.put("winner", game.getWinner());
+       obj.put("request", game.getRequest());
+       obj.put("playedMove", game.getPlayedMove());
+       obj.put("position", game.getPosition());
+       obj.put("nextMove", game.getNextMove());
+       obj.put("message", game.getMessage());
+
+       return obj;
+   }
 }

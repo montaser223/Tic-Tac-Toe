@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.json.simple.JSONObject;
+import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
@@ -25,25 +25,38 @@ import org.json.simple.parser.ParseException;
  */
 public class ClientHandler extends Thread implements Serializable {
 
-    static ArrayList<Player> players = new ArrayList<Player>();
+    private static ArrayList<Player> players = new ArrayList<Player>();
     private XoDataBase database;
     private volatile boolean connected;
-    DataOutputStream outStream;
-    DataInputStream inStream;
-    JSONParser parser;
-    JsonConverter convert;
+    private JSONParser parser;
+    private JsonConverter convert;
+    private JSONObject obj;
+    private DataInputStream inStream;
+    private PrintStream outStream;
     public static HashMap<String, ClientHandler> connectedPlayers = new HashMap<String, ClientHandler>();
+    public static Game gameHandlerRequest = null;
+    
 
+   
+    
+
+   
+    
     ClientHandler(Socket socket) {
+        
         try {
-
+            
+            System.out.println("Player connected");
             database = new XoDataBase();
-            outStream = new DataOutputStream(socket.getOutputStream());
+            outStream = new PrintStream(socket.getOutputStream());
             inStream = new DataInputStream(socket.getInputStream());
+            parser = new JSONParser();
             connected = true;
             parser = new JSONParser();
             convert = new JsonConverter();
             start();
+            
+            
 
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
@@ -52,13 +65,46 @@ public class ClientHandler extends Thread implements Serializable {
         }
     }
 
-    private void messageHandler(Player newPlayer) {
-        switch (newPlayer.getRequest()) {
+    @Override
+    public void run() {
+        
+        while (connected) {
+            try {
+                
+                obj = (JSONObject) parser.parse(inStream.readLine());
+                messageHandler(obj);
+                
+                
+            } catch (IOException ex) {
+                System.out.println(ex.getMessage());
+            } catch (ParseException ex) {
+                Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    private void messageHandler(JSONObject message) {
+        
+        switch ((String) message.get("request")) {
             case Request.LOGIN:
-                login(newPlayer);
+                
+                login(JsonConverter.fromJsonToPlayer(message));
                 break;
             case Request.LOGOUT:
-                logout(newPlayer);
+                logout(JsonConverter.fromJsonToPlayer(message));
+                break;
+            case Request.START_GAME:
+                startGame();
+                break;
+               
+            case Request.GAME_MOVE:
+            case Request.GAME_PLAYAGAIN:
+            case Request.Chat_Message:
+                System.out.println(message);
+                sendRequestToGameHandler(JsonConverter.fromJsonToGame(message));
+                break;
+            case Request.RECORD_GAME:
+                recordGamePosition(JsonConverter.fromJsonToGame(message));
                 break;
             case Request.SIGNUP:
                 sginUp(newPlayer);
@@ -66,13 +112,85 @@ public class ClientHandler extends Thread implements Serializable {
         }
     }
 
-    private void sendMsg(Player player) {
-        try {
-            JSONObject obj = convert.fromPlayerToJson(player, convert.fromPlayerListToJSONArray(player.getPlayersList()));
-            outStream.writeUTF(obj.toString());
-        } catch (IOException ex) {
-            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+    private void startGame(){
+        System.out.println("Sending start game to game handler");
+        new GameHandler(this);
+    }
+    
+    private void sendRequestToGameHandler(Game newGame){
+        
+        System.out.println("Sending  gameMove to game handler");
+        gameHandlerRequest = newGame;
+        
+    }
+    
+    public static Game getGameHandlerRequest(){
+        Game tmp = gameHandlerRequest;
+        gameHandlerRequest = null;
+        return tmp;
+    }
+    
+    public static void setGameHandlerRequest(Game game){
+        gameHandlerRequest = game;
+    }
+    
+    private void recordGamePosition(Game game){
+        
+        if(game.getRecordedGamePosition().equals(null)){
+            game.setRespond(Respond.FAILURE);
+            sendMsg(JsonConverter.fromGameToJson(game).toString());
+        }else{
+            /*
+            will send to dataBase these information
+            game.getPlayerX();
+            game.getPlayerO();
+            game.getRecordedGamePosition();
+            */
+            game.setRespond(Respond.SUCCESS);
+            sendMsg(JsonConverter.fromGameToJson(game).toString());
         }
+    }
+    
+    void logOut(String _un) {
+//        int index = getIndex(_un);
+//        if (index > -1) {
+//            ClientHandler client = clients.elementAt(index);
+//            System.out.println(client);
+//            clients.removeElementAt(clients.indexOf(client));
+//        } else {
+//            System.out.println("Cannot remove client at index 0");
+//        }
+    }
+
+    int getIndex(String _un) {
+//        int index = -1;
+//        for (ClientHandler client : clients) {
+//            if (client.UserName == _un) {
+//                index = clients.indexOf(client);
+//            }
+//        }
+        return 0;
+    }
+
+    public void stopClientHandler() {
+
+//        startFlag = false;
+//        for (ClientHandler client : clients) {
+//            logout(client.UserName);
+//        }
+    }
+
+    private void sendMsg(Player player){
+        
+        
+        JSONObject obj = convert.fromPlayerToJson(player, convert.fromPlayerListToJSONArray(player.getPlayersList()));
+
+        this.outStream.println(player);
+    }
+    
+    public void sendMsg(String game){
+        
+        this.outStream.println(game);
     }
 
     private void login(Player newPlayer) {
@@ -145,29 +263,29 @@ public class ClientHandler extends Thread implements Serializable {
             sendMsg(newPlayer);
 
         } else {
-//            database.sign_up(newPlayer.getFirstname(), newPlayer.getLastname(), newPlayer.getUsername(),newPlayer.getPassword());
-//            newPlayer.setRespond(Respond.SUCCESS);
-//            sendMsg(newPlayer); 
+           database.sign_up(newPlayer.getFirstname(), newPlayer.getLastname(), newPlayer.getUsername(),newPlayer.getPassword());
+           newPlayer.setRespond(Respond.SUCCESS);
+           sendMsg(newPlayer); 
         }
 
     }
 
-    @Override
-    public void run() {
-        while (connected) {
+//     @Override
+//     public void run() {
+//         while (connected) {
 
-            try {
-                try {
-                    JSONObject obj = (JSONObject) parser.parse(inStream.readUTF());
-//                 , convert.jSONArrayToPlayerList((JSONArray) obj.get("playersList"))
-                    Player newPlayer = convert.fromJsonToPlayer(obj);
-                    messageHandler(newPlayer);
-                } catch (IOException ex) {
-                    System.out.println(ex.getMessage());
-                }
-            } catch (ParseException ex) {
-                System.out.println(ex.getMessage());
-            }
-        }
-    }
+//             try {
+//                 try {
+//                     JSONObject obj = (JSONObject) parser.parse(inStream.readUTF());
+//                  , convert.jSONArrayToPlayerList((JSONArray) obj.get("playersList"))
+//                     Player newPlayer = convert.fromJsonToPlayer(obj);
+//                     messageHandler(newPlayer);
+//                 } catch (IOException ex) {
+//                     System.out.println(ex.getMessage());
+//                 }
+//             } catch (ParseException ex) {
+//                 System.out.println(ex.getMessage());
+//             }
+//         }
+//     }
 }

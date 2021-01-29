@@ -22,8 +22,6 @@ public class Player implements Serializable {
 
     ArrayList<Player> players = new ArrayList<Player>();
 
-//    ArrayList<PlayerList> players;
-//    = new ArrayList<>();
     String username, password, firstname, lastname, status, request, respond, buttonerespond, player2;
     int scour;
 
@@ -123,13 +121,4 @@ public class Player implements Serializable {
     public ArrayList<Player> getPlayersList() {
         return players;
     }
-
-//    public static class PlayerList {
-//
-//        Player players ;
-//        public PlayerList(Player _player)
-//        {
-//            players = _player;
-//        }
-//    }
 }

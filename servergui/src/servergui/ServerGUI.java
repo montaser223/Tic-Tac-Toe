@@ -54,8 +54,6 @@ class Server extends Thread {
                 socket = serverSocket.accept();
                 System.out.println("Request Recived");
                 new ClientHandler(socket);
-                // here the server should send the sockt to the login function in clientHandler class
-                // or create an object of a clinetHandler class this Constructor taking socket
             } catch (IOException ex) {
                 System.out.println(ex.getMessage());
                 // here we should add something to the client in case the server is down
