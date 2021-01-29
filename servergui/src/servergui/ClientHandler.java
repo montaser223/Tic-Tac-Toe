@@ -101,6 +101,7 @@ public class ClientHandler extends Thread implements Serializable {
                 break;
             case Request.RECORD_GAME:
                 recordGamePosition(JsonConverter.fromJsonToGame(message));
+                break;
 
         }
     }
