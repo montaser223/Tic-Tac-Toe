@@ -71,7 +71,6 @@ class Server  {
     
     public static void stopServer(){
         
-        System.out.println(startServerflag);
         if(startServerflag){
             
             startServerflag = false;
@@ -106,7 +105,7 @@ public class ServerGUI extends Application {
     boolean startFlag;
 
     @Override
-    public void init() throws Exception {
+    public void init(){
 
         startFlag = true;
         startAndStopButton = new Button("Start");
@@ -130,7 +129,7 @@ public class ServerGUI extends Application {
     }
 
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage stage){
 
         BorderPane root = new BorderPane();
 
