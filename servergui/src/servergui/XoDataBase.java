@@ -5,7 +5,7 @@
  */
 package servergui;
 
-//import com.mysql.jdbc.Driver;
+import com.mysql.jdbc.Driver;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -42,8 +42,8 @@ public class XoDataBase implements Serializable {
     public XoDataBase() {
 
         try {
-            // String q = new String("select * from student");
-//            DriverManager.registerDriver(new com.mysql.jdbc.Driver());
+             String q = new String("select * from student");
+            DriverManager.registerDriver(new com.mysql.jdbc.Driver());
 
             con = DriverManager.getConnection("jdbc:mysql://localhost:3306/xo_db", "root", "");
             stmt = con.createStatement();
