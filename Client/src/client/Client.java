@@ -294,7 +294,7 @@ public class Client extends Application implements Serializable {
                         JSONParser parse = new JSONParser();
                         obj = new JSONObject();
                         obj = (JSONObject) parse.parse(inputStream.readLine());
-                        p = convert.fromJsonToPlayer(obj);
+                        p = convert.fromJsonToPlayer((JSONObject) obj);
                         System.out.println("Line 196: " + p.getRespond());
                         messageHandelr(p);
                         System.out.println("Line 98: " + p.getRespond());
@@ -316,8 +316,7 @@ public class Client extends Application implements Serializable {
     }
 
     /**
-     * **********************************Screens
-     * methods*******************************************************************************
+     * **********************************Screens methods*******************************************************************************
      */
     public AnchorPane ScreenOne() {
         ScreenOne = new AnchorPane();
