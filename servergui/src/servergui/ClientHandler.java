@@ -3,22 +3,30 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package servergui;
-
+package xodatabase;
+import libs.Status;
+import libs.Respond;
 import libs.*;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.json.simple.*;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import javax.swing.JOptionPane;
+import xodatabase.game;
+
+/**
+ *
+ * @author Eman
+ 
+
 
 /**
  *
@@ -26,254 +34,181 @@ import org.json.simple.parser.ParseException;
  */
 public class ClientHandler extends Thread implements Serializable {
 
-    private static ArrayList<Player> players = new ArrayList<Player>();
+    private static Vector<ClientHandler> clients = new Vector<ClientHandler>();
+    private ObjectInputStream readObj;
+    private ObjectOutputStream writeObj;
     private XoDataBase database;
     private volatile boolean connected;
-    private JSONParser parser;
-    private JsonConverter convert;
-    private JSONObject obj;
-    private DataInputStream inStream;
-    private PrintStream outStream;
+    private game play_game;
+    private String [] Positions;
+    
+
     public static HashMap<String, ClientHandler> connectedPlayers = new HashMap<String, ClientHandler>();
-    public static Game gameHandlerRequest = null;
-    
 
-   
-    
-
-   
-    
     ClientHandler(Socket socket) {
-        
         try {
-            
-            System.out.println("Player connected");
             database = new XoDataBase();
-            outStream = new PrintStream(socket.getOutputStream());
-            inStream = new DataInputStream(socket.getInputStream());
-            parser = new JSONParser();
-            parser = new JSONParser();
-            convert = new JsonConverter();
+            writeObj = new ObjectOutputStream(socket.getOutputStream());
+            readObj = new ObjectInputStream(socket.getInputStream());
             connected = true;
             start();
-            
-            
+             
 
         } catch (IOException ex) {
-            System.out.println(ex.getMessage());
+            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("Clinet socket is not work");
             connected = false;
         }
     }
 
-    @Override
-    public void run() {
-        
-        while (connected) {
-            try {
-                
-                obj = (JSONObject) parser.parse(inStream.readLine());
-                messageHandler(obj);
-                
-            } catch (IOException ex) {
-                System.out.println(ex.getMessage());
-            } catch (ParseException ex) {
-                Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }
-    
-    private void messageHandler(JSONObject message) {
-        
-        switch ((String) message.get("request")) {
+    private void messageHandler(Player newPlayer) {
+        switch (newPlayer.getRequest()) {
             case Request.LOGIN:
-                login(message);
+                login(newPlayer);
                 break;
             case Request.LOGOUT:
-                logout(message);
+                //logout(newPlayer);
                 break;
-            case Request.SIGNUP:
-                sginUp(message);
+                 case Request.GAMEINVITATION:
+                 gameInvitation(newPlayer);
                 break;
-            case Request.START_GAME:
-                startGame();
+                 case Request.GAMERESPOND:
+                gameResponse(newPlayer);
                 break;
-            case Request.END_GAME:
-                endGame();
-            case Request.GAME_MOVE:
-            case Request.GAME_PLAYAGAIN:
-            case Request.Chat_Message:
-                System.out.println(message);
-                sendRequestToGameHandler(message);
-                break;
-            case Request.RECORD_GAME:
-                System.out.println(message);
-                recordGamePosition(message);
-                break;
-            
-        }
-    }
-
-    private void startGame(){
-        System.out.println("Sending start game to game handler");
-        new GameHandler(this);
-    }
-    private void endGame(){
-        
-    }
-    
-    private void sendRequestToGameHandler(JSONObject message){
-        
-        Game newGame = convert.fromJsonToGame(message);
-        System.out.println("Sending  gameMove to game handler");
-        gameHandlerRequest = newGame;
-        
-    }
-    
-    public static Game getGameHandlerRequest(){
-        Game tmp = gameHandlerRequest;
-        gameHandlerRequest = null;
-        return tmp;
-    }
-    
-    public static void setGameHandlerRequest(Game game){
-        gameHandlerRequest = game;
-    }
-    
-    private void recordGamePosition(JSONObject obj){
-        
-        Game game = convert.fromJsonWithArrayToGame(obj, convert.fromJsonArrayToRecordedGame( (JSONArray) obj.get("recordedPosition") ));
-        System.out.println("send positions to database");
-        
-        if(isGamePositionEmpty(game.getRecordedGamePosition())){
-            game.setRespond(Respond.FAILURE);
-            game.setRecordedGamePosition(null);
-            System.out.println("set respond to  " + game.getRespond());
-
-            sendMsg(convert.fromGameToJson(game).toString());
-        }else{
-            /*
-            will send to dataBase these information
-            game.getPlayerX();
-            game.getPlayerO();
-            game.getRecordedGamePosition();
-            */
-            game.setRespond(Respond.SUCCESS);
-            game.setRecordedGamePosition(null);
-            System.out.println("set respond to  " + game.getRespond());
-
-            sendMsg(convert.fromGameToJson(game).toString());
-        }
-    }
-    
-    private boolean isGamePositionEmpty(String[] gamePosition){
-        boolean isEmpty = false;
-        for(String position: gamePosition){
-            if(position.equalsIgnoreCase("")){
-                isEmpty = true;
-            }
-        }
-        return isEmpty;
-    }
-
-
-    int getIndex(String _un) {
-//        int index = -1;
-//        for (ClientHandler client : clients) {
-//            if (client.UserName == _un) {
-//                index = clients.indexOf(client);
-//            }
-//        }
-        return 0;
-    }
-
-    public void stopClientHandler() {
-
-//        startFlag = false;
-//        for (ClientHandler client : clients) {
-//            logout(client.UserName);
-//        }
-    }
-
-    public void sendMsg(Player player){
-        
-        
-         obj = convert.fromPlayerToJson(player);
-        
-        this.outStream.println(obj);
-    }
-    
-    public void sendMsg(Player player, String request){
-        
-        player.setRequest(request);
-         obj = convert.fromPlayerToJson(player, convert.fromPlayerListToJSONArray(player.getPlayersList()));
-        
-        this.outStream.println(obj);
-    }
-    
-    public void sendMsg(String game){
-        
-        this.outStream.println(game);
-    }
-
-    private void login(JSONObject message) {
-        Player newPlayer = convert.fromJsonToPlayer(message);
-        
-        Player isExist = database.check_username_password(newPlayer.getUsername(), newPlayer.getPassword());
-        if (isExist.getRespond().equals(Respond.SUCCESS)) {
-            int isOnline = database.updateStatus(Status.ONLINE, newPlayer.getUsername());
-            if (isOnline == 1) {
-                newPlayer.setRespond(Respond.SUCCESS);
-                newPlayer.setState(Status.ONLINE);
-                connectedPlayers.put(newPlayer.getUsername(), this);
-                sendMsg(newPlayer);
-                updatePlayerList();
-            } else {
-                newPlayer.setRespond(Respond.FAILURE);
-                sendMsg(newPlayer);
-            }
-        } else {
-            newPlayer.setRespond(Respond.FAILURE);
-            sendMsg(newPlayer);
-        }
-    }
-
-    private void updatePlayerList() {
-        players = database.selectplayer();
-        PlayersList.setPlayerList(players);
-        for (Player player : players) {
-            System.out.println("Player :" + player.getUsername() + " Status= " + player.getState());
-            if (player.getState().equals(Status.ONLINE)) {
-                player.setPlayerList(PlayersList.getPlayersList());
-                ClientHandler user = connectedPlayers.get(player.getUsername());
                 
-                user.sendMsg(player, Request.PlAYER_LIST);
-            }
+               //  case "playRequest":
+               // playRequest();
 
         }
     }
 
-    private void logout(JSONObject message) {
-        
-        Player newPlayer = convert.fromJsonToPlayer(message);
-        int isOffline = database.updateStatus(Status.OFFLINE, newPlayer.getUsername());
-        if (isOffline == 1) {
-            Boolean isRemoved = connectedPlayers.remove(newPlayer.getUsername(), this);
-            if (isRemoved) {
-                try {
-                    newPlayer.setRespond(Respond.SUCCESS);
-                    newPlayer.setState(Status.OFFLINE);
-                    sendMsg(newPlayer);
-                    updatePlayerList();
-                    connected = false;
-                    inStream.close();
-                    outStream.close();
-                } catch (IOException ex) {
-                    System.out.println(ex.getMessage());
-                }
-            } else {
-                newPlayer.setRespond(Respond.FAILURE);
+    private void sendMsg(Player player) {
+
+        try {
+            this.writeObj.writeObject(player);
+        } catch (IOException ex) {
+            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+  /**
+     * for player1
+     * receive a new game request from player then check game type[old,new]
+     * if there is an old game ask player1 to choose what he want to start [old,new]
+     * if there is not an old game then send a new play request to player2
+     */
+    //game_invitation
+    
+    private void  gameInvitation(Player senderPlayer){
+        //gui
+       // newplayer2.setRequest(Request.GAMEINVITATION);
+       //connectedPlayers.put("emansol", this);
+      
+       if((connectedPlayers.get(senderPlayer.getDestination())!=null))
+         //(connectedPlayers.get(senderPlayer.getDestination()).getState().equals(Status.ONLINE)))
+               {
+                   //System.out.println("playe");
+                    //senderPlayer.Requestgame();
+                    senderPlayer.setRequest(Request.GAMEINVITATION);
+                    
+            connectedPlayers.get(senderPlayer.getDestination()).sendMsg(senderPlayer);
+            //Player newPlay=new Player();
+            //newPlay.setUsername(senderPlayer.getDestination());
+            //newPlay.setRequest(Request.GAMEINVITATION);
+            //sendMsg(newPlay);
+            
+            
+             
+            //sendMsg(senderPlayer);
+      //thread.sleep(1000);
+      
+       }
+       else{
+            senderPlayer.setRespond(Respond.FAILURE);
+            //enter play list again to chooce anther one to playe
+            senderPlayer.setRespond(Request.GAMEINVITATION);
+            System.out.println("no");
+         
+             
+            sendMsg(senderPlayer);
+       }
+           
+       // System.out.println(senderPlayer.Respondgame());
+    }
+             
+//game invitition
+//game respond
+//    
+    
+      private void gameResponse(Player destinationPlayer){
+          //gui
+          //newplayer.setRequest(Request.respond_GAME);
+         
+         // newplayer.Requestgame();
+          //System.out.println("enterrrrrrrr");
+         // if(destinationPlayer.Respondgame()==JOptionPane.YES_OPTION){
+              //destinationPlayer.setRespond(Respond.SUCCESS);
+          //}
+         // else if(destinationPlayer.Respondgame()==JOptionPane.NO_OPTION)
+            //  destinationPlayer.setRespond(Respond.FAILURE);
+          //else
+              //destinationPlayer.setRespond(Respond.FAILURE);
+          
+          if(destinationPlayer.getRespond().equals(Respond.SUCCESS)){
+               System.out.println("enter ah");
+             //newplayer.setRespond(Respond.SUCCESS);
+                 destinationPlayer.setRequest(Request.GAMERESPOND);
+                  System.out.println("elgame");
+                 //enter game
+                 //newplayer.setRequest(Request.STARTGAME);
+                 
+      }
+      else{
+             System.out.println("not enter ");
+            destinationPlayer.setRequest(Request.GAMERESPOND);
+          destinationPlayer.setRespond(Respond.FAILURE);
+         //newplayer.setRequest(Request.);
+           
+      }
+           //gui get destinayion==> player obj.getusername()=> sender
+            connectedPlayers.get(destinationPlayer.getUsername()).sendMsg(destinationPlayer);
+      }
+     private void sendNewGameRequest(Player newplayer1,Player newplayer2 ){
+         //enter to new game frame 
+        // play_game.game_record(Positions,newplayer1.getUsername(),newplayer2.getUsername());
+                  
+     
+     }
+      
+   private void login(Player newPlayer) {
+       Player newPlayerr=new Player();
+     newPlayerr= database.check_username_password(newPlayer.getUsername(),newPlayer.getPassword());
+        if (newPlayerr.getUsername()!=null) {
+            connectedPlayers.put(newPlayer.getUsername(), this);
+            newPlayer.setRespond(Respond.SUCCESS);
+            newPlayer.setState(Status.ONLINE);
+            
+            System.out.println("login");
+            sendMsg(newPlayer);
+
+        } else {
+            newPlayer.setRespond(Respond.FAILURE);
+            System.out.println("not");
+            sendMsg(newPlayer);
+        }
+    }
+
+    private void logout(Player newPlayer) {
+        Boolean isRemoved = connectedPlayers.remove(newPlayer.getUsername(), this);
+        if (isRemoved) {
+            try {
+                newPlayer.setRespond(Respond.SUCCESS);
+                newPlayer.setState(Status.OFFLINE);
                 sendMsg(newPlayer);
+                connected = false;
+                readObj.close();
+                writeObj.close();
+            } catch (IOException ex) {
+                System.out.println(ex.getMessage());
             }
         } else {
             newPlayer.setRespond(Respond.FAILURE);
@@ -281,39 +216,33 @@ public class ClientHandler extends Thread implements Serializable {
         }
     }
 
-    private void sginUp(JSONObject message) {
+    private void sginUp(Player newPlayer) {
         
-        Player newPlayer = convert.fromJsonToPlayer(message);
         int isExist = database.check_username(newPlayer.getUsername());
-
-        if (isExist == 1) {
+        
+        if(isExist == 1){
             newPlayer.setRespond(Respond.FAILURE);
             sendMsg(newPlayer);
-
-        } else {
-           database.sign_up(newPlayer.getFirstname(), newPlayer.getLastname(), newPlayer.getUsername(),newPlayer.getPassword());
-           newPlayer.setRespond(Respond.SUCCESS);
-           sendMsg(newPlayer); 
+            
+        }else{
+           // database.sign_up(newPlayer.getFirstname, newPlayer.getLastname(), newPlayer.getUsername(),newPlayer.getPassword());
+            newPlayer.setRespond(Respond.SUCCESS);
+            sendMsg(newPlayer); 
         }
-
+        
     }
 
-//     @Override
-//     public void run() {
-//         while (connected) {
-
-//             try {
-//                 try {
-//                     JSONObject obj = (JSONObject) parser.parse(inStream.readUTF());
-//                  , convert.jSONArrayToPlayerList((JSONArray) obj.get("playersList"))
-//                     Player newPlayer = convert.fromJsonToPlayer(obj);
-//                     messageHandler(newPlayer);
-//                 } catch (IOException ex) {
-//                     System.out.println(ex.getMessage());
-//                 }
-//             } catch (ParseException ex) {
-//                 System.out.println(ex.getMessage());
-//             }
-//         }
-//     }
+    @Override
+    public void run() {
+        while (connected) {
+            try {
+                Player p2 = (Player) readObj.readObject();
+                messageHandler(p2);
+            } catch (IOException ex) {
+                System.out.println(ex.getMessage());
+            } catch (ClassNotFoundException ex) {
+                System.out.println(ex.getMessage());
+            }
+        }
+    }
 }

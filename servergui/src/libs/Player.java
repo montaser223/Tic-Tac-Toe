@@ -4,54 +4,46 @@
  * and open the template in the editor.
  */
 package libs;
+ 
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import javax.swing.JOptionPane;
 
 /**
  *
  * @author Eman
  */
+
+
+
 /**
  *
  * @author black horse
- *
+ * 
  */
-public class Player implements Serializable {
+ public class Player implements Serializable{
+  
 
-    ArrayList<Player> players = new ArrayList<Player>();
+    String username, password, firstname, lastname, state,  request, respond,buttonerespond,player2_username,scour;
+    int respond_massage;
 
-    String username, password, firstname, lastname, status, request, respond, buttonerespond, player2, scour;
-
-    public Player(String _username, String _password) {
+    public Player()
+    {
+    }
+     public Player(String _username, String _password) {
         username = _username;
         password = _password;
         request = Request.LOGIN;
     }
 
-    public Player() {}
-
-    public Player(String _username, String _scour, String _status) {
-        username = _username;
-        scour = _scour;
-        status = _status;
-    }
+     
 
     public void setFirstname(String firstname) {
         this.firstname = firstname;
     }
-    
+
     public void setLastname(String lastname) {
         this.lastname = lastname;
-    }
-    
-    public String getFirstname() {
-        return firstname;
-    }
-
-    public String getLastname() {
-        return lastname;
     }
 
     public Player(String _username, String _password, String _firstname, String _lastname) {
@@ -70,8 +62,8 @@ public class Player implements Serializable {
         this.password = password;
     }
 
-    public void setState(String _status) {
-        status = _status;
+    public void setState(String state) {
+        this.state = state;
     }
 
     public void setScour(String scour) {
@@ -95,7 +87,7 @@ public class Player implements Serializable {
     }
 
     public String getState() {
-        return status;
+        return state;
     }
 
     public String getScour() {
@@ -109,22 +101,36 @@ public class Player implements Serializable {
     public String getRespond() {
         return respond;
     }
-
-    public String getButtoneRespond() {
+    /*
+     public String getButtoneRespond() {
         return buttonerespond;
     }
-
-    public void setButtoneRespond(String bntrespond) {
-        this.buttonerespond = bntrespond;
-
-    }
-
-    public void setPlayerList(ArrayList<Player> _players) {
-        players = _players;
-    }
-
-    public ArrayList<Player> getPlayersList() {
-        return players;
-    }
+     */
+            
+       
+       public void setDestination(String Player2_Username){
+       
+       player2_username=Player2_Username;
+       }
+     
+         public String getDestination(){
+       
+      return  player2_username;
+       }
+         /*
+           public void  Requestgame(){
+        
+               respond_massage=JOptionPane.showConfirmDialog(null,"do you want playing with me ?"); 
+               
+       }
+     
+              
+           public int Respondgame(){
+        
+               return respond_massage;
+               
+       }*/
+     
     
 }
+ 
