@@ -156,12 +156,19 @@ public class XOBase extends AnchorPane implements Serializable{
                 recordedPositions[index].equalsIgnoreCase(Game.O_MOVE)){
                 
                 
-                buttons[index].setText(recordedPositions[index]);
-                buttons[index].setDisable(true);
+                
                 
                 if(recordedPositions[index] == "X"){
+                    
+                    buttons[index].setTextFill(javafx.scene.paint.Color.rgb(255, 157, 10));
+                    buttons[index].setText(recordedPositions[index]);
+                    buttons[index].setDisable(true);
                     playerXpositions.add(index+1);
+                    
                 }else{
+                    buttons[index].setTextFill(javafx.scene.paint.Color.rgb(255, 157, 10));
+                    buttons[index].setText(recordedPositions[index]);
+                buttons[index].setDisable(true);
                     playerOpositions.add(index+1);
                 }
                     
@@ -352,7 +359,8 @@ public class XOBase extends AnchorPane implements Serializable{
         
         
         if(playedMove.equalsIgnoreCase(Game.X_MOVE)){
-            buttons[position.intValue()-1].setTextFill(javafx.scene.paint.Color.rgb(255, 157, 10));
+            
+            buttons[position.intValue()-1].setTextFill(javafx.scene.paint.Color.rgb(5, 112, 255));
             buttons[position.intValue()-1].setText(playedMove);
             buttons[position.intValue()-1].setDisable(true);
             
@@ -361,7 +369,7 @@ public class XOBase extends AnchorPane implements Serializable{
             
         }else{
             
-            buttons[position.intValue()-1].setTextFill(javafx.scene.paint.Color.rgb(5, 112, 255));
+            buttons[position.intValue()-1].setTextFill(javafx.scene.paint.Color.rgb(255, 88, 66));
             buttons[position.intValue()-1].setText(playedMove);
             buttons[position.intValue()-1].setDisable(true);
             
