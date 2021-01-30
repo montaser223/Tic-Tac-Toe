@@ -184,80 +184,80 @@ public class ClientHandler extends Thread implements Serializable {
      */
     //game_invitation
     
-    private void  gameInvitation(Player senderPlayer){
-        //gui
-       // newplayer2.setRequest(Request.GAMEINVITATION);
-       //connectedPlayers.put("emansol", this);
-      
-       if((connectedPlayers.get(senderPlayer.getDestination())!=null))
-         //(connectedPlayers.get(senderPlayer.getDestination()).getState().equals(Status.ONLINE)))
-               {
-                   //System.out.println("playe");
-                    //senderPlayer.Requestgame();
-                    senderPlayer.setRequest(Request.GAMEINVITATION);
-                    
-            connectedPlayers.get(senderPlayer.getDestination()).sendMsg(senderPlayer);
-            //Player newPlay=new Player();
-            //newPlay.setUsername(senderPlayer.getDestination());
-            //newPlay.setRequest(Request.GAMEINVITATION);
-            //sendMsg(newPlay);
-            
-            
-             
-            //sendMsg(senderPlayer);
-      //thread.sleep(1000);
-      
-       }
-       else{
-            senderPlayer.setRespond(Respond.FAILURE);
-            //enter play list again to chooce anther one to playe
-            senderPlayer.setRespond(Request.GAMEINVITATION);
-            System.out.println("no");
-         
-             
-            sendMsg(senderPlayer);
-       }
-           
-       // System.out.println(senderPlayer.Respondgame());
-    }
-             
-//game invitition
-//game respond
+//    private void  gameInvitation(Player senderPlayer){
+//        //gui
+//       // newplayer2.setRequest(Request.GAMEINVITATION);
+//       //connectedPlayers.put("emansol", this);
+//      
+//       if((connectedPlayers.get(senderPlayer.getDestination())!=null))
+//         //(connectedPlayers.get(senderPlayer.getDestination()).getState().equals(Status.ONLINE)))
+//               {
+//                   //System.out.println("playe");
+//                    //senderPlayer.Requestgame();
+//                    senderPlayer.setRequest(Request.GAMEINVITATION);
+//                    
+//            connectedPlayers.get(senderPlayer.getDestination()).sendMsg(senderPlayer);
+//            //Player newPlay=new Player();
+//            //newPlay.setUsername(senderPlayer.getDestination());
+//            //newPlay.setRequest(Request.GAMEINVITATION);
+//            //sendMsg(newPlay);
+//            
+//            
+//             
+//            //sendMsg(senderPlayer);
+//      //thread.sleep(1000);
+//      
+//       }
+//       else{
+//            senderPlayer.setRespond(Respond.FAILURE);
+//            //enter play list again to chooce anther one to playe
+//            senderPlayer.setRespond(Request.GAMEINVITATION);
+//            System.out.println("no");
+//         
+//             
+//            sendMsg(senderPlayer);
+//       }
+//           
+//       // System.out.println(senderPlayer.Respondgame());
+//    }
+//             
+////game invitition
+////game respond
+////    
 //    
-    
-      private void gameResponse(Player destinationPlayer){
-          //gui
-          //newplayer.setRequest(Request.respond_GAME);
-         
-         // newplayer.Requestgame();
-          //System.out.println("enterrrrrrrr");
-         // if(destinationPlayer.Respondgame()==JOptionPane.YES_OPTION){
-              //destinationPlayer.setRespond(Respond.SUCCESS);
-          //}
-         // else if(destinationPlayer.Respondgame()==JOptionPane.NO_OPTION)
-            //  destinationPlayer.setRespond(Respondssssssssss.FAILURE);
-          //else
-              //destinationPlayer.setRespond(Respond.FAILURE);
-          
-          if(destinationPlayer.getRespond().equals(Respond.SUCCESS)){
-               System.out.println("enter ah");
-             //newplayer.setRespond(Respond.SUCCESS);
-                 destinationPlayer.setRequest(Request.GAMERESPOND);
-                  System.out.println("elgame");
-                 //enter game
-                 //newplayer.setRequest(Request.STARTGAME);
-                 
-            }
-            else{
-                    System.out.println("not enter ");
-                    destinationPlayer.setRequest(Request.GAMERESPOND);
-                destinationPlayer.setRespond(Respond.FAILURE);
-                //newplayer.setRequest(Request.);
-                
-            }
-                //gui get destinayion==> player obj.getusername()=> sender
-                    connectedPlayers.get(destinationPlayer.getUsername()).sendMsg(destinationPlayer);
-        }
+//      private void gameResponse(Player destinationPlayer){
+//          //gui
+//          //newplayer.setRequest(Request.respond_GAME);
+//         
+//         // newplayer.Requestgame();
+//          //System.out.println("enterrrrrrrr");
+//         // if(destinationPlayer.Respondgame()==JOptionPane.YES_OPTION){
+//              //destinationPlayer.setRespond(Respond.SUCCESS);
+//          //}
+//         // else if(destinationPlayer.Respondgame()==JOptionPane.NO_OPTION)
+//            //  destinationPlayer.setRespond(Respondssssssssss.FAILURE);
+//          //else
+//              //destinationPlayer.setRespond(Respond.FAILURE);
+//          
+//          if(destinationPlayer.getRespond().equals(Respond.SUCCESS)){
+//               System.out.println("enter ah");
+//             //newplayer.setRespond(Respond.SUCCESS);
+//                 destinationPlayer.setRequest(Request.GAMERESPOND);
+//                  System.out.println("elgame");
+//                 //enter game
+//                 //newplayer.setRequest(Request.STARTGAME);
+//                 
+//            }
+//            else{
+//                    System.out.println("not enter ");
+//                    destinationPlayer.setRequest(Request.GAMERESPOND);
+//                destinationPlayer.setRespond(Respond.FAILURE);
+//                //newplayer.setRequest(Request.);
+//                
+//            }
+//                //gui get destinayion==> player obj.getusername()=> sender
+//                    connectedPlayers.get(destinationPlayer.getUsername()).sendMsg(destinationPlayer);
+//        }
 
 
     int getIndex(String _un) {

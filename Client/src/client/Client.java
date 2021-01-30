@@ -57,7 +57,6 @@ import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
-import com.google.gson.Gson;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -94,13 +93,15 @@ import javafx.scene.text.FontWeight;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-
 /**
  *
  * @author hebaa
  */
 public class Client extends Application implements Serializable {
-    /************************************socket***********************************************************************/
+
+    /**
+     * **********************************socket**********************************************************************
+     */
     Socket socket;
     ObjectInputStream readObj;
     ObjectOutputStream writeObj;
@@ -110,12 +111,20 @@ public class Client extends Application implements Serializable {
     JSONObject obj;
     JSONParser parse;
     Thread thread;
-    /****************************Player class******************************************************************************/
+    /**
+     * **************************Player
+     * class*****************************************************************************
+     */
     Player p;
-    /******************************Single Mode Game**********************************************************************************/
-    int count = 0 ;
+    /**
+     * ****************************Single Mode
+     * Game*********************************************************************************
+     */
+    int count = 0;
 //    SingleModeGame single ;
-    /*************************************Alert**************************************************************************/
+    /**
+     * ***********************************Alert*************************************************************************
+     */
     Alert alertEmptyLogIn1 = new Alert(Alert.AlertType.ERROR);
     Alert alertWrongLogIn1 = new Alert(Alert.AlertType.ERROR);
     Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -123,14 +132,20 @@ public class Client extends Application implements Serializable {
     Alert alertEmptySignUp1 = new Alert(Alert.AlertType.ERROR);
     Alert alertWrongLogout1;
     Alert unSelected4 = new Alert(Alert.AlertType.ERROR);
-    /*********************************AnchorPane Screens***********************************************************************************/
+    /**
+     * *******************************AnchorPane
+     * Screens**********************************************************************************
+     */
     AnchorPane ScreenOne;
     AnchorPane ScreenTwo;
     AnchorPane ScreenThree;
     AnchorPane ScreenFour;
     AnchorPane ScreenSingleMode;
     AnchorPane ScreenMultiMode;
-    /***********************************Screen one variables**********************************************************************/
+    /**
+     * *********************************Screen one
+     * variables*********************************************************************
+     */
     public ImageView LoginImg;
     public Label LoginLabel;
     public Label usrName1;
@@ -143,7 +158,10 @@ public class Client extends Application implements Serializable {
     Text usernameDislay3 = new Text();
     ImageView imageView;
     InputStream stream;
-    /***************************************Screen two variables********************************************************************/
+    /**
+     * *************************************Screen two
+     * variables*******************************************************************
+     */
     public GridPane GridOfImageAndForm;
     public ColumnConstraints columnConstraints;
     public ColumnConstraints columnConstraints0;
@@ -161,7 +179,10 @@ public class Client extends Application implements Serializable {
     public PasswordField passText2;
     public Button signupBtn2;
     public Button backBtn2;
-    /*****************************************Screen three variables*******************************************************************/
+    /**
+     * ***************************************Screen three
+     * variables******************************************************************
+     */
     public GridPane GridOfPlay;
     public ColumnConstraints tableColumnConstraints;
     public RowConstraints tableRowConstraints;
@@ -171,7 +192,10 @@ public class Client extends Application implements Serializable {
     public Button singleBtn3;
     public Button multiBtn3;
     public Button logOutBtn3;
-    /*******************************************Screen four variables*****************************************************************************/
+    /**
+     * *****************************************Screen four
+     * variables****************************************************************************
+     */
     ImageView TableImg;
     TableView PlayerTable;
     TableColumn PlayerName;
@@ -180,7 +204,9 @@ public class Client extends Application implements Serializable {
     Label TableLabel;
     Button playBtn4;
     Button backBtn4;
-    /***********************************************ScreenSingleMode******************************************************************/
+    /**
+     * *********************************************ScreenSingleMode*****************************************************************
+     */
     ImageView GameImg;
     Button exit;
     Button recordGame;
@@ -193,7 +219,7 @@ public class Client extends Application implements Serializable {
     Button bt7;
     Button bt8;
     Button bt9;
-     
+
     ArrayList<Integer> playerXpositions = new ArrayList<Integer>();
     ArrayList<Integer> playerOpositions = new ArrayList<Integer>();
     Label playerName;
@@ -211,75 +237,72 @@ public class Client extends Application implements Serializable {
     int index;
 
     private static String username;
-    /********************************************ScreenMultiMode**********************************************************************/
-    
-     ImageView MultiGameImage;
-     TextArea chatArea;
-     TextField messageField;
-     Button sendMsg;
-     Button btn1;
-     Button btn2;
-     Button btn3;
-     Button btn4;
-     Button btn5;
-     Button btn6;
-     Button btn7;
-     Button btn8;
-     Button btn9;
-     Button exitGame;
-     Label playerOneName;
-     Label playerTwoName;
-     Label playerO;
-     Label currentTurn;
-     Label playerX;
-     Label playerOneScore;
-     Label playerTwoScore;
-     Label scoreSeperator2;
-     Button recordGame2;
-     /**************************************************************************************************************/
+    /**
+     * ******************************************ScreenMultiMode*********************************************************************
+     */
+
+    ImageView MultiGameImage;
+    TextArea chatArea;
+    TextField messageField;
+    Button sendMsg;
+    Button btn1;
+    Button btn2;
+    Button btn3;
+    Button btn4;
+    Button btn5;
+    Button btn6;
+    Button btn7;
+    Button btn8;
+    Button btn9;
+    Button exitGame;
+    Label playerOneName;
+    Label playerTwoName;
+    Label playerO;
+    Label currentTurn;
+    Label playerX;
+    Label playerOneScore;
+    Label playerTwoScore;
+    Label scoreSeperator2;
+    Button recordGame2;
+
+    /**
+     * ***********************************************************************************************************
+     */
     @Override
-   public void init() {
-         p=new Player("","");
-         alertWrongLogIn1.setTitle("LogIn ");
-         alertWrongLogIn1.setHeaderText(null);
-         alertWrongLogIn1.setContentText("Invalid User Name or Password");
-         
+    public void init() {
+        p = new Player("", "");
+        alertWrongLogIn1.setTitle("LogIn ");
+        alertWrongLogIn1.setHeaderText(null);
+        alertWrongLogIn1.setContentText("Invalid User Name or Password");
+
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                try
-                {
+                try {
                     socket = new Socket("127.0.0.1", 5005);
                     inputStream = new DataInputStream(socket.getInputStream());
                     outputStream = new PrintStream(socket.getOutputStream());
 //                    writeObj = new ObjectOutputStream(socket.getOutputStream());
 //                    readObj = new ObjectInputStream(socket.getInputStream());                      
-                } 
-                catch (IOException ex)
-                {
+                } catch (IOException ex) {
                     System.out.println(ex.getMessage());
                 }
                 System.out.println("hoooo");
                 while (true) {
-                    try
-                    {
+                    try {
                         //(JSONObject) parser.parse(inStream.readLine());
                         JSONParser parse = new JSONParser();
-                        obj =  new JSONObject();
+                        obj = new JSONObject();
                         obj = (JSONObject) parse.parse(inputStream.readLine());
                         p = convert.fromJsonToPlayer(obj);
                         System.out.println("Line 196: " + p.getRespond());
                         messageHandelr(p);
                         System.out.println("Line 98: " + p.getRespond());
                         System.out.println("Line 196: " + p.getUsername() + p.getPassword());
-                    } 
-                    catch (IOException ex)
-                    {
-                         System.out.println("Line 100: " + p.getRespond());
+                    } catch (IOException ex) {
+                        System.out.println("Line 100: " + p.getRespond());
                         System.out.println(ex.getMessage());
-                    } 
-                    catch (NullPointerException ex)
-                    {
+                    } catch (NullPointerException ex) {
                         System.out.println("You should run server first Line 111: " + p.getRespond());
                         System.out.println(ex.getMessage());
                     } catch (ParseException ex) {
@@ -291,9 +314,12 @@ public class Client extends Application implements Serializable {
         thread.start();
 
     }
-    /************************************Screens methods********************************************************************************/
-        public AnchorPane ScreenOne()
-    {
+
+    /**
+     * **********************************Screens
+     * methods*******************************************************************************
+     */
+    public AnchorPane ScreenOne() {
         ScreenOne = new AnchorPane();
         LoginImg = new ImageView();
         LoginLabel = new Label();
@@ -320,9 +346,9 @@ public class Client extends Application implements Serializable {
             FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\login.jpg");
             Image image = new Image(stream);
             LoginImg.setImage(image);
-            
+
         } catch (FileNotFoundException ex) {
-           
+
             System.out.println("Faild to load login image");
         }
 
@@ -388,21 +414,23 @@ public class Client extends Application implements Serializable {
         ScreenOne.getChildren().add(passText1);
         ScreenOne.getChildren().add(logInBtn1);
         ScreenOne.getChildren().add(signupBtn1);
-        
+
         userText1.clear();
         passText1.clear();
         alertEmptyLogIn1.setTitle("sign in ");
         alertEmptyLogIn1.setHeaderText(null);
         alertEmptyLogIn1.setContentText("All Fields are Required");
-        
-        /*************Screen One Button Action********************/
+
+        /**
+         * ***********Screen One Button Action*******************
+         */
         signupBtn1.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
             public void handle(ActionEvent event) {
-                
+
                 ScreenTwo().getChildren().clear();
-                
+
                 signupBtn1.getScene().setRoot(ScreenTwo());
 
             }
@@ -414,15 +442,12 @@ public class Client extends Application implements Serializable {
             @Override
             public void handle(ActionEvent event) {
 
-                if (userText1.getText().isEmpty() || passText1.getText().isEmpty())
-                {
+                if (userText1.getText().isEmpty() || passText1.getText().isEmpty()) {
                     alertEmptyLogIn1.showAndWait();
-                } 
-                else
-                {
+                } else {
                     Player newPlayer = new Player(userText1.getText(), passText1.getText());
-                    setPlayerName( userText1.getText() );
-                    
+                    setPlayerName(userText1.getText());
+
                     convert = new JsonConverter();
                     JSONObject obj = new JSONObject();
                     obj = convert.fromPlayerToJson(newPlayer);
@@ -433,21 +458,18 @@ public class Client extends Application implements Serializable {
 
             }
         });
-        
+
         return ScreenOne;
-          
+
     }
-        
-    public String getusername()
-   {
-       System.out.println(userName3);
-       return  userText1.getText()  ;
-       
-       
-   }
-    
-     public AnchorPane ScreenTwo()
-    {
+
+    public String getusername() {
+        System.out.println(userName3);
+        return userText1.getText();
+
+    }
+
+    public AnchorPane ScreenTwo() {
         ScreenTwo = new AnchorPane();
         GridOfImageAndForm = new GridPane();
         columnConstraints = new ColumnConstraints();
@@ -497,7 +519,7 @@ public class Client extends Application implements Serializable {
             FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\registration.jpg");
             Image image = new Image(stream);
             SignUpImg.setImage(image);
-            
+
         } catch (FileNotFoundException ex) {
             System.out.println("Faild load signup image");
         }
@@ -601,7 +623,7 @@ public class Client extends Application implements Serializable {
         SignUpFormPanel.getChildren().add(backBtn2);
         GridOfImageAndForm.getChildren().add(SignUpFormPanel);
         ScreenTwo.getChildren().add(GridOfImageAndForm);
-        
+
         userText2.clear();
         FirstText2.clear();
         LastText2.clear();
@@ -617,7 +639,7 @@ public class Client extends Application implements Serializable {
         alertUserExists.setTitle("signUp ");
         alertUserExists.setHeaderText(null);
         alertUserExists.setContentText("User already exist choose another uername");
-        
+
         signupBtn2.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
@@ -625,19 +647,14 @@ public class Client extends Application implements Serializable {
                 if (userText2.getText().isEmpty() || FirstText2.getText().isEmpty() || LastText2.getText().isEmpty() || passText2.getText().isEmpty()) {
 
                     alertEmptySignUp1.showAndWait();
-                } 
-                else
-                {
-                    
-                    Player signUpPlayer = new Player(userText2.getText(),passText2.getText(), FirstText2.getText(), LastText2.getText());
-                    
-                    try
-                    {
+                } else {
+
+                    Player signUpPlayer = new Player(userText2.getText(), passText2.getText(), FirstText2.getText(), LastText2.getText());
+
+                    try {
                         writeObj.writeObject(signUpPlayer);
                         System.out.println("New Player has sign up!");
-                    }
-                    catch (IOException ex)
-                    {
+                    } catch (IOException ex) {
                         System.out.println(ex.getMessage());
                     }
 
@@ -656,9 +673,8 @@ public class Client extends Application implements Serializable {
         });
         return ScreenTwo;
     }
-     
-     public AnchorPane ScreenThree()
-    {
+
+    public AnchorPane ScreenThree() {
         ScreenThree = new AnchorPane();
         GridOfPlay = new GridPane();
         tableColumnConstraints = new ColumnConstraints();
@@ -699,7 +715,7 @@ public class Client extends Application implements Serializable {
             FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\rocket.jpg");
             Image image = new Image(stream);
             PlayImg.setImage(image);
-            
+
         } catch (FileNotFoundException ex) {
             System.out.println("Fsild to load menu image");
         }
@@ -750,47 +766,38 @@ public class Client extends Application implements Serializable {
         PlayPanel.getChildren().add(logOutBtn3);
         GridOfPlay.getChildren().add(PlayPanel);
         ScreenThree.getChildren().add(GridOfPlay);
-        
-        
+
         logOutBtn3.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
             public void handle(ActionEvent event) {
-                
+
                 Player logOutPlayer = new Player(userText1.getText(), passText1.getText());
                 logOutPlayer.setRequest(Request.LOGOUT);
                 System.out.println(logOutPlayer.getRequest());
-                    try
-                    {
-                        writeObj.writeObject(logOutPlayer);
-                        System.out.println("User send logout Request!");
-                    }
-                    catch (IOException ex)
-                    {
-                        System.out.println(ex.getMessage());
-                    }
+
+                outputStream.println(convert.fromPlayerToJson(logOutPlayer).toString());
+                System.out.println("User send logout Request!");
             }
 
         });
         //to reuest to play with another player send playrqeuest to server --->sender
         //in case of success respond start game means to move to multimode screen (recieve respond on playrqeuest)then send another request to server (startgame)
-        
 
         //reciver sent a request (answer) to the other player -->reciver
         //respond with another (answer) request holding success or falier 
-        
         multiBtn3.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
             public void handle(ActionEvent event) {
-                
+
                 ScreenFour().getChildren().clear();
                 multiBtn3.getScene().setRoot(ScreenFour());
 
             }
 
         });
-        
+
         singleBtn3.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
@@ -798,28 +805,27 @@ public class Client extends Application implements Serializable {
 
                 ScreenSingleMode().getChildren().clear();
                 singleBtn3.getScene().setRoot(ScreenSingleMode());
-                
+
             }
 
         });
-        
+
         return ScreenThree;
     }
-     
-     public AnchorPane ScreenFour()
-     {
+
+    public AnchorPane ScreenFour() {
         ScreenFour = new AnchorPane();
         TableImg = new ImageView();
 //        PlayerTable = new TableView();
         TableView<Player> PlayerTable = new TableView<Player>();
-        ObservableList<Player> playerData= FXCollections.observableArrayList(
-        new Player("MOHAMED" , "ON","13"),
-        new Player("ALI","OFF","25"),
-        new Player("HOSSAM","ON","42"),
-        new Player("gala","OFF","42"),
-        new Player("heba","ON","34")
-    );
-        
+        ObservableList<Player> playerData = FXCollections.observableArrayList(
+                new Player("MOHAMED", "ON", "13"),
+                new Player("ALI", "OFF", "25"),
+                new Player("HOSSAM", "ON", "42"),
+                new Player("gala", "OFF", "42"),
+                new Player("heba", "ON", "34")
+        );
+
         PlayerName = new TableColumn();
         Score = new TableColumn();
         Status = new TableColumn();
@@ -842,7 +848,7 @@ public class Client extends Application implements Serializable {
             FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\image.jpg");
             Image image = new Image(stream);
             TableImg.setImage(image);
-            
+
         } catch (FileNotFoundException ex) {
 //            Logger.getLogger(FXMLScreenOne.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -900,44 +906,44 @@ public class Client extends Application implements Serializable {
         ScreenFour.getChildren().add(playBtn4);
         ScreenFour.getChildren().add(backBtn4);
         PlayerName.setCellValueFactory(
-        new PropertyValueFactory<Player,String>("username")
-    );
-    Score.setCellValueFactory(
-        new PropertyValueFactory<Player,String>("scour")
-    );
-    Status.setCellValueFactory(
-        new PropertyValueFactory<Player,String>("state")
-    );
-        
+                new PropertyValueFactory<Player, String>("username")
+        );
+        Score.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("scour")
+        );
+        Status.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("state")
+        );
+
         PlayerTable.setItems(playerData);
-        
+
         unSelected4.setTitle("player list");
         unSelected4.setHeaderText(null);
         unSelected4.setContentText("please select player ");
 
-    backBtn4.setOnAction(new EventHandler<ActionEvent>() {
+        backBtn4.setOnAction(new EventHandler<ActionEvent>() {
 
-            @Override 
+            @Override
             public void handle(ActionEvent event) {
-                   
-                ScreenThree().getChildren().clear();
-                backBtn4.getScene().setRoot(ScreenThree());   
 
+                ScreenThree().getChildren().clear();
+                backBtn4.getScene().setRoot(ScreenThree());
 
             }
         });
-    playBtn4.setOnAction(new EventHandler<ActionEvent>() {
+        playBtn4.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
             public void handle(ActionEvent event) {
                 try {
                     Player pl = PlayerTable.getSelectionModel().getSelectedItem();
-                    Platform.runLater(()->{ScreenMultiMode().getChildren().clear();});
-                     Platform.runLater(()->{playBtn4.getScene().setRoot(ScreenMultiMode());
-                             });
+                    Platform.runLater(() -> {
+                        ScreenMultiMode().getChildren().clear();
+                    });
+                    Platform.runLater(() -> {
+                        playBtn4.getScene().setRoot(ScreenMultiMode());
+                    });
 
-                   
-                
                 } catch (NullPointerException q) {
 
                     unSelected4.showAndWait();
@@ -945,13 +951,12 @@ public class Client extends Application implements Serializable {
 
             }
         });
-    
-        return ScreenFour; 
-        
-     }
-     
-    public AnchorPane ScreenSingleMode()
-    {
+
+        return ScreenFour;
+
+    }
+
+    public AnchorPane ScreenSingleMode() {
         ScreenSingleMode = new AnchorPane();
         GameImg = new ImageView();
         exit = new Button();
@@ -967,13 +972,11 @@ public class Client extends Application implements Serializable {
         bt9 = new Button();
         playerScore = new Label();
         computerScore = new Label();
-        
+
         playerName = new Label();
         computerName = new Label();
         scoreSeperator = new Label();
         username = getusername();
-        
-        
 
         ScreenSingleMode.setMaxHeight(USE_PREF_SIZE);
         ScreenSingleMode.setMaxWidth(USE_PREF_SIZE);
@@ -990,7 +993,7 @@ public class Client extends Application implements Serializable {
             FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\image.jpg");
             Image image = new Image(stream);
             GameImg.setImage(image);
-            
+
         } catch (FileNotFoundException ex) {
 //            Logger.getLogger(FXMLScreenOne.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -1082,7 +1085,7 @@ public class Client extends Application implements Serializable {
         computerName.setText("Computer");
         computerName.setTextFill(javafx.scene.paint.Color.WHITE);
         computerName.setFont(Font.font("Javanese Text", FontWeight.BOLD, 20));
-        
+
         playerScore.setLayoutX(140.0);
         playerScore.setLayoutY(50.0);
         playerScore.setText(String.valueOf(playerScoreCounter));
@@ -1119,15 +1122,14 @@ public class Client extends Application implements Serializable {
         ScreenSingleMode.getChildren().add(playerName);
         ScreenSingleMode.getChildren().add(computerName);
         ScreenSingleMode.getChildren().add(scoreSeperator);
-        
-        
+
         playerScoreCounter = 0;
         computerScoreCounter = 0;
         recordedPositions = new String[9];
         gameFlag = true;
         symbol = "X";
         buttons = new Button[9];
-        
+
         buttons[0] = bt1;
         buttons[1] = bt2;
         buttons[2] = bt3;
@@ -1390,7 +1392,6 @@ public class Client extends Application implements Serializable {
 
         });
 
-
         recordGame.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -1404,28 +1405,26 @@ public class Client extends Application implements Serializable {
             }
 
         });
-        
-                exit.setOnAction(new EventHandler<ActionEvent>() {
+
+        exit.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
             public void handle(ActionEvent event) {
-              
-               ScreenThree().getChildren().clear();
-               exit.getScene().setRoot(ScreenThree()); 
-;
+
+                ScreenThree().getChildren().clear();
+                exit.getScene().setRoot(ScreenThree());
+                ;
             }
 
         });
 
-        playerName.setText(username);       
-        
+        playerName.setText(username);
+
         return ScreenSingleMode;
     }
 
+    public AnchorPane ScreenMultiMode() {
 
-    public AnchorPane ScreenMultiMode()
-    {
-        
         ScreenMultiMode = new AnchorPane();
         MultiGameImage = new ImageView();
         chatArea = new TextArea();
@@ -1466,7 +1465,7 @@ public class Client extends Application implements Serializable {
             FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\image.jpg");
             Image image = new Image(stream);
             MultiGameImage.setImage(image);
-            
+
         } catch (FileNotFoundException ex) {
 //            Logger.getLogger(FXMLScreenOne.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -1498,7 +1497,7 @@ public class Client extends Application implements Serializable {
         btn1.setMnemonicParsing(false);
         btn1.setPrefHeight(68.0);
         btn1.setPrefWidth(86.0);
-         //add text from palyer
+        //add text from palyer
         btn1.setText("X");
         btn1.setFont(new Font("Engravers MT", 36.0));
 
@@ -1528,7 +1527,7 @@ public class Client extends Application implements Serializable {
         btn5.setMnemonicParsing(false);
         btn5.setPrefHeight(68.0);
         btn5.setPrefWidth(86.0);
-         //add text from palyer
+        //add text from palyer
         btn5.setText("O");
         btn5.setFont(new Font("Engravers MT", 36.0));
 
@@ -1669,11 +1668,10 @@ public class Client extends Application implements Serializable {
         ScreenMultiMode.getChildren().add(scoreSeperator);
         ScreenMultiMode.getChildren().add(recordGame);
         return ScreenMultiMode;
-    }         
-             
-             
+    }
+
     public void messageHandelr(Player p) {
-        
+
         System.out.println("Line 212: " + p.getRespond());
         switch (p.getRequest()) {
             case Request.LOGIN:
@@ -1687,79 +1685,86 @@ public class Client extends Application implements Serializable {
                 logout(p);
                 break;
         }
-        
+
     }
-    
-    public void login(Player newPalyer)
-    {
+
+    public void login(Player newPalyer) {
         System.out.println("Line 221: " + newPalyer.getRespond());
-        
-        if (newPalyer.getRespond().equals(Respond.SUCCESS))
-        {
-            
+
+        if (newPalyer.getRespond().equals(Respond.SUCCESS)) {
+
             System.out.println("Line 223: " + newPalyer.getRespond());
-            
-            Platform.runLater(()->{ScreenThree().getChildren().clear();});
-            Platform.runLater(()->{logInBtn1.getScene().setRoot(ScreenThree());});
+
+            Platform.runLater(() -> {
+                ScreenThree().getChildren().clear();
+            });
+            Platform.runLater(() -> {
+                logInBtn1.getScene().setRoot(ScreenThree());
+            });
 
             System.out.println("Line 226: " + newPalyer.getRespond());
-        } 
-        else
-        {
+        } else {
             System.out.println("Line 228: " + newPalyer.getRespond());
-            Platform.runLater(()->alertWrongLogIn1.showAndWait());
-            
+            Platform.runLater(() -> alertWrongLogIn1.showAndWait());
 
         }
     }
-    
-    
+
     public void signup(Player p) {
-        
+
         System.out.println("Line 343: " + p.getRespond());
         if (p.getRespond().equals(Respond.SUCCESS)) {
             System.out.println("Line 344: " + p.getRespond());
-            Platform.runLater(()->{alert.showAndWait();});
-            Platform.runLater(()->{ScreenOne().getChildren().clear();});
-            Platform.runLater(()->{signupBtn2.getScene().setRoot(ScreenOne());});
-            
+            Platform.runLater(() -> {
+                alert.showAndWait();
+            });
+            Platform.runLater(() -> {
+                ScreenOne().getChildren().clear();
+            });
+            Platform.runLater(() -> {
+                signupBtn2.getScene().setRoot(ScreenOne());
+            });
+
             System.out.println("Line 348: " + p.getRespond());
-        } 
-        else
-        {
-            System.out.println("else"+p.getRespond());
-            Platform.runLater(()->{alertUserExists.showAndWait();});
+        } else {
+            System.out.println("else" + p.getRespond());
+            Platform.runLater(() -> {
+                alertUserExists.showAndWait();
+            });
             System.out.println("Line 232: user already exsist" + p.getRespond());
-           
-            
 
         }
     }
 
     public void logout(Player p) {
-        
+
         System.out.println("Logout function: " + p.getRespond());
-        
+
         if (p.getRespond().equals(Respond.SUCCESS)) {
-            
-            Platform.runLater(()->{ScreenOne().getChildren().clear();});
-            Platform.runLater(()->{logOutBtn3.getScene().setRoot(ScreenOne());});
+
+            Platform.runLater(() -> {
+                ScreenOne().getChildren().clear();
+            });
+            Platform.runLater(() -> {
+                logOutBtn3.getScene().setRoot(ScreenOne());
+            });
             System.out.println("User logout successfully: " + p.getRespond());
-        } 
-        else
-        {
-            alertWrongLogout1=new Alert(Alert.AlertType.ERROR);
+        } else {
+            alertWrongLogout1 = new Alert(Alert.AlertType.ERROR);
             alertWrongLogout1.setTitle("Logout ");
             alertWrongLogout1.setHeaderText(null);
             alertWrongLogout1.setContentText("Faild logout");
-            Platform.runLater(()->alertWrongLogout1.showAndWait());
+            Platform.runLater(() -> alertWrongLogout1.showAndWait());
             System.out.println("Line 389 logout: " + p.getRespond());
 
         }
     }
-    
-    /************************************ Single Mode Game methods********************************************************************************/
-        String checkWinner() {
+
+    /**
+     * ********************************** Single Mode Game
+     * methods*******************************************************************************
+     */
+    String checkWinner() {
         String winner = null;
         //winning conditions
         List topRow = Arrays.asList(1, 2, 3);
@@ -1925,13 +1930,11 @@ public class Client extends Application implements Serializable {
         computerScore.setText(String.valueOf(computerScoreCounter));
         recordGame.setText("Play Again!");
     }
-   
-    
-    @Override
-     public void start(Stage primaryStage) {
 
-            try
-        {
+    @Override
+    public void start(Stage primaryStage) {
+
+        try {
             Parent root = ScreenOne();
             Scene scene = new Scene(root);
 
@@ -1944,42 +1947,37 @@ public class Client extends Application implements Serializable {
                 //Setting image to the image view
                 primaryStage.getIcons().add(image);
             } catch (FileNotFoundException ex) {
-                
+
                 System.out.println("Cann't load background image in start method");
             }
-            
-            
+
             primaryStage.setScene(scene);
             primaryStage.setResizable(false);
             primaryStage.setTitle("Tic Tac Toe");
             primaryStage.show();
-        }
-        catch(NullPointerException ex)
-        {
+        } catch (NullPointerException ex) {
             System.out.println("Error");
         }
     }
-    
+
     @Override
     public void stop() {
-        
+
 //        p.setRequest(Request.DISCONNECT);
-        try
-        {
+        try {
             writeObj.writeObject(p);
             socket.close();
             readObj.close();
             writeObj.close();
             System.out.println("Sent a disconnection request to the server");
-        }
-        catch (IOException ex)
-        {
-                        System.out.println("problem in stop method ");
-            
+        } catch (IOException ex) {
+            System.out.println("problem in stop method ");
+
         }
         thread.stop();
-        
+
     }
+
     /**
      * @param args the command line arguments
      */
@@ -1987,6 +1985,4 @@ public class Client extends Application implements Serializable {
         launch(args);
     }
 
-
-    
 }
