@@ -95,6 +95,12 @@ public class ClientHandler extends Thread implements Serializable {
             case Request.SIGNUP:
                 sginUp(message);
                 break;
+            case Request.GAME_INVITATION:
+                gameInvitation(message);
+                break;
+            case Request.GAME_INVITATION_RESPOND:
+                gameResponse(message);
+                break;
             case Request.START_GAME:
                 startGame();
                 break;
@@ -115,7 +121,7 @@ public class ClientHandler extends Thread implements Serializable {
     }
 
     private void startGame(){
-        System.out.println("Sending start game to game handler");
+        System.out.println("124: Sending start game to game handler");
         new GameHandler(this);
     }
     private void endGame(){
@@ -125,7 +131,7 @@ public class ClientHandler extends Thread implements Serializable {
     private void sendRequestToGameHandler(JSONObject message){
         
         Game newGame = convert.fromJsonToGame(message);
-        System.out.println("Sending  gameMove to game handler");
+        System.out.println("134: Sending  gameMove to game handler");
         gameHandlerRequest = newGame;
         
     }
@@ -176,99 +182,76 @@ public class ClientHandler extends Thread implements Serializable {
         return isEmpty;
     }
 
-    /**
-     * for player1
-     * receive a new game request from player then check game type[old,new]
-     * if there is an old game ask player1 to choose what he want to start [old,new]
-     * if there is not an old game then send a new play request to player2
-     */
-    //game_invitation
     
-//    private void  gameInvitation(Player senderPlayer){
-//        //gui
-//       // newplayer2.setRequest(Request.GAMEINVITATION);
-//       //connectedPlayers.put("emansol", this);
-//      
-//       if((connectedPlayers.get(senderPlayer.getDestination())!=null))
-//         //(connectedPlayers.get(senderPlayer.getDestination()).getState().equals(Status.ONLINE)))
-//               {
-//                   //System.out.println("playe");
-//                    //senderPlayer.Requestgame();
-//                    senderPlayer.setRequest(Request.GAMEINVITATION);
-//                    
-//            connectedPlayers.get(senderPlayer.getDestination()).sendMsg(senderPlayer);
-//            //Player newPlay=new Player();
-//            //newPlay.setUsername(senderPlayer.getDestination());
-//            //newPlay.setRequest(Request.GAMEINVITATION);
-//            //sendMsg(newPlay);
-//            
-//            
-//             
-//            //sendMsg(senderPlayer);
-//      //thread.sleep(1000);
-//      
-//       }
-//       else{
-//            senderPlayer.setRespond(Respond.FAILURE);
-//            //enter play list again to chooce anther one to playe
-//            senderPlayer.setRespond(Request.GAMEINVITATION);
-//            System.out.println("no");
-//         
-//             
-//            sendMsg(senderPlayer);
-//       }
-//           
-//       // System.out.println(senderPlayer.Respondgame());
-//    }
-//             
-////game invitition
-////game respond
-////    
-//    
-//      private void gameResponse(Player destinationPlayer){
-//          //gui
-//          //newplayer.setRequest(Request.respond_GAME);
-//         
-//         // newplayer.Requestgame();
-//          //System.out.println("enterrrrrrrr");
-//         // if(destinationPlayer.Respondgame()==JOptionPane.YES_OPTION){
-//              //destinationPlayer.setRespond(Respond.SUCCESS);
-//          //}
-//         // else if(destinationPlayer.Respondgame()==JOptionPane.NO_OPTION)
-//            //  destinationPlayer.setRespond(Respondssssssssss.FAILURE);
-//          //else
-//              //destinationPlayer.setRespond(Respond.FAILURE);
-//          
-//          if(destinationPlayer.getRespond().equals(Respond.SUCCESS)){
-//               System.out.println("enter ah");
-//             //newplayer.setRespond(Respond.SUCCESS);
-//                 destinationPlayer.setRequest(Request.GAMERESPOND);
-//                  System.out.println("elgame");
-//                 //enter game
-//                 //newplayer.setRequest(Request.STARTGAME);
-//                 
-//            }
-//            else{
-//                    System.out.println("not enter ");
-//                    destinationPlayer.setRequest(Request.GAMERESPOND);
-//                destinationPlayer.setRespond(Respond.FAILURE);
-//                //newplayer.setRequest(Request.);
-//                
-//            }
-//                //gui get destinayion==> player obj.getusername()=> sender
-//                    connectedPlayers.get(destinationPlayer.getUsername()).sendMsg(destinationPlayer);
-//        }
-
-
-    int getIndex(String _un) {
-//        int index = -1;
-//        for (ClientHandler client : clients) {
-//            if (client.UserName == _un) {
-//                index = clients.indexOf(client);
-//            }
-//        }
-        return 0;
+    private String getPlayerStatus(String username){
+        String status = "";
+        for (Player player : players) {
+            if (player.getUsername().equalsIgnoreCase(username)) {
+                    status  = player.getStatus();
+            }
+        }
+        
+        return status;
     }
+    
+    private int getPlayerIndex(String username){
+        int index = -1;
+        for(Player player: players){
+            if(player.getUsername().equalsIgnoreCase(username)){
+                index++;
+            }
+        }
+        
+        return index;
+    }
+    
+    
+    private void  gameInvitation(JSONObject message){
+        
+       Player senderPlayer = convert.fromJsonToPlayer(message);
+       
+       if(getPlayerStatus(senderPlayer.getDestination()).equalsIgnoreCase(Status.ONLINE)){
+           
+            senderPlayer.setRequest(Request.GAME_INVITATION); 
+            connectedPlayers.get(senderPlayer.getDestination()).sendMsg(senderPlayer);
+            
+       }else{
+           
+             senderPlayer.setRespond(Respond.FAILURE);
+             senderPlayer.setRespond(Request.GAME_INVITATION);
+             sendMsg(senderPlayer);
+        }
+    }
+    
+    private void gameResponse(JSONObject message){
+        // this is the same object send from the gameInvitation sender,
+        // so the playerObj.getUsername -> the sender Username
+        // and the playerObj.getDestination -> the destination player
+        
+        Player destinationPlayer = convert.fromJsonToPlayer(message);
+        
+        if(destinationPlayer.getRespond().equals(Respond.SUCCESS)){
+            destinationPlayer.setRequest(Request.GAME_INVITATION);
+            destinationPlayer.setRespond(Respond.SUCCESS);
+            connectedPlayers.get(destinationPlayer.getUsername()).sendMsg(destinationPlayer);
+            players.get(getPlayerIndex(destinationPlayer.getUsername())).setStatus(Status.PLAYING);
+            updatePlayerList();
+            // we need to send again for the destinationPlayer a Game Invitation Respond == success
+            // to join the game with
+            connectedPlayers.get(destinationPlayer.getDestination()).sendMsg(destinationPlayer);
+            players.get(getPlayerIndex(destinationPlayer.getDestination())).setStatus(Status.PLAYING);
+            updatePlayerList();
+                    
+        }else{
+            destinationPlayer.setRequest(Request.GAME_INVITATION);
+            destinationPlayer.setRespond(Respond.FAILURE);
+            connectedPlayers.get(destinationPlayer.getUsername()).sendMsg(destinationPlayer);
+        }
+        
+    }
+
+
+
 
     public void stopClientHandler() {
 
@@ -307,7 +290,7 @@ public class ClientHandler extends Thread implements Serializable {
             int isOnline = database.updateStatus(Status.ONLINE, newPlayer.getUsername());
             if (isOnline == 1) {
                 newPlayer.setRespond(Respond.SUCCESS);
-                newPlayer.setState(Status.ONLINE);
+                newPlayer.setStatus(Status.ONLINE);
                 connectedPlayers.put(newPlayer.getUsername(), this);
                 sendMsg(newPlayer);
                 updatePlayerList();
@@ -325,8 +308,8 @@ public class ClientHandler extends Thread implements Serializable {
         players = database.selectplayer();
         PlayersList.setPlayerList(players);
         for (Player player : players) {
-            System.out.println("Player :" + player.getUsername() + " Status= " + player.getState());
-            if (player.getState().equals(Status.ONLINE)) {
+            System.out.println("Player :" + player.getUsername() + " Status= " + player.getStatus());
+            if (player.getStatus().equals(Status.ONLINE)) {
                 player.setPlayerList(PlayersList.getPlayersList());
                 ClientHandler user = connectedPlayers.get(player.getUsername());
                 
@@ -345,7 +328,7 @@ public class ClientHandler extends Thread implements Serializable {
             if (isRemoved) {
                 try {
                     newPlayer.setRespond(Respond.SUCCESS);
-                    newPlayer.setState(Status.OFFLINE);
+                    newPlayer.setStatus(Status.OFFLINE);
                     sendMsg(newPlayer);
                     updatePlayerList();
                     connected = false;

@@ -22,7 +22,8 @@ public class Player implements Serializable {
 
     ArrayList<Player> players = new ArrayList<Player>();
 
-    String username, password, firstname, lastname, status, request, respond, buttonerespond, player2, scour;
+    String username, password, firstname, lastname, status, request, respond,  destination;
+    int scour;
 
     public Player(String _username, String _password) {
         username = _username;
@@ -32,11 +33,37 @@ public class Player implements Serializable {
 
     public Player() {}
 
-    public Player(String _username, String _scour, String _status) {
+    public Player(String _username, int _scour, String _status) {
         username = _username;
         scour = _scour;
         status = _status;
     }
+    
+    public Player(String _username, String _password, String _firstname, String _lastname) {
+        username = _username;
+        password = _password;
+        firstname = _firstname;
+        lastname = _lastname;
+        request = Request.SIGNUP;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setDestination(String destination) {
+        this.destination = destination;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+    
+    
 
     public void setFirstname(String firstname) {
         this.firstname = firstname;
@@ -54,13 +81,7 @@ public class Player implements Serializable {
         return lastname;
     }
 
-    public Player(String _username, String _password, String _firstname, String _lastname) {
-        username = _username;
-        password = _password;
-        firstname = _firstname;
-        lastname = _lastname;
-        request = Request.SIGNUP;
-    }
+    
 
     public void setUsername(String username) {
         this.username = username;
@@ -70,11 +91,9 @@ public class Player implements Serializable {
         this.password = password;
     }
 
-    public void setState(String _status) {
-        status = _status;
-    }
+    
 
-    public void setScour(String scour) {
+    public void setScour(int scour) {
         this.scour = scour;
     }
 
@@ -94,11 +113,7 @@ public class Player implements Serializable {
         return password;
     }
 
-    public String getState() {
-        return status;
-    }
-
-    public String getScour() {
+    public int getScour() {
         return scour;
     }
 
@@ -109,16 +124,7 @@ public class Player implements Serializable {
     public String getRespond() {
         return respond;
     }
-
-    public String getButtoneRespond() {
-        return buttonerespond;
-    }
-
-    public void setButtoneRespond(String bntrespond) {
-        this.buttonerespond = bntrespond;
-
-    }
-
+    
     public void setPlayerList(ArrayList<Player> _players) {
         players = _players;
     }

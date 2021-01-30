@@ -62,7 +62,7 @@ public class XoDataBase implements Serializable {
             //rs.first();
 
             while (rs.next()) {
-                Player newPlayer = new Player(rs.getString("username"), rs.getString("score"), rs.getString("status"));
+                Player newPlayer = new Player(rs.getString("username"), rs.getInt("score"), rs.getString("status"));
                 players.add(newPlayer);
                 ID = rs.getInt("ID");
 //                System.out.println(rs.getInt("ID"));
@@ -181,8 +181,8 @@ public class XoDataBase implements Serializable {
                     while (rs.next()) {
 
                         NewPlayer.setUsername(rs.getString("username"));
-                        NewPlayer.setScour((rs.getString("score")));
-                        NewPlayer.setState(rs.getString("status"));
+                        NewPlayer.setScour((rs.getInt("score")));
+                        NewPlayer.setStatus(rs.getString("status"));
                         NewPlayer.setRespond(Respond.SUCCESS);
 
                     }
@@ -227,7 +227,7 @@ public class XoDataBase implements Serializable {
         System.out.println(p.getUsername());
         System.out.println(p.getRespond());
         System.out.println(p.getScour());
-        System.out.println(p.getState());
+        System.out.println(p.getStatus());
 
     }
 

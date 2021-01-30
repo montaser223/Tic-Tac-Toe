@@ -24,9 +24,10 @@ public class JsonConverter {
         newPlayer.setFirstname((String) obj.get("firstname"));
         newPlayer.setLastname((String) obj.get("lastname"));
         newPlayer.setRequest((String) obj.get("request"));
-        newPlayer.setState((String) obj.get("status"));
+        newPlayer.setStatus((String) obj.get("status"));
         newPlayer.setRespond((String) obj.get("respond"));
         newPlayer.setPassword((String) obj.get("password"));
+        newPlayer.setDestination((String) obj.get("destination"));
         return newPlayer;
     }
 
@@ -36,7 +37,7 @@ public class JsonConverter {
         newPlayer.setFirstname((String) obj.get("firstname"));
         newPlayer.setLastname((String) obj.get("lastname"));
         newPlayer.setRequest((String) obj.get("request"));
-        newPlayer.setState((String) obj.get("status"));
+        newPlayer.setStatus((String) obj.get("status"));
         newPlayer.setRespond((String) obj.get("respond"));
         newPlayer.setPassword((String) obj.get("password"));
         newPlayer.setPlayerList(players);
@@ -49,9 +50,10 @@ public class JsonConverter {
         jsonObj.put("firstname", newPlayer.getFirstname());
         jsonObj.put("lastname", newPlayer.getLastname());
         jsonObj.put("request", newPlayer.getRequest());
-        jsonObj.put("status", newPlayer.getState());
+        jsonObj.put("status", newPlayer.getStatus());
         jsonObj.put("respond", newPlayer.getRespond());
         jsonObj.put("password", newPlayer.getPassword());
+        jsonObj.put("destination", newPlayer.getDestination());
         return jsonObj;
     }
 
@@ -59,7 +61,7 @@ public class JsonConverter {
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("username", newPlayer.getUsername());
         jsonObj.put("request", newPlayer.getRequest());
-        jsonObj.put("status", newPlayer.getState());
+        jsonObj.put("status", newPlayer.getStatus());
         jsonObj.put("respond", newPlayer.getRespond());
         jsonObj.put("password", newPlayer.getPassword());
         jsonObj.put("playersList", players);
@@ -86,7 +88,7 @@ public class JsonConverter {
     
     
     
-    /***********************game***********************************************/
+    /******************************game***************************************/
 
     public  Game fromJsonToGame(JSONObject obj) {
        game = new Game();
