@@ -57,6 +57,44 @@ import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
+import com.google.gson.Gson;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.PrintStream;
+import java.io.Serializable;
+import libs.*;
+import org.json.simple.*;
+import java.lang.reflect.Array;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.scene.control.Button;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.RowConstraints;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+
 /**
  *
  * @author hebaa
@@ -66,6 +104,11 @@ public class TicTacToe extends Application implements Serializable {
     Socket socket;
     ObjectInputStream readObj;
     ObjectOutputStream writeObj;
+    DataInputStream inputStream;
+    PrintStream outputStream;
+    JsonConverter convert;
+    JSONObject obj;
+    JSONParser parse;
     Thread thread;
     /****************************Player class******************************************************************************/
     Player p;
@@ -207,8 +250,10 @@ public class TicTacToe extends Application implements Serializable {
                 try
                 {
                     socket = new Socket("127.0.0.1", 5005);
-                    writeObj = new ObjectOutputStream(socket.getOutputStream());
-                    readObj = new ObjectInputStream(socket.getInputStream());                      
+                    inputStream = new DataInputStream(socket.getInputStream());
+                    outputStream = new PrintStream(socket.getOutputStream());
+//                    writeObj = new ObjectOutputStream(socket.getOutputStream());
+//                    readObj = new ObjectInputStream(socket.getInputStream());                      
                 } 
                 catch (IOException ex)
                 {
@@ -218,7 +263,11 @@ public class TicTacToe extends Application implements Serializable {
                 while (true) {
                     try
                     {
-                        p = (Player) readObj.readObject();
+                        //(JSONObject) parser.parse(inStream.readLine());
+                        JSONParser parse = new JSONParser();
+                        obj =  new JSONObject();
+                        obj = (JSONObject) parse.parse(inputStream.readLine());
+                        p = convert.fromJsonToPlayer(obj);
                         System.out.println("Line 196: " + p.getRespond());
                         messageHandelr(p);
                         System.out.println("Line 98: " + p.getRespond());
@@ -229,15 +278,12 @@ public class TicTacToe extends Application implements Serializable {
                          System.out.println("Line 100: " + p.getRespond());
                         System.out.println(ex.getMessage());
                     } 
-                    catch (ClassNotFoundException ex)
-                    {
-                         System.out.println("Line 106: " + p.getRespond());
-                        System.out.println(ex.getMessage());
-                    }
                     catch (NullPointerException ex)
                     {
                         System.out.println("You should run server first Line 111: " + p.getRespond());
                         System.out.println(ex.getMessage());
+                    } catch (ParseException ex) {
+                        Logger.getLogger(TicTacToe.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             }
@@ -377,15 +423,12 @@ public class TicTacToe extends Application implements Serializable {
                     Player newPlayer = new Player(userText1.getText(), passText1.getText());
                     setPlayerName( userText1.getText() );
                     
-                    try
-                    {
-                        writeObj.writeObject(newPlayer);
-                        System.out.println("object sent!");
-                    }
-                    catch (IOException ex)
-                    {
-                        System.out.println(ex.getMessage());
-                    }
+                    convert = new JsonConverter();
+                    JSONObject obj = new JSONObject();
+                    obj = convert.fromPlayerToJson(newPlayer);
+                    outputStream.println(obj.toString());
+                    //                        writeObj.writeObject(newPlayer);
+                    System.out.println("object sent!");
                 }
 
             }
@@ -1382,6 +1425,7 @@ public class TicTacToe extends Application implements Serializable {
 
     public AnchorPane ScreenMultiMode()
     {
+        
         ScreenMultiMode = new AnchorPane();
         MultiGameImage = new ImageView();
         chatArea = new TextArea();
@@ -1919,7 +1963,7 @@ public class TicTacToe extends Application implements Serializable {
     @Override
     public void stop() {
         
-        p.setRequest(Request.DISCONNECT);
+//        p.setRequest(Request.DISCONNECT);
         try
         {
             writeObj.writeObject(p);
