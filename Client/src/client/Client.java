@@ -817,14 +817,10 @@ public class Client extends Application implements Serializable {
         ScreenFour = new AnchorPane();
         TableImg = new ImageView();
 //        PlayerTable = new TableView();
-        TableView<Player> PlayerTable = new TableView<Player>();
-        ObservableList<Player> playerData = FXCollections.observableArrayList(
-                new Player("MOHAMED", "ON", "13"),
-                new Player("ALI", "OFF", "25"),
-                new Player("HOSSAM", "ON", "42"),
-                new Player("gala", "OFF", "42"),
-                new Player("heba", "ON", "34")
-        );
+       TableView<Player> PlayerTable = new TableView<Player>();
+       ObservableList<Player> playerData = FXCollections.observableArrayList()
+       
+       }
 
         PlayerName = new TableColumn();
         Score = new TableColumn();
@@ -915,7 +911,7 @@ public class Client extends Application implements Serializable {
                 new PropertyValueFactory<Player, String>("state")
         );
 
-        PlayerTable.setItems(playerData);
+       PlayerTable.setItems(playerData);
 
         unSelected4.setTitle("player list");
         unSelected4.setHeaderText(null);
@@ -936,7 +932,7 @@ public class Client extends Application implements Serializable {
             @Override
             public void handle(ActionEvent event) {
                 try {
-                    Player pl = PlayerTable.getSelectionModel().getSelectedItem();
+                   Player pl = PlayerTable.getSelectionModel().getSelectedItem();
                     Platform.runLater(() -> {
                         ScreenMultiMode().getChildren().clear();
                     });
