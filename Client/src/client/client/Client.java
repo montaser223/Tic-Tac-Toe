@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package client;
 
 import java.io.FileInputStream;
@@ -12,6 +8,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+//import java.io.ObjectInputStream;
+//import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -90,6 +89,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
@@ -99,26 +100,30 @@ import org.json.simple.parser.ParseException;
  */
 public class Client extends Application implements Serializable {
 
+    ArrayList<Player> ASD;
     /**
-     * **********************************socket**********************************************************************
+     * ***********socket***********************
      */
+    private JSONObject obj;
+
+    JSONParser parser = new JSONParser();
+    JsonConverter convert = new JsonConverter();
+//      PrintStream  outStream  ;
+    DataInputStream inStream;
+
     Socket socket;
-    ObjectInputStream readObj;
-    ObjectOutputStream writeObj;
-    DataInputStream inputStream;
-    PrintStream outputStream;
-    JsonConverter convert;
-    JSONObject obj;
-    JSONParser parse;
+//    ObjectInputStream readObj;
+//    DataInputStream   readObj;
+
+//    ObjectOutputStream writeObj;
+    PrintStream writeObj;
     Thread thread;
     /**
-     * **************************Player
-     * class*****************************************************************************
+     * *******Player class**************************
      */
     Player p;
     /**
-     * ****************************Single Mode
-     * Game*********************************************************************************
+     * *********Single Mode Game**************************
      */
     int count = 0;
 //    SingleModeGame single ;
@@ -278,27 +283,35 @@ public class Client extends Application implements Serializable {
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
+
                 try {
                     socket = new Socket("127.0.0.1", 5005);
-                    inputStream = new DataInputStream(socket.getInputStream());
-                    outputStream = new PrintStream(socket.getOutputStream());
+
+//               outStream = new PrintStream(socket.getOutputStream());
+                    inStream = new DataInputStream(socket.getInputStream());
+
 //                    writeObj = new ObjectOutputStream(socket.getOutputStream());
-//                    readObj = new ObjectInputStream(socket.getInputStream());                      
+                    writeObj = new PrintStream(socket.getOutputStream());
+
+//               readObj =  new DataInputStream(socket.getInputStream());                   
                 } catch (IOException ex) {
                     System.out.println(ex.getMessage());
                 }
                 System.out.println("hoooo");
                 while (true) {
                     try {
-                        //(JSONObject) parser.parse(inStream.readLine());
-                        JSONParser parse = new JSONParser();
-                        obj = new JSONObject();
-                        obj = (JSONObject) parse.parse(inputStream.readLine());
-                        p = convert.fromJsonToPlayer((JSONObject) obj);
-                        System.out.println("Line 196: " + p.getRespond());
-                        messageHandelr(p);
-                        System.out.println("Line 98: " + p.getRespond());
-                        System.out.println("Line 196: " + p.getUsername() + p.getPassword());
+
+                        System.out.println("line 216");
+
+                        obj = (JSONObject) parser.parse(inStream.readLine());
+                        Player p2 = convert.fromJsonToPlayer(obj,
+                                convert.fromJSONArrayToPlayerList((JSONArray) obj.get("playersList")));
+
+                        System.out.println("line 225 " + obj);
+
+                        messageHandelr(p2);
+//                        System.out.println("Line 98: " + p.getRespond());
+//                        System.out.println("Line 196: " + p.getUsername() + p.getPassword());
                     } catch (IOException ex) {
                         System.out.println("Line 100: " + p.getRespond());
                         System.out.println(ex.getMessage());
@@ -444,15 +457,20 @@ public class Client extends Application implements Serializable {
                 if (userText1.getText().isEmpty() || passText1.getText().isEmpty()) {
                     alertEmptyLogIn1.showAndWait();
                 } else {
-                    Player newPlayer = new Player(userText1.getText(), passText1.getText());
-                    setPlayerName(userText1.getText());
+                    try {
+                        Player newPlayer = new Player(userText1.getText(), passText1.getText());
+//                           setPlayerName( userText1.getText() );
 
-                    convert = new JsonConverter();
-                    JSONObject obj = new JSONObject();
-                    obj = convert.fromPlayerToJson(newPlayer);
-                    outputStream.println(obj.toString());
-                    //                        writeObj.writeObject(newPlayer);
-                    System.out.println("object sent!");
+                        obj = convert.fromPlayerToJson(newPlayer);
+                        writeObj.println(obj.toString());
+//                           outStream.println(obj.toString()) ;
+                        System.out.println("object sent!");
+
+                    } catch (Exception e) {
+
+                        e.printStackTrace();
+                    }
+
                 }
 
             }
@@ -650,12 +668,9 @@ public class Client extends Application implements Serializable {
 
                     Player signUpPlayer = new Player(userText2.getText(), passText2.getText(), FirstText2.getText(), LastText2.getText());
 
-                    try {
-                        writeObj.writeObject(signUpPlayer);
-                        System.out.println("New Player has sign up!");
-                    } catch (IOException ex) {
-                        System.out.println(ex.getMessage());
-                    }
+                    obj = convert.fromPlayerToJson(signUpPlayer);
+                    writeObj.println(obj.toString());
+                    System.out.println("New Player has sign up!");
 
                 }
 
@@ -773,25 +788,45 @@ public class Client extends Application implements Serializable {
 
                 Player logOutPlayer = new Player(userText1.getText(), passText1.getText());
                 logOutPlayer.setRequest(Request.LOGOUT);
-                System.out.println(logOutPlayer.getRequest());
+                try {
+                    System.out.println(logOutPlayer.getRequest());
 
-                outputStream.println(convert.fromPlayerToJson(logOutPlayer).toString());
-                System.out.println("User send logout Request!");
+                    obj = convert.fromPlayerToJson(logOutPlayer);
+                    writeObj.println(obj.toString());
+                    System.out.println("User send logout Request!");
+
+                } catch (Exception e) {
+
+                    e.printStackTrace();
+                }
+
             }
 
         });
-        //to reuest to play with another player send playrqeuest to server --->sender
-        //in case of success respond start game means to move to multimode screen (recieve respond on playrqeuest)then send another request to server (startgame)
 
-        //reciver sent a request (answer) to the other player -->reciver
-        //respond with another (answer) request holding success or falier 
         multiBtn3.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
             public void handle(ActionEvent event) {
+                try {
+//                    
+//                        Player p3 = new Player()  ;
+//                        p3.setRequest(Request.USERS);
+//                      obj = convert.fromPlayerToJson(p3) ;
+//                        writeObj.println(obj.toString()) ;
 
-                ScreenFour().getChildren().clear();
-                multiBtn3.getScene().setRoot(ScreenFour());
+                    for (Player player : ASD) {
+
+                        System.out.println("Player :" + player.getUsername() + " Status= " + player.getState());
+                    }
+
+                    ScreenFour().getChildren().clear();
+                    multiBtn3.getScene().setRoot(ScreenFour());
+
+//                    
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
             }
 
@@ -812,18 +847,17 @@ public class Client extends Application implements Serializable {
         return ScreenThree;
     }
 
-    public AnchorPane ScreenFour() {
+    public AnchorPane ScreenFour() throws ParseException, IOException {
         ScreenFour = new AnchorPane();
         TableImg = new ImageView();
+
 //        PlayerTable = new TableView();
         TableView<Player> PlayerTable = new TableView<Player>();
-        ObservableList<Player> playerData = FXCollections.observableArrayList(
-                new Player("MOHAMED", "ON", "13"),
-                new Player("ALI", "OFF", "25"),
-                new Player("HOSSAM", "ON", "42"),
-                new Player("gala", "OFF", "42"),
-                new Player("heba", "ON", "34")
-        );
+        ObservableList<Player> playerData =   FXCollections.observableArrayList();
+                    playerData.clear(); 
+                    playerData.addAll(ASD);
+                    
+        
 
         PlayerName = new TableColumn();
         Score = new TableColumn();
@@ -897,9 +931,12 @@ public class Client extends Application implements Serializable {
         backBtn4.setFont(new Font("Lucida Calligraphy Italic", 20.0));
 
         ScreenFour.getChildren().add(TableImg);
+        //--------------------------- tableview ------------------
         PlayerTable.getColumns().add(PlayerName);
         PlayerTable.getColumns().add(Score);
         PlayerTable.getColumns().add(Status);
+        //--------------------------- tableview ------------------
+
         ScreenFour.getChildren().add(PlayerTable);
         ScreenFour.getChildren().add(TableLabel);
         ScreenFour.getChildren().add(playBtn4);
@@ -1671,21 +1708,34 @@ public class Client extends Application implements Serializable {
 
     public void messageHandelr(Player p) {
 
-        System.out.println("Line 212: " + p.getRespond());
-        switch (p.getRequest()) {
-            case Request.LOGIN:
-                login(p);
-                break;
-            case Request.SIGNUP:
-                signup(p);
-                break;
-            case Request.LOGOUT:
-                System.out.println("Line 313: " + p.getRespond());
-                logout(p);
-                break;
+       try {
+            System.out.println("Line 212: " + p.getRespond());
+            switch (p.getRequest()) {
+                case Request.LOGIN:
+                    login(p);
+                    break;
+                case Request.SIGNUP:
+                    signup(p);
+                    break;
+                case Request.LOGOUT:
+                    System.out.println("Line 313: " + p.getRespond());
+                    logout(p);
+                    break;
+                case Request.USERS:
+                    System.out.println("Line 1410 : " + p.getPlayersList().get(0));
+
+                    playlist(p.getPlayersList());
+                    break;
+
+            }
+
+        } catch (Exception e) {
+
+            System.out.println("error in  messange handler 1416");
         }
 
-    }
+        }
+    
 
     public void login(Player newPalyer) {
         System.out.println("Line 221: " + newPalyer.getRespond());
@@ -1964,9 +2014,12 @@ public class Client extends Application implements Serializable {
 
 //        p.setRequest(Request.DISCONNECT);
         try {
-            writeObj.writeObject(p);
+
+            obj = convert.fromPlayerToJson(p);
+            writeObj.println(obj.toString());
+//            writeObj.writeObject(p);
             socket.close();
-            readObj.close();
+//            readObj.close();
             writeObj.close();
             System.out.println("Sent a disconnection request to the server");
         } catch (IOException ex) {
@@ -1975,6 +2028,17 @@ public class Client extends Application implements Serializable {
         }
         thread.stop();
 
+    }
+
+    public void playlist(ArrayList<Player> arrayOfPlayers) throws ParseException {
+
+        ASD = arrayOfPlayers ;
+
+//          pp.get(0).getUsername() ; 
+        System.out.println("fasfab  1727");
+
+//      
+        System.out.println(arrayOfPlayers + "line 1731");
     }
 
     /**

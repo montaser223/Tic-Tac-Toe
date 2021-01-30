@@ -327,6 +327,7 @@
         <property name="ant-javafx.jar.location" value="${platform.home}${file.separator}tools${file.separator}ant-javafx.jar"/>
     </target>
     <target name="-check-ant-javafx-in-probjdk-lib" unless="ant-javafx.jar.location">
+<<<<<<< HEAD
         <condition property="do.set.ant-javafx.in.probjdk.lib.has_jre">
             <available file="${java.home}${file.separator}..${file.separator}lib${file.separator}ant-javafx.jar"/>
         </condition>
@@ -340,10 +341,17 @@
                     <isset property="do.set.ant-javafx.in.probjdk.lib.has_jre"/>
                     <isset property="do.set.ant-javafx.in.probjdk.lib.no_jre"/>
                 </or>
+=======
+        <condition property="do.set.ant-javafx.in.probjdk.lib">
+            <and>
+                <not><isset property="ant-javafx.jar.location"/></not>
+                <available file="${java.home}${file.separator}..${file.separator}lib${file.separator}ant-javafx.jar"/>
+>>>>>>> fa8fd07311cbc1c72e9d93f5bdda7eafc3e949a8
             </and>
         </condition>
     </target>
     <target name="-set-ant-javafx-in-probjdk-lib" depends="-set-ant-javafx-in-platform-home-tools,-check-ant-javafx-in-probjdk-lib" if="do.set.ant-javafx.in.probjdk.lib">
+<<<<<<< HEAD
         <condition property="ant-javafx.jar.location" value="${java.home}${file.separator}..${file.separator}lib${file.separator}ant-javafx.jar" else="${java.home}${file.separator}lib${file.separator}ant-javafx.jar">
             <isset property="do.set.ant-javafx.in.probjdk.lib.has_jre"/>
         </condition>
@@ -362,13 +370,26 @@
                     <isset property="do.set.ant-javafx.in.probjdk.tools.has_jre"/>
                     <isset property="do.set.ant-javafx.in.probjdk.tools.no_jre"/>
                 </or>
+=======
+        <property name="ant-javafx.jar.location" value="${java.home}${file.separator}..${file.separator}lib${file.separator}ant-javafx.jar"/>
+    </target>
+    <target name="-check-ant-javafx-in-probjdk-tools" unless="ant-javafx.jar.location">
+        <condition property="do.set.ant-javafx.in.probjdk.tools">
+            <and>
+                <not><isset property="ant-javafx.jar.location"/></not>
+                <available file="${java.home}${file.separator}..${file.separator}tools${file.separator}ant-javafx.jar"/>
+>>>>>>> fa8fd07311cbc1c72e9d93f5bdda7eafc3e949a8
             </and>
         </condition>
     </target>
     <target name="-set-ant-javafx-in-probjdk-tools" depends="-set-ant-javafx-in-probjdk-lib,-check-ant-javafx-in-probjdk-tools" if="do.set.ant-javafx.in.probjdk.tools">
+<<<<<<< HEAD
         <condition property="ant-javafx.jar.location" value="${java.home}${file.separator}..${file.separator}tools${file.separator}ant-javafx.jar" else="${java.home}${file.separator}tools${file.separator}ant-javafx.jar">
             <isset property="do.set.ant-javafx.in.probjdk.tools.has_jre"/>
         </condition>
+=======
+        <property name="ant-javafx.jar.location" value="${java.home}${file.separator}..${file.separator}tools${file.separator}ant-javafx.jar"/>
+>>>>>>> fa8fd07311cbc1c72e9d93f5bdda7eafc3e949a8
     </target>
     <target name="-check-ant-javafx-in-macjdk-lib" unless="ant-javafx.jar.location">
         <condition property="do.set.ant-javafx.in.macjdk.lib">
@@ -1847,6 +1868,7 @@
                     
                     // manifest
                     var man = jar.createManifest();
+<<<<<<< HEAD
                     var userManifestPath = project.getProperty("manifest.file");
                     if (userManifestPath) {
                         var userManifestFile = project.resolveFile(userManifestPath);
@@ -1866,6 +1888,8 @@
                             }
                         }
                     }
+=======
+>>>>>>> fa8fd07311cbc1c72e9d93f5bdda7eafc3e949a8
                     var a1val = new String(project.getProperty("application.vendor"));
                     var a1 = new org.apache.tools.ant.taskdefs.Manifest.Attribute();
                     a1.setName("Implementation-Vendor");
@@ -3719,7 +3743,10 @@
             <jvmarg line="${endorsed.classpath.cmd.line.arg}"/>
             <jvmarg line="${debug-args-line}"/>
             <jvmarg value="-Xrunjdwp:transport=${debug-transport},address=${jpda.address}"/>
+<<<<<<< HEAD
             <jvmarg value="-Dglass.disableGrab=true"/>
+=======
+>>>>>>> fa8fd07311cbc1c72e9d93f5bdda7eafc3e949a8
             <jvmarg value="-Dfile.encoding=${runtime.encoding}"/>
             <redirector errorencoding="${runtime.encoding}" inputencoding="${runtime.encoding}" outputencoding="${runtime.encoding}"/>
             <jvmarg line="${run.jvmargs}"/>
@@ -3858,7 +3885,11 @@
     <target name="-debug-javaws-debuggee" depends="-init-debug-args">
         <echo message="Executing ${jfx.deployment.jnlp} in debug mode using ${active.webstart.executable}"/>
         <exec executable="${active.webstart.executable}">
+<<<<<<< HEAD
             <env key="JAVAWS_VM_ARGS" value="${debug-args-line} -Xrunjdwp:transport=${debug-transport},address=${jpda.address} -Dglass.disableGrab=true"/>
+=======
+            <env key="JAVAWS_VM_ARGS" value="${debug-args-line} -Xrunjdwp:transport=${debug-transport},address=${jpda.address}"/>
+>>>>>>> fa8fd07311cbc1c72e9d93f5bdda7eafc3e949a8
             <arg value="-wait"/>
             <arg file="${jfx.deployment.jnlp}"/>
         </exec>

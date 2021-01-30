@@ -53,7 +53,6 @@ class Server extends Thread {
             startflag = true;
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
-            System.out.println("Server");
         }
         this.start();
     }
@@ -72,7 +71,6 @@ class Server extends Thread {
                 // or create an object of a clinetHandler class this Constructor taking socket
             } catch (IOException ex) {
                 System.out.println(ex.getMessage());
-                System.out.println(" Closed");
                 // here we should add something to the client in case the server is down
             }
         }
@@ -239,17 +237,8 @@ public class ServerGUI extends Application {
     public void stop() {
         /* this function will handle case if user close the app from the close btn (X)
             it will close Server and thread*/
-        s.startflag = false;
-        try {
-            s.socket.close();
-            s.serverSocket.close();
-          
-        } catch (IOException ex) {
-//            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("Server Closed");
-        }
-        s.stop();
         
+        s.stopServer();
         System.out.println(startFlag);
         
     }

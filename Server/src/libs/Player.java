@@ -22,7 +22,8 @@ public class Player implements Serializable {
 
     ArrayList<Player> players = new ArrayList<Player>();
 
-    String username, password, firstname, lastname, status, request, respond, buttonerespond, player2, scour;
+    String username, password, firstname, lastname, status, request, respond, buttonerespond, player2;
+    int scour;
 
     public Player(String _username, String _password) {
         username = _username;
@@ -30,9 +31,11 @@ public class Player implements Serializable {
         request = Request.LOGIN;
     }
 
-    public Player() {}
+    public Player() {
 
-    public Player(String _username, String _scour, String _status) {
+    }
+
+    public Player(String _username, int _scour, String _status) {
         username = _username;
         scour = _scour;
         status = _status;
@@ -126,5 +129,4 @@ public class Player implements Serializable {
     public ArrayList<Player> getPlayersList() {
         return players;
     }
-    
 }
