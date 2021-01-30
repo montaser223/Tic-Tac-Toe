@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tictactoe;
+package client;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -99,7 +99,7 @@ import org.json.simple.parser.ParseException;
  *
  * @author hebaa
  */
-public class TicTacToe extends Application implements Serializable {
+public class Client extends Application implements Serializable {
     /************************************socket***********************************************************************/
     Socket socket;
     ObjectInputStream readObj;
@@ -114,7 +114,7 @@ public class TicTacToe extends Application implements Serializable {
     Player p;
     /******************************Single Mode Game**********************************************************************************/
     int count = 0 ;
-    SingleModeGame single ;
+//    SingleModeGame single ;
     /*************************************Alert**************************************************************************/
     Alert alertEmptyLogIn1 = new Alert(Alert.AlertType.ERROR);
     Alert alertWrongLogIn1 = new Alert(Alert.AlertType.ERROR);
@@ -283,7 +283,7 @@ public class TicTacToe extends Application implements Serializable {
                         System.out.println("You should run server first Line 111: " + p.getRespond());
                         System.out.println(ex.getMessage());
                     } catch (ParseException ex) {
-                        Logger.getLogger(TicTacToe.class.getName()).log(Level.SEVERE, null, ex);
+//                        Logger.getLogger(TicTacToe.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             }
