@@ -28,51 +28,75 @@ import javafx.stage.Stage;
  *
  * @author black horse
  */
-class Server extends Thread {
+class Server  {
 
-    ClientHandler handler;
-    ServerSocket serverSocket;
-    Socket socket;
-    volatile boolean startflag;
-
-    Server() {
+    private static ClientHandler handler;
+    private static ServerSocket serverSocket;
+    private static Socket socket;
+    private static volatile boolean startServerflag;
+    private static Thread thread;
+    
+    public static void startServerX(){
         try {
-            serverSocket = new ServerSocket(5005);
-            startflag = true;
+            serverSocket = new ServerSocket(8888);
+            startServerflag = true;
+            System.out.println(startServerflag);
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
         }
-        this.start();
-    }
+        
+        thread = new Thread(new Runnable(){
+            @Override
+            public void run() {
+                
+                while (startServerflag) {
+                        System.out.println("inside thread" + startServerflag);
+                    try {
 
-    @Override
-    public void run() {
-        //super.run(); //To change body of generated methods, choose Tools | Templates.
-
-        while (startflag) {
-            try {
-
-                socket = serverSocket.accept();
-                System.out.println("Request Recived");
-                new ClientHandler(socket);
-            } catch (IOException ex) {
-                System.out.println(ex.getMessage());
-                // here we should add something to the client in case the server is down
+                        socket = serverSocket.accept();
+                        System.out.println("Request Recived");
+                        new ClientHandler(socket);
+                        
+                    } catch (IOException ex) {
+                        System.out.println("socket closed line 60");
+                        // here we should add something to the client in case the server is down
+                    }
+                }
+                
             }
-        }
-
+        });
+        
+        thread.start();
     }
+    
+    public static void stopServer(){
+        
+        System.out.println(startServerflag);
+        if(startServerflag){
+            
+            startServerflag = false;
+            
+            
+            try {
+                serverSocket.close();
+            } catch (IOException ex) {
+//                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {
+                socket.close();
+            } catch (NullPointerException ex) {
+                System.out.println("Server is down");
+                // will send to all the online player meesge to say the serve is down
 
-    public void stopServer() {
-        // stop server and close  the server socket 
-        startflag = false;
-        try {
-            serverSocket.close();
-        } catch (IOException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+
+            }
+            
+            thread.stop();
         }
     }
-
+    
+    
 }
 
 public class ServerGUI extends Application {
@@ -91,12 +115,12 @@ public class ServerGUI extends Application {
             public void handle(ActionEvent event) {
 
                 if (startFlag) {
-                    s = new Server();
+                    Server.startServerX();
                     System.out.println("The server is runnig");
                     startAndStopButton.setText("Stop");
                     startFlag = false;
                 } else {
-                    s.stopServer();
+                    Server.stopServer();
                     startFlag = true;
                     startAndStopButton.setText("Start");
                 }
@@ -121,7 +145,7 @@ public class ServerGUI extends Application {
     public void stop() {
         /* this function will handle case if user close the app from the close btn (X)
             it will close Server and thread*/
-        s.stopServer();
+        Server.stopServer();
     }
 
     /**
