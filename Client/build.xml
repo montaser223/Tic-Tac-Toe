@@ -1,3 +1,4 @@
+<<<<<<< HEAD:servergui/build.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- You may freely edit this file. See commented blocks below for -->
 <!-- some examples of how to customize the build. -->
@@ -9,6 +10,10 @@
 <!-- in the project's Project Properties dialog box.-->
 <project name="servergui" default="default" basedir=".">
     <description>Builds, tests, and runs the project servergui.</description>
+=======
+<?xml version="1.0" encoding="UTF-8"?><!-- You may freely edit this file. See commented blocks below for --><!-- some examples of how to customize the build. --><!-- (If you delete it and reopen the project it will be recreated.) --><!-- By default, only the Clean and Build commands use this build script. --><project name="TicTacToe" default="default" basedir="." xmlns:fx="javafx:com.sun.javafx.tools.ant">
+    <description>Builds, tests, and runs the project TicTacToe.</description>
+>>>>>>> Heba:Client/build.xml
     <import file="nbproject/build-impl.xml"/>
     <!--
 
