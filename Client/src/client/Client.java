@@ -342,7 +342,7 @@ public class Client extends Application implements Serializable {
         LoginImg.setPickOnBounds(true);
 
         try {
-            FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\login.jpg");
+            FileInputStream stream = new FileInputStream("ProjectImg/login.jpg");
             Image image = new Image(stream);
             LoginImg.setImage(image);
 
@@ -515,7 +515,7 @@ public class Client extends Application implements Serializable {
         SignUpImg.setFitWidth(321.0);
         SignUpImg.setPickOnBounds(true);
         try {
-            FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\registration.jpg");
+            FileInputStream stream = new FileInputStream("ProjectImg/registration.jpg");
             Image image = new Image(stream);
             SignUpImg.setImage(image);
 
@@ -711,7 +711,7 @@ public class Client extends Application implements Serializable {
         PlayImg.setFitWidth(642.0);
         PlayImg.setPickOnBounds(true);
         try {
-            FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\rocket.jpg");
+            FileInputStream stream = new FileInputStream("ProjectImg/rocket.jpg");
             Image image = new Image(stream);
             PlayImg.setImage(image);
 
@@ -817,9 +817,9 @@ public class Client extends Application implements Serializable {
         TableImg = new ImageView();
 //        PlayerTable = new TableView();
        TableView<Player> PlayerTable = new TableView<Player>();
-       ObservableList<Player> playerData = FXCollections.observableArrayList()
+//       ObservableList<Player> playerData = FXCollections.observableArrayList()
        
-       }
+       
 
         PlayerName = new TableColumn();
         Score = new TableColumn();
@@ -840,7 +840,7 @@ public class Client extends Application implements Serializable {
         TableImg.setPickOnBounds(true);
 //        TableImg.setImage(new Image(getClass().getResource("../../../Project/Img/image.jpg").toExternalForm()));
         try {
-            FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\image.jpg");
+            FileInputStream stream = new FileInputStream("ProjectImg/image.jpg");
             Image image = new Image(stream);
             TableImg.setImage(image);
 
@@ -910,7 +910,7 @@ public class Client extends Application implements Serializable {
                 new PropertyValueFactory<Player, String>("state")
         );
 
-       PlayerTable.setItems(playerData);
+//       PlayerTable.setItems(playerData);
 
         unSelected4.setTitle("player list");
         unSelected4.setHeaderText(null);
@@ -985,7 +985,7 @@ public class Client extends Application implements Serializable {
         GameImg.setFitWidth(642.0);
         GameImg.setPickOnBounds(true);
         try {
-            FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\image.jpg");
+            FileInputStream stream = new FileInputStream("ProjectImg/image.jpg");
             Image image = new Image(stream);
             GameImg.setImage(image);
 
@@ -1457,7 +1457,7 @@ public class Client extends Application implements Serializable {
         MultiGameImage.setPickOnBounds(true);
 //        MultiGameImage.setImage(new Image(getClass().getResource("../../../Project/Img/image.jpg").toExternalForm()));
         try {
-            FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\image.jpg");
+            FileInputStream stream = new FileInputStream("ProjectImg/image.jpg");
             Image image = new Image(stream);
             MultiGameImage.setImage(image);
 
@@ -1935,7 +1935,7 @@ public class Client extends Application implements Serializable {
 
             try {
                 //creating the image object
-                InputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\xo.png");
+                InputStream stream = new FileInputStream("ProjectImg/xo.png");
                 Image image = new Image(stream);
                 //Creating the image view
                 ImageView imageView = new ImageView();

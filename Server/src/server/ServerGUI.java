@@ -71,7 +71,7 @@ class Server  {
                         new ClientHandler(socket);
                         
                     } catch (IOException ex) {
-                        System.out.println("socket closed line 60");
+                        System.out.println("socket closed");
                         // here we should add something to the client in case the server is down
                     }
                 }
@@ -90,22 +90,9 @@ class Server  {
             
             
             try {
-<<<<<<< HEAD
                 serverSocket.close();
             } catch (IOException ex) {
 //                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-=======
-
-                socket = serverSocket.accept();
-                System.out.println("Request Recived");
-                new ClientHandler(socket);
-                // here the server should send the sockt to the login function in clientHandler class
-                // or create an object of a clinetHandler class this Constructor taking socket
-            } catch (IOException ex) {
-                System.out.println(ex.getMessage());
-                System.out.println(" Closed");
-                // here we should add something to the client in case the server is down
->>>>>>> Heba
             }
             try {
                 socket.close();
@@ -115,24 +102,10 @@ class Server  {
 
             } catch (IOException ex) {
 
-<<<<<<< HEAD
             }
             
             thread.stop();
-=======
-    public void stopServer() {
-        // stop server and close  the server socket 
-        startflag = false;
-        try {
-            socket.close();
-            serverSocket.close();
-          
-        } catch (IOException ex) {
-//            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("Server Closed");
->>>>>>> Heba
         }
-        this.stop();
     }
     
     
@@ -166,7 +139,7 @@ public class ServerGUI extends Application {
         serverImg.setFitWidth(259.0);
         serverImg.setPickOnBounds(true);
         try {
-            FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\server.jpg");
+            FileInputStream stream = new FileInputStream("ProjectImg/server.jpeg");
             Image image = new Image(stream);
             serverImg.setImage(image);
 
@@ -238,16 +211,8 @@ public class ServerGUI extends Application {
                     startAndStopButton.setText("Stop");
                     
                     startFlag = false;
-<<<<<<< HEAD
                 } else {
                     Server.stopServer();
-=======
-                    
-                } 
-                else {
-//                    s.stopServer();
-                    stop();
->>>>>>> Heba
                     startFlag = true;
                     startAndStopButton.setText("Start");
                 }
@@ -268,13 +233,17 @@ public class ServerGUI extends Application {
     @Override
     public void start(Stage stage){
 
-        //creating the image object
-        InputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\xo.png");
-        Image image = new Image(stream);
+        try {
+            //creating the image object
+
+            Image image = new Image(new FileInputStream("ProjectImg/index.jpeg"));
+        } catch (FileNotFoundException ex) {
+                System.out.println("can't load icon img");
+        }
         //Creating the image view
         ImageView imageView = new ImageView();
         //Setting image to the image view
-        stage.getIcons().add(image);
+//        stage.getIcons().add(image);
 
         Scene scene = new Scene(root, 642, 540);
         stage.setScene(scene);
@@ -287,23 +256,7 @@ public class ServerGUI extends Application {
     public void stop() {
         /* this function will handle case if user close the app from the close btn (X)
             it will close Server and thread*/
-<<<<<<< HEAD
         Server.stopServer();
-=======
-        s.startflag = false;
-        try {
-            s.socket.close();
-            s.serverSocket.close();
-          
-        } catch (IOException ex) {
-//            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("Server Closed");
-        }
-        s.stop();
-        
-        System.out.println(startFlag);
-        
->>>>>>> Heba
     }
 
     /**
