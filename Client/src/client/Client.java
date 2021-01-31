@@ -5,7 +5,6 @@
  */
 package client;
 
-import com.google.gson.Gson;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import libs.*;
