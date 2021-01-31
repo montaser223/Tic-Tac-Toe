@@ -1082,7 +1082,7 @@ public class Client extends Application implements Serializable {
                 } else {
 
                     Player signUpPlayer = new Player(userText2.getText(), passText2.getText(), FirstText2.getText(), LastText2.getText());
-                    outputStream.println(convert.fromPlayerToJson(signUpPlayer).toString());
+                    outStream.println(convert.fromPlayerToJson(signUpPlayer).toString());
 //                    try {
 //                        writeObj.writeObject(signUpPlayer);
 //                        System.out.println("New Player has sign up!");
