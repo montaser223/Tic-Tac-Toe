@@ -57,7 +57,7 @@ public class XoDataBase implements Serializable {
     public ArrayList<Player> selectplayer() {
 
         try {
-            queryString = new String("select *from player");
+            queryString = new String("select *from player order by score desc");
             rs = stmt.executeQuery(queryString);
             //rs.first();
 
@@ -86,8 +86,8 @@ public class XoDataBase implements Serializable {
             //  while(rs.next())
             if (!rs.next()) {
 
-                queryString = " insert into player (firstname,lastname, username, password)"
-                        + " values (?, ?, ?, ?)";
+                queryString = " insert into player (firstname,lastname, username, password,score,status)"
+                        + " values (?, ?, ?, ?,0,'offline')";
 
                 PreparedStatement preparedStmt = con.prepareStatement(queryString);
 
@@ -143,6 +143,20 @@ public class XoDataBase implements Serializable {
         return 1;
     }
 
+     public int updateScore(int _score, String _username) {
+        int res = 0;
+        queryString = "update player set score='" + _score + "' where username='" + _username + "'";
+        try {
+            res = stmt.executeUpdate(queryString);
+//                    executeQuery(queryString);
+
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+        return res;
+    }
+
+    
     public int updateStatus(String status, String _username) {
         int res = 0;
         queryString = "update player set status='" + status + "' where username='" + _username + "'";
