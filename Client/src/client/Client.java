@@ -271,6 +271,7 @@ public class Client extends Application implements Serializable {
     @Override
     public void init() {
         p = new Player("", "");
+        convert = new JsonConverter();
         alertWrongLogIn1.setTitle("LogIn ");
         alertWrongLogIn1.setHeaderText(null);
         alertWrongLogIn1.setContentText("Invalid User Name or Password");
@@ -295,6 +296,7 @@ public class Client extends Application implements Serializable {
                         obj = new JSONObject();
                         obj = (JSONObject) parse.parse(inputStream.readLine());
                         p = convert.fromJsonToPlayer(obj);
+                        System.out.println("dasdas: " + obj);
                         System.out.println("Line 196: " + p.getRespond());
                         messageHandelr(p);
                         System.out.println("Line 98: " + p.getRespond());
@@ -650,13 +652,13 @@ public class Client extends Application implements Serializable {
                 } else {
 
                     Player signUpPlayer = new Player(userText2.getText(), passText2.getText(), FirstText2.getText(), LastText2.getText());
-
-                    try {
-                        writeObj.writeObject(signUpPlayer);
-                        System.out.println("New Player has sign up!");
-                    } catch (IOException ex) {
-                        System.out.println(ex.getMessage());
-                    }
+                    outputStream.println(convert.fromPlayerToJson(signUpPlayer).toString());
+//                    try {
+//                        writeObj.writeObject(signUpPlayer);
+//                        System.out.println("New Player has sign up!");
+//                    } catch (IOException ex) {
+//                        System.out.println(ex.getMessage());
+//                    }
 
                 }
 
