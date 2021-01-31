@@ -116,6 +116,8 @@ public class ClientHandler extends Thread implements Serializable {
                 System.out.println(message);
                 recordGamePosition(message);
                 break;
+            case Request.GET_RECORDEDGAME:
+                break;
             
         }
     }

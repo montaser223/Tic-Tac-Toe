@@ -5,6 +5,7 @@
  */
 package client;
 
+import com.google.gson.Gson;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import libs.*;
@@ -98,6 +99,436 @@ import org.json.simple.parser.ParseException;
  * @author hebaa
  */
 public class Client extends Application implements Serializable {
+    
+    
+    /*
+    ***************** multi mode game functino*********************************
+    */
+    
+    private Game forwardedGameRequest;
+    private Game gameRequest;
+    private boolean isMySymbolReceved = false;
+    private  volatile boolean isGameRunning = true;
+    private String currentMove; 
+    private static String[] recordedPositions;
+    
+    Game gameMessages;
+    Game myGame;
+    String mySymbol;
+    
+    
+    private boolean recordGameFlag;
+    private Thread gamethread;
+    
+    private void forwardGameRequest(JSONObject obj){
+        forwardedGameRequest = convert.fromJsonToGame(obj);
+    }
+    
+    private Game getforwardGameRequest(){
+        
+        Game newGameRequest = forwardedGameRequest; // tmp varibale to save the request
+        forwardedGameRequest = null;
+        return newGameRequest;
+        
+    }
+    
+    private void receveMySymbol(){
+        
+        while(!isMySymbolReceved){
+            
+            gameRequest = getforwardGameRequest();
+            
+            if(gameRequest != null){
+                
+                isMySymbolReceved = true;
+                mySymbol = gameRequest.getNextMove();
+                isGameRunning = true;
+                System.out.println("reciving game symbol " + mySymbol + " from gmae handler");
+                System.out.println("and this is my  symbol " + currentMove );
+                gamethread.start();
+                System.out.println("game Thread started");
+            }
+        }
+    }
+    
+    private void startGame(){
+        
+        sendGameMove(Request.START_GAME);
+        receveMySymbol();
+        
+        gamethread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                
+                while (isGameRunning) {
+                    
+                    gameRequest = getforwardGameRequest();
+            
+                    if(gameRequest != null){
+                        
+                        Platform.runLater(() -> {
+                        receiveGameMove(gameRequest);
+                        });
+                    }
+                }
+            }
+        });
+        
+    }
+    
+    
+    private String checkWinner(){
+        String winner = "";
+        List topRow = Arrays.asList(1,2,3);
+        List midRow = Arrays.asList(4,5,6);
+        List botRow = Arrays.asList(7,8,9);
+        
+        List liftCol = Arrays.asList(1,4,7);
+        List midtCol = Arrays.asList(2,5,8);
+        List righCol = Arrays.asList(3,6,9);
+        
+        List cross1 = Arrays.asList(1,5,9);
+        List cross2 = Arrays.asList(3,5,7);
+        
+        List<List> winning = new ArrayList<List>();
+        
+        winning.add(topRow);
+        winning.add(midRow);
+        winning.add(botRow);
+        winning.add(liftCol);
+        winning.add(midtCol);
+        winning.add(righCol);
+        winning.add(cross1);
+        winning.add(cross2);
+        
+        for(List winningComp: winning){
+           
+            if(playerXpositions.containsAll(winningComp)){
+                winner = Game.X_MOVE;
+                 playerXpositions.clear();
+                 playerXpositions.addAll(winningComp);
+            }
+            else if(playerOpositions.containsAll(winningComp)){
+                winner = Game.O_MOVE;
+                 playerOpositions.clear();
+                 playerOpositions.addAll(winningComp);
+            }
+            else if(playerXpositions.size() + playerOpositions.size() == 9)
+                winner =  Game.DRAW;
+        }
+        return winner;
+    }
+    
+    private void highLightWinner(ArrayList<Integer> winner){
+        // will take the winner position and highlight each button equl to this position
+        
+        for(int i=0; i<9; i++){
+            if( i+1 == (int) winner.get(0) || i+1 == (int) winner.get(1) || i+1 == (int) winner.get(2))
+                buttons[i].setStyle("-fx-background-color: #90EE90");
+        }         
+    }
+    
+    private void recordPositions(){
+        
+        recordedPositions = new String[9];
+        // save the value of each buttons of the 9'th, X or O or bull
+        for(int index = 0; index <9; index++){
+            recordedPositions[index] = buttons[index].getText();
+        }
+    }
+    
+    private void drawOldPositions(){
+        
+         for(int index = 0; index <9; index++){
+             
+            if( recordedPositions[index].equalsIgnoreCase(Game.X_MOVE) || 
+                recordedPositions[index].equalsIgnoreCase(Game.O_MOVE)){
+                
+                
+                
+                
+                if(recordedPositions[index] == "X"){
+                    
+                    buttons[index].setTextFill(javafx.scene.paint.Color.rgb(255, 157, 10));
+                    buttons[index].setText(recordedPositions[index]);
+                    buttons[index].setDisable(true);
+                    playerXpositions.add(index+1);
+                    
+                }else{
+                    buttons[index].setTextFill(javafx.scene.paint.Color.rgb(255, 157, 10));
+                    buttons[index].setText(recordedPositions[index]);
+                buttons[index].setDisable(true);
+                    playerOpositions.add(index+1);
+                }
+                    
+            }
+        }
+        //change the current move to the right turn
+        // the defualt move at the begining is x,
+        // so we need to check if it correct or no
+        if(playerXpositions.size() > playerOpositions.size()){
+            currentMove = Game.O_MOVE;
+            
+        }
+    }
+    
+    private void resetBoard(){
+        
+        currentMove = Game.X_MOVE;
+        playerXpositions.clear();
+        playerOpositions.clear();
+        recordGame.setText("Record Game");
+        recordGameFlag = true;
+        
+        Button tmpButton = new Button();
+        for(Button btn: buttons){
+            
+            // reset the old style
+            btn.setStyle(tmpButton.getStyle());
+            btn.setFont(new Font("Engravers MT", 36.0));
+            btn.setText(null);
+            btn.setDisable(false); 
+            
+        }
+    }
+    
+    private void playAgainMultiMode(){
+        
+        sendGameMove(Request.GAME_PLAYAGAIN);
+    }
+    
+    private void updateScoreIndataBase(){
+        
+        this.recordGame.setText("Play Again!");
+        this.recordGameFlag = false;
+
+    }
+    
+    private void drawTie(){
+        
+        
+        for(Button btn: buttons){
+            btn.setText(Game.DRAW);
+            btn.setDisable(true);
+        }
+        
+    }
+    
+    private void drawXO(){
+        for(String str: recordedPositions){
+            System.out.println(str);
+        }
+    }
+    
+   
+    private void updateBoard(Long buttonsPosition){
+        
+        System.out.println("is  game turn " + currentMove + " == " + mySymbol);
+                
+                if(mySymbol.equalsIgnoreCase(currentMove)){
+                    buttons[buttonsPosition.intValue()-1].setDisable(true);
+                    
+                    if(currentMove.equalsIgnoreCase(Game.X_MOVE)){
+                        
+                        
+                        if(checkWinner() == Game.X_MOVE){
+                            myGame.setWinner(Game.X_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER); 
+                            myGame.setPosition(buttonsPosition);
+                            sendGameMove(Request.GAME_MOVE);
+                            
+                        }else if(checkWinner() == Game.DRAW){
+                            drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(buttonsPosition);
+                            sendGameMove(Request.GAME_MOVE);
+                            
+                        }else{                        
+                            myGame.setPlayedMove(currentMove); 
+                            myGame.setPosition(buttonsPosition);  
+                            myGame.setNextMove(Game.O_MOVE); 
+                            sendGameMove(Request.GAME_MOVE);
+                        }
+                    }
+                    else{
+                        
+                        if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
+                            myGame.setWinner(Game.O_MOVE);
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setNextMove(Game.GAME_OVER);
+                            myGame.setPosition(buttonsPosition);
+                            sendGameMove(Request.GAME_MOVE);
+                        }
+                        else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
+                            drawTie();
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(buttonsPosition);
+                            sendGameMove(Request.GAME_MOVE);
+                        }else{
+                            myGame.setPlayedMove(currentMove);
+                            myGame.setPosition(buttonsPosition);
+                            myGame.setNextMove(Game.X_MOVE);
+                            sendGameMove(Request.GAME_MOVE);
+                        }
+                        
+                        
+                    }   
+                }
+    }
+    
+    private void sendGameMessage(String gameMessage){
+        
+        gameMessages.setRequest(gameMessage);
+        obj = convert.fromGameToJson(gameMessages);
+        this.outStream.println(obj.toString());
+    }
+    
+    private void sendGameMove(String gameRequest){
+        
+        myGame.setRequest(gameRequest);
+        JSONObject obj = convert.fromGameToJson(myGame);
+        System.out.println("Sending move to handlers " + "+ chat message: ");
+        this.outStream.println(obj.toString());
+    }
+    
+    private void receiveGameMove(Game gameMove){
+        
+        
+        if(gameMove.getRequest().equalsIgnoreCase(Request.Chat_Message)){
+            gameMessages = gameMove;
+            appendMessage();
+        }
+        else{
+            
+            myGame = gameMove;
+            
+            switch(myGame.getRequest()){
+                
+                case Request.RECORD_GAME:
+                    checkRecordGameRespond();
+                    break;
+                case Request.GET_RECORDEDGAME:
+                    drawOldPositions();
+                    break;
+                case Request.GAME_PLAYAGAIN:
+                    resetBoard();
+                    break;
+                    
+                default:
+                    
+                    drawAndSaveMove(myGame.getPosition(), myGame.getPlayedMove());
+                    currentMove = myGame.getNextMove();
+            
+                    if(checkWinner().equalsIgnoreCase(Game.X_MOVE)){
+                        highLightWinner(playerXpositions);
+                        updateScore();
+                    }else if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
+                        highLightWinner(playerOpositions);
+                        updateScore();
+                    }else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
+                        drawTie();
+                        updateScore();
+                    }
+                break;
+            }
+           
+            
+                
+            
+        }
+            
+            
+            
+            
+        }
+    
+    private void drawAndSaveMove(Long position,String playedMove){
+        
+        
+        
+        if(playedMove.equalsIgnoreCase(Game.X_MOVE)){
+            
+            buttons[position.intValue()-1].setTextFill(javafx.scene.paint.Color.rgb(5, 112, 255));
+            buttons[position.intValue()-1].setText(playedMove);
+            buttons[position.intValue()-1].setDisable(true);
+            
+            System.out.println("adding position in x " + position.intValue());
+            playerXpositions.add(position.intValue());
+            
+        }else{
+            
+            buttons[position.intValue()-1].setTextFill(javafx.scene.paint.Color.rgb(255, 88, 66));
+            buttons[position.intValue()-1].setText(playedMove);
+            buttons[position.intValue()-1].setDisable(true);
+            
+            System.out.println("adding position in o " + position.intValue());
+            playerOpositions.add(position.intValue());
+        }
+        
+        
+        
+    }
+    
+    private void sendChat(){
+        
+        gameMessages = new Game();
+        gameMessages.setMessage(messageField.getText());
+        sendGameMessage(Request.Chat_Message);
+        messageField.clear();
+        
+    }
+    
+    private void appendMessage(){
+        
+        if(!gameMessages.getMessage().equalsIgnoreCase(null)){
+            chatArea.appendText(gameMessages.getMessage() + "\n");
+        }
+    }
+    
+    public static void setRecordedPosition(String[] oldGame){
+        recordedPositions = oldGame;
+    }
+    
+    public static String[] getRecordedPosition(){
+        
+        return recordedPositions;
+    }
+    
+    private void sendRecordedPosition(){
+        recordPositions();
+        sendGamePosition(Request.RECORD_GAME);
+    }
+    
+    private void sendGamePosition(String request){
+        
+        JSONArray positions = new JSONArray();
+        positions = convert.fromRecordedGamePositionTOJsonArray(recordedPositions);
+        myGame.setRequest(request);
+        obj = convert.fromGameToJsonWithArray(myGame, positions);
+        this.outStream.println(obj.toString());
+    }
+    
+    private void checkRecordGameRespond(){
+        System.out.println(myGame.getRespond());
+        if(myGame.getRespond().equalsIgnoreCase(Respond.SUCCESS)){
+            System.out.println("Record game success");
+            drawXO();
+        }else if(myGame.getRespond().equalsIgnoreCase(Respond.FAILURE)){
+            System.out.println("Record game faliure");
+        }
+    }
+    
+    private void sendExitGameRequest(){
+        
+        sendGameMove(Request.END_GAME);
+        isGameRunning = false;
+        gameRequest = null;
+        gamethread.stop();
+        
+        
+                    
+    }
 
     /**
      * **********************************socket**********************************************************************
@@ -105,12 +536,13 @@ public class Client extends Application implements Serializable {
     Socket socket;
     ObjectInputStream readObj;
     ObjectOutputStream writeObj;
-    DataInputStream inputStream;
-    PrintStream outputStream;
+    DataInputStream inStream;
+    PrintStream outStream;
     JsonConverter convert;
     JSONObject obj;
     JSONParser parse;
     Thread thread;
+    
     /**
      * **************************Player
      * class*****************************************************************************
@@ -228,7 +660,7 @@ public class Client extends Application implements Serializable {
     Label computerScore;
     Label scoreSeperator;//remove
     Button[] buttons;
-    String[] recordedPositions;
+//    String[] recordedPositions;
     String symbol;
     boolean gameFlag;
     int move;
@@ -271,6 +703,7 @@ public class Client extends Application implements Serializable {
     @Override
     public void init() {
         p = new Player("", "");
+        Game game = new Game();
         alertWrongLogIn1.setTitle("LogIn ");
         alertWrongLogIn1.setHeaderText(null);
         alertWrongLogIn1.setContentText("Invalid User Name or Password");
@@ -280,8 +713,8 @@ public class Client extends Application implements Serializable {
             public void run() {
                 try {
                     socket = new Socket("127.0.0.1", 5005);
-                    inputStream = new DataInputStream(socket.getInputStream());
-                    outputStream = new PrintStream(socket.getOutputStream());
+                    inStream = new DataInputStream(socket.getInputStream());
+                    outStream = new PrintStream(socket.getOutputStream());
 //                    writeObj = new ObjectOutputStream(socket.getOutputStream());
 //                    readObj = new ObjectInputStream(socket.getInputStream());                      
                 } catch (IOException ex) {
@@ -293,7 +726,7 @@ public class Client extends Application implements Serializable {
                         //(JSONObject) parser.parse(inStream.readLine());
                         JSONParser parse = new JSONParser();
                         obj = new JSONObject();
-                        obj = (JSONObject) parse.parse(inputStream.readLine());
+                        obj = (JSONObject) parse.parse(inStream.readLine());
                         p = convert.fromJsonToPlayer((JSONObject) obj);
                         System.out.println("Line 196: " + p.getRespond());
                         messageHandelr(p);
@@ -450,8 +883,7 @@ public class Client extends Application implements Serializable {
                     convert = new JsonConverter();
                     JSONObject obj = new JSONObject();
                     obj = convert.fromPlayerToJson(newPlayer);
-                    outputStream.println(obj.toString());
-                    //                        writeObj.writeObject(newPlayer);
+                    outStream.println(obj.toString());
                     System.out.println("object sent!");
                 }
 
@@ -467,7 +899,7 @@ public class Client extends Application implements Serializable {
         return userText1.getText();
 
     }
-
+    
     public AnchorPane ScreenTwo() {
         ScreenTwo = new AnchorPane();
         GridOfImageAndForm = new GridPane();
@@ -775,7 +1207,7 @@ public class Client extends Application implements Serializable {
                 logOutPlayer.setRequest(Request.LOGOUT);
                 System.out.println(logOutPlayer.getRequest());
 
-                outputStream.println(convert.fromPlayerToJson(logOutPlayer).toString());
+                outStream.println(convert.fromPlayerToJson(logOutPlayer).toString());
                 System.out.println("User send logout Request!");
             }
 
@@ -1418,8 +1850,18 @@ public class Client extends Application implements Serializable {
         return ScreenSingleMode;
     }
 
+    
     public AnchorPane ScreenMultiMode() {
-
+        
+        myGame = new Game();
+        convert = new JsonConverter();
+        currentMove = Game.X_MOVE;
+        recordGameFlag = true;
+        
+        if(recordedPositions == null){
+            recordedPositions = new String[9];
+        }
+        
         ScreenMultiMode = new AnchorPane();
         MultiGameImage = new ImageView();
         chatArea = new TextArea();
@@ -1434,6 +1876,100 @@ public class Client extends Application implements Serializable {
         btn7 = new Button();
         btn8 = new Button();
         btn9 = new Button();
+        
+        buttons[0] = btn1;
+        buttons[1] = btn2;
+        buttons[2] = btn3;
+        buttons[3] = btn4;
+        buttons[4] = btn5;
+        buttons[5] = btn6;
+        buttons[6] = btn7;
+        buttons[7] = btn8;
+        buttons[8] = btn9;
+        
+        btn1.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 1l;
+                updateBoard(buttonPosition);
+            }
+        
+        });
+        btn2.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 2l;
+                updateBoard(buttonPosition);
+            }
+            
+        
+        
+        });
+        btn3.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 3l;
+                updateBoard(buttonPosition);
+            }
+        
+        
+        });
+        btn4.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 4l;
+                updateBoard(buttonPosition);
+            }
+        
+        
+        });
+        btn5.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 5l;
+                updateBoard(buttonPosition);
+            }
+        
+        
+        });
+        btn6.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 6l;
+                updateBoard(buttonPosition);
+            }
+        
+        
+        });
+        btn7.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 7l;
+                updateBoard(buttonPosition);
+            }
+        
+        
+        });
+        btn8.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 8l;
+                updateBoard(buttonPosition);
+            }
+        
+        
+        });
+        btn9.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 9l;
+                updateBoard(buttonPosition);
+            }
+        
+        
+        });
+        
+        
         exitGame = new Button();
         playerOneName = new Label();
         playerTwoName = new Label();
@@ -1444,6 +1980,20 @@ public class Client extends Application implements Serializable {
         playerTwoScore = new Label();
         scoreSeperator = new Label();
         recordGame = new Button();
+        
+        recordGame.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                
+                if(recordGameFlag){
+                    sendRecordedPosition();
+                    drawXO();
+                }else{
+                    playAgain();
+                }
+            }
+        
+        });
 
         ScreenMultiMode.setMaxHeight(USE_PREF_SIZE);
         ScreenMultiMode.setMaxWidth(USE_PREF_SIZE);
@@ -1486,6 +2036,13 @@ public class Client extends Application implements Serializable {
         sendMsg.setText("Send");
         sendMsg.setTextFill(javafx.scene.paint.Color.WHITE);
         sendMsg.setFont(new Font("Lucida Calligraphy Italic", 20.0));
+        
+        sendMsg.setOnAction(new EventHandler<ActionEvent> () {
+            @Override
+            public void handle(ActionEvent event) {
+                sendChat();
+            }
+        });
 
         btn1.setLayoutX(40.0);
         btn1.setLayoutY(113.0);
@@ -1565,7 +2122,14 @@ public class Client extends Application implements Serializable {
         exitGame.setText("Exit");
         exitGame.setTextFill(javafx.scene.paint.Color.WHITE);
         exitGame.setFont(new Font("Lucida Calligraphy Italic", 20.0));
-
+        
+        exitGame.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                sendExitGameRequest(); 
+            }
+        });
+        
         playerOneName.setLayoutX(55.0);
         playerOneName.setPrefHeight(27.0);
         playerOneName.setPrefWidth(78.0);
@@ -1638,6 +2202,8 @@ public class Client extends Application implements Serializable {
         recordGame2.setText("Record Game");
         recordGame2.setTextFill(javafx.scene.paint.Color.WHITE);
         recordGame2.setFont(new Font("Lucida Calligraphy Italic", 20.0));
+        
+        drawOldPositions();
 
         ScreenMultiMode.getChildren().add(MultiGameImage);
         ScreenMultiMode.getChildren().add(chatArea);
@@ -1679,10 +2245,30 @@ public class Client extends Application implements Serializable {
                 System.out.println("Line 313: " + p.getRespond());
                 logout(p);
                 break;
+            case Request.GAME_INVITATION:
+                checkGameRespond();
+                break;
+            case Request.GAME_INVITATION_RESPOND:
+                generateAlertToAskUserForRespond();
+                break;
+            case Request.GAME_MOVE:
+            case Request.GAME_PLAYAGAIN:
+            case Request.Chat_Message:
+            case Request.RECORD_GAME:
+            case Request.END_GAME:
+            case Request.GET_RECORDEDGAME:
+//                forwardedGameRequest(JSONObject obj);
+                break;
         }
 
     }
-
+    
+    private void checkGameRespond(){
+        
+    }
+    private void generateAlertToAskUserForRespond(){
+        
+    }
     public void login(Player newPalyer) {
         System.out.println("Line 221: " + newPalyer.getRespond());
 
@@ -1759,67 +2345,6 @@ public class Client extends Application implements Serializable {
      * ********************************** Single Mode Game
      * methods*******************************************************************************
      */
-    String checkWinner() {
-        String winner = null;
-        //winning conditions
-        List topRow = Arrays.asList(1, 2, 3);
-        List midRow = Arrays.asList(4, 5, 6);
-        List botRow = Arrays.asList(7, 8, 9);
-
-        List liftCol = Arrays.asList(1, 4, 7);
-        List midtCol = Arrays.asList(2, 5, 8);
-        List righCol = Arrays.asList(3, 6, 9);
-
-        List cross1 = Arrays.asList(1, 5, 9);
-        List cross2 = Arrays.asList(3, 5, 7);
-
-        List<List> winning = new ArrayList<List>();
-
-        winning.add(topRow);
-        winning.add(midRow);
-        winning.add(botRow);
-        winning.add(liftCol);
-        winning.add(midtCol);
-        winning.add(righCol);
-        winning.add(cross1);
-        winning.add(cross2);
-
-        for (List winningComp : winning) {
-
-            if (playerXpositions.containsAll(winningComp)) {
-                winner = "X";
-                playerXpositions.clear();
-                playerXpositions.addAll(winningComp);
-            } else if (playerOpositions.containsAll(winningComp)) {
-                winner = "O";
-                playerOpositions.clear();
-                playerOpositions.addAll(winningComp);
-            } else if (playerXpositions.size() + playerOpositions.size() == 9) {
-                winner = "tie";
-            }
-        }
-        return winner;
-    }
-
-    void highLightWinner(ArrayList<Integer> winner) {
-        // will take the winner position and highlight each button equl to this position
-
-        for (int i = 0; i < 9; i++) {
-            if (i + 1 == (int) winner.get(0) || i + 1 == (int) winner.get(1) || i + 1 == (int) winner.get(2)) {
-                buttons[i].setStyle("-fx-background-color: #128dba");
-            }
-        }
-    }
-
-    String[] recordPositions() {
-        // save the value of each buttons of the 9'th, X or O or bull
-        recordedPositions = new String[9];
-        for (int index = 0; index < 9; index++) {
-            recordedPositions[index] = buttons[index].getText();
-        }
-        return recordedPositions;
-    }
-
     void drawOldPositions(String[] positions) {
         // will append symbol, and disable  buttons according to  last saved
         for (int index = 0; index < 9; index++) {
@@ -1842,19 +2367,6 @@ public class Client extends Application implements Serializable {
         }
 
     }
-
-    void drawTie() {
-        for (Button btn : buttons) {
-            btn.setText("Tie");
-        }
-    }
-
-    void drawXO() {
-        for (String str : recordedPositions) {
-            System.out.println(str);
-        }
-    }
-
     int computerMove() {
         Random random = new Random();
         int cpuPosition = random.nextInt(9) + 1;

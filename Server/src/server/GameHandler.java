@@ -131,14 +131,11 @@ public class GameHandler extends Thread  implements Serializable{
     
     
     private void disConnect(){
+        // this function not finished yet, 
+        // we need to handle if one of the player lost the connecttion or left the game
         System.out.println("breaking the loop");
         isGameRunning = false;
-        try {
-            inStream.close();
-        } catch (IOException ex) {
-            Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-                    outStream.close();
+        this.stop();
     }
     
     public void sendGameMove(String obj){
@@ -147,6 +144,7 @@ public class GameHandler extends Thread  implements Serializable{
             
             System.out.println("Broadcast to all player");
             player.sendMsg(obj);
+            
         }
     }
     
