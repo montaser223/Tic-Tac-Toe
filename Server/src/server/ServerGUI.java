@@ -15,6 +15,9 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,55 +43,54 @@ import javafx.stage.Stage;
  *
  * @author black horse
  */
-class Server  {
+class Server {
 
     private static ClientHandler handler;
     private static ServerSocket serverSocket;
     private static Socket socket;
     private static volatile boolean startServerflag;
     private static Thread thread;
-    
-    public static void startServerX(){
+
+    public static void startServerX() {
         try {
-            serverSocket = new ServerSocket(8888);
+            serverSocket = new ServerSocket(5005);
             startServerflag = true;
             System.out.println(startServerflag);
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
             System.out.println("Server");
         }
-        
-        thread = new Thread(new Runnable(){
+
+        thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                
+
                 while (startServerflag) {
-                        System.out.println("inside thread" + startServerflag);
+                    System.out.println("inside thread" + startServerflag);
                     try {
 
                         socket = serverSocket.accept();
                         System.out.println("Request Recived");
                         new ClientHandler(socket);
-                        
+
                     } catch (IOException ex) {
                         System.out.println("socket closed");
                         // here we should add something to the client in case the server is down
                     }
                 }
-                
+
             }
         });
-        
+
         thread.start();
     }
-    
-    public static void stopServer(){
-        
-        if(startServerflag){
-            
+
+    public static void stopServer() {
+
+        if (startServerflag) {
+
             startServerflag = false;
-            
-            
+
             try {
                 serverSocket.close();
             } catch (IOException ex) {
@@ -103,12 +105,11 @@ class Server  {
             } catch (IOException ex) {
 
             }
-            
+
             thread.stop();
         }
     }
-    
-    
+
 }
 
 public class ServerGUI extends Application {
@@ -118,23 +119,26 @@ public class ServerGUI extends Application {
     boolean startFlag;
     ImageView serverImg = new ImageView();
     TableView tableView;
+    ObservableList<Player> playerData;
     TableColumn playerNameServer;
     TableColumn scoreServer;
     TableColumn statusServer;
     AnchorPane root;
+    ArrayList<Player> players;
+    private XoDataBase database;
 
     @Override
-    public void init(){
+    public void init() {
 
         root = new AnchorPane();
-        
+
         startAndStopButton = new Button("Start");
-        
+        database = new XoDataBase();
         tableView = new TableView();
         playerNameServer = new TableColumn();
         scoreServer = new TableColumn();
         statusServer = new TableColumn();
-        
+
         serverImg.setFitHeight(540.0);
         serverImg.setFitWidth(259.0);
         serverImg.setPickOnBounds(true);
@@ -146,25 +150,31 @@ public class ServerGUI extends Application {
         } catch (FileNotFoundException ex) {
             System.out.println("Cann't load server background image");
         };
-        /***************************Button text flag*******************************************************************/
-        
+        /**
+         * *************************Button text
+         * flag******************************************************************
+         */
+
         startFlag = true;
-        /******************************Table Data**********************************************************/
-        TableView<Player> tableView = new TableView<Player>();
-        ObservableList<Player> playerData = FXCollections.observableArrayList();
-        
-        
-          playerNameServer.setCellValueFactory(new PropertyValueFactory<Player, String>("username")
-        );
-        scoreServer.setCellValueFactory(
-                new PropertyValueFactory<Player, String>("scour")
-        );
-        statusServer.setCellValueFactory(
-                new PropertyValueFactory<Player, String>("state")
-        );
+        /**
+         * ****************************Table
+         * Data*********************************************************
+         */
+        tableView = new TableView<Player>();
+        playerData = FXCollections.observableArrayList();
+//        playerData.clear();
+//        playerData.addAll(ASD);
 
-        tableView.setItems(playerData);
-
+//        playerNameServer.setCellValueFactory(new PropertyValueFactory<Player, String>("username")
+//        );
+//        scoreServer.setCellValueFactory(
+//                new PropertyValueFactory<Player, String>("scour")
+//        );
+//        statusServer.setCellValueFactory(
+//                new PropertyValueFactory<Player, String>("state")
+//        );
+//
+//        tableView.setItems(playerData);
         playerNameServer = new TableColumn();
         scoreServer = new TableColumn();
         statusServer = new TableColumn();
@@ -181,7 +191,7 @@ public class ServerGUI extends Application {
 
         statusServer.setPrefWidth(108.0);
         statusServer.setText("Status");
-        
+
         startAndStopButton.setLayoutX(357.0);
         startAndStopButton.setLayoutY(450.0);
         startAndStopButton.setMnemonicParsing(false);
@@ -209,7 +219,7 @@ public class ServerGUI extends Application {
                     startAndStopButton.setTextFill(javafx.scene.paint.Color.WHITE);
                     startAndStopButton.setFont(new Font("Lucida Calligraphy Italic", 18.0));
                     startAndStopButton.setText("Stop");
-                    
+
                     startFlag = false;
                 } else {
                     Server.stopServer();
@@ -219,26 +229,45 @@ public class ServerGUI extends Application {
 
             }
         });
-        
-        tableView.getColumns().add(playerNameServer);
-        tableView.getColumns().add(scoreServer);
-        tableView.getColumns().add(statusServer);
-        root.getChildren().add(tableView);
-        root.setStyle("-fx-background-color: linear-gradient(to right, #5c258d, #4389a2);;");
-        root.getChildren().add(serverImg);
-        root.getChildren().add(startAndStopButton);
+        players = database.selectplayer();
+
+        PlayersList.setPlayerList(players);
+        updateScreen();
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                updateScreen();
+            }
+        }, 0, 20000);
+
+        System.out.println(
+                "230 P " + players);
+        tableView.getColumns()
+                .add(playerNameServer);
+        tableView.getColumns()
+                .add(scoreServer);
+        tableView.getColumns()
+                .add(statusServer);
+        root.getChildren()
+                .add(tableView);
+        root.setStyle(
+                "-fx-background-color: linear-gradient(to right, #5c258d, #4389a2);;");
+        root.getChildren()
+                .add(serverImg);
+        root.getChildren()
+                .add(startAndStopButton);
 
     }
 
     @Override
-    public void start(Stage stage){
+    public void start(Stage stage) {
 
         try {
             //creating the image object
 
             Image image = new Image(new FileInputStream("ProjectImg/index.jpeg"));
         } catch (FileNotFoundException ex) {
-                System.out.println("can't load icon img");
+            System.out.println("can't load icon img");
         }
         //Creating the image view
         ImageView imageView = new ImageView();
@@ -250,6 +279,28 @@ public class ServerGUI extends Application {
         stage.setResizable(false);
         stage.setTitle("Tic Tac Toe Server");
         stage.show();
+    }
+
+    public void updateScreen() {
+        updatePlayerList();
+        playerData.clear();
+        playerData.addAll(players);
+        playerNameServer
+                .setCellValueFactory(
+                        new PropertyValueFactory<Player, String>("username")
+                );
+        scoreServer.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("scour")
+        );
+        statusServer.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("status")
+        );
+
+        tableView.setItems(playerData);
+    }
+
+    public void updatePlayerList() {
+        players = PlayersList.getPlayersList();
     }
 
     @Override
