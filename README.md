@@ -61,7 +61,6 @@ Network based Tic-Tac-Toe game, implemented with JavaFX as a project in ITI Open
  # Used Technolgies
  - [MySQL](https://dev.mysql.com/downloads/connector/j/)- JDBC Type 4 driver for MySQL
  - [json-simple](https://code.google.com/archive/p/json-simple/)- A simple Java toolkit for JSON
- - [gson](https://jar-download.com/artifacts/com.google.code.gson/gson/2.8.2/source-code)
  
  # Team
  - Abo Bakr Yousre
