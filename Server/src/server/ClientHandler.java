@@ -41,8 +41,6 @@ public class ClientHandler extends Thread implements Serializable {
     ClientHandler(Socket socket) {
 
         try {
-
-            System.out.println("Player connected");
             database = new XoDataBase();
             outStream = new PrintStream(socket.getOutputStream());
             inStream = new DataInputStream(socket.getInputStream());
@@ -54,7 +52,6 @@ public class ClientHandler extends Thread implements Serializable {
 
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
-            System.out.println("Clinet socket is not work");
             connected = false;
         }
     }
@@ -66,12 +63,13 @@ public class ClientHandler extends Thread implements Serializable {
             try {
 
                 obj = (JSONObject) parser.parse(inStream.readLine());
-                System.out.println("line 68 : " + obj);
                 messageHandler(obj);
 
 
             } catch (IOException ex) {
                 System.out.println(ex.getMessage());
+                this.stop();
+
             } catch (ParseException ex) {
                 Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -104,11 +102,9 @@ public class ClientHandler extends Thread implements Serializable {
             case Request.GAME_MOVE:
             case Request.GAME_PLAYAGAIN:
             case Request.Chat_Message:
-                System.out.println(message);
                 sendRequestToGameHandler(message);
                 break;
             case Request.RECORD_GAME:
-                System.out.println(message);
                 recordGamePosition(message);
                 break;
             case Request.GET_RECORDEDGAME:
@@ -382,6 +378,7 @@ public class ClientHandler extends Thread implements Serializable {
             database.sign_up(newPlayer.getFirstname(), newPlayer.getLastname(), newPlayer.getUsername(), newPlayer.getPassword());
             newPlayer.setRespond(Respond.SUCCESS);
             sendMsg(newPlayer);
+            updatePlayerList();
         }
 
     }
