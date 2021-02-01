@@ -8,15 +8,8 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-<<<<<<< HEAD
-    <jar href="Client.jar" size="60563" download="eager" />
+    <jar href="Client.jar" size="62259" download="eager" />
     <jar href="lib\json-simple-1.1.1.jar" size="23737" download="eager" />
-=======
-    <jar href="Client.jar" size="53453" download="eager" />
-    <jar href="lib\gson-2.6.2.jar" size="229650" download="eager" />
-    <jar href="lib\json-simple-1.1.1 (1).jar" size="23737" download="eager" />
-    <jar href="lib\mysql-connector-java-5.1.49-bin.jar" size="1006906" download="eager" />
->>>>>>> 45caedf04afdc65e2647359a98017ef7f7faba77
   </resources>
   <applet-desc  width="800" height="600" main-class="com.javafx.main.NoJavaFXFallback"  name="Client" >
     <param name="requiredFXVersion" value="8.0+"/>

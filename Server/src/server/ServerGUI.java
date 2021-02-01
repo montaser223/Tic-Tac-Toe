@@ -110,23 +110,6 @@ class Server {
         }
     }
 
-    public void stopServer() {
-        // stop server and close  the server socket 
-        startflag = false;
-        try {
-            //Edit
-            if (socket != null)
-            {
-                socket.close(); 
-            }
-            serverSocket.close();
-        } catch (IOException ex) {
-//            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("Server Closed");
-        }
-        this.stop();
-    }
-
 }
 
 public class ServerGUI extends Application {

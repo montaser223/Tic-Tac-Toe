@@ -313,7 +313,7 @@ public class ClientHandler extends Thread implements Serializable {
                 newPlayer.setRespond(Respond.SUCCESS);
                 newPlayer.setStatus(Status.ONLINE);
                 connectedPlayers.put(newPlayer.getUsername(), this);
-                sendMsgUpdateplayer(newPlayer,newPlayer.getRequest());
+                sendMsg(newPlayer);
                 updatePlayerList();
             } else {
                 newPlayer.setRespond(Respond.FAILURE);
@@ -334,7 +334,7 @@ public class ClientHandler extends Thread implements Serializable {
                 player.setPlayerList(PlayersList.getPlayersList());
                 ClientHandler user = connectedPlayers.get(player.getUsername());
                 if (user != null) {
-                    user.sendMsg(player, Request.PlAYER_LIST);
+                    user.sendMsgUpdateplayer(player, Request.PlAYER_LIST);
                 } else {
                     database.updateStatus(Status.OFFLINE, player.getUsername());
                 }
@@ -349,8 +349,8 @@ public class ClientHandler extends Thread implements Serializable {
             Boolean isRemoved = connectedPlayers.remove(newPlayer.getUsername(), this);
             if (isRemoved) {
                 newPlayer.setRespond(Respond.SUCCESS);
-                newPlayer.setState(Status.OFFLINE);
-                sendMsg(newPlayer,newPlayer.getRequest());
+                newPlayer.setStatus(Status.OFFLINE);
+                sendMsg(newPlayer);
                 updatePlayerList();
             } else {
                 newPlayer.setRespond(Respond.FAILURE);
