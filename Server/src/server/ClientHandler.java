@@ -69,6 +69,7 @@ public class ClientHandler extends Thread implements Serializable {
                 System.out.println("line 68 : " + obj);
                 messageHandler(obj);
 
+
             } catch (IOException ex) {
                 System.out.println(ex.getMessage());
             } catch (ParseException ex) {
@@ -228,12 +229,22 @@ public class ClientHandler extends Thread implements Serializable {
         if (destinationPlayer.getRespond().equals(Respond.SUCCESS)) {
             destinationPlayer.setRequest(Request.GAME_INVITATION);
             destinationPlayer.setRespond(Respond.SUCCESS);
+         destinationPlayer.setStatus(Status.PLAYING);
+          System.out.println("send back to SENDER "+ convert.fromPlayerToJson(destinationPlayer).toString());
+
+
             connectedPlayers.get(destinationPlayer.getUsername()).sendMsg(destinationPlayer);
             players.get(getPlayerIndex(destinationPlayer.getUsername())).setStatus(Status.PLAYING);
-            updatePlayerList();
+//            updatePlayerList();
             // we need to send again for the destinationPlayer a Game Invitation Respond == success
             // to join the game with
-            connectedPlayers.get(destinationPlayer.getDestination()).sendMsg(destinationPlayer);
+            destinationPlayer.setRequest(Request.GAME_INVITATION);
+            destinationPlayer.setRespond(Respond.SUCCESS);
+            destinationPlayer.setStatus(Status.PLAYING);
+            System.out.println("send back to destination "+ convert.fromPlayerToJson(destinationPlayer).toString());
+        
+          connectedPlayers.get(destinationPlayer.getDestination()).sendMsg(destinationPlayer); 
+
             players.get(getPlayerIndex(destinationPlayer.getDestination())).setStatus(Status.PLAYING);
             updatePlayerList();
 
@@ -254,18 +265,33 @@ public class ClientHandler extends Thread implements Serializable {
     }
 
     public void sendMsg(Player player) {
+       
+//        obj = convert.fromPlayerToJson(player);
+        System.out.println("player inside send meesage = "+ player);
+        obj = convert.fromPlayerToJson(player); 
 
-        obj = convert.fromPlayerToJson(player);
-
+        System.out.println("line 282 clinet handeler send message "+obj); 
+        
         this.outStream.println(obj);
+        
     }
 
-    public void sendMsg(Player player, String request) {
+    public void sendMsgUpdateplayer(Player player, String request) {
 
         player.setRequest(request);
         obj = convert.fromPlayerToJson(player, convert.fromPlayerListToJSONArray(player.getPlayersList()));
+        System.out.println("line 291 "+ obj);
+            if (obj == null )
+            {
+                
+                System.out.println("tring to send null obj ");
+            }
+            else
+            {
+                        this.outStream.println(obj);
 
-        this.outStream.println(obj);
+            }
+
     }
 
     public void sendMsg(String game) {
@@ -275,15 +301,17 @@ public class ClientHandler extends Thread implements Serializable {
 
     private void login(JSONObject message) {
         Player newPlayer = convert.fromJsonToPlayer(message);
-
+            System.out.println("line 283" +newPlayer.getRequest());
         Player isExist = database.check_username_password(newPlayer.getUsername(), newPlayer.getPassword());
         if (isExist.getRespond().equals(Respond.SUCCESS)) {
+               
+
             int isOnline = database.updateStatus(Status.ONLINE, newPlayer.getUsername());
             if (isOnline == 1) {
                 newPlayer.setRespond(Respond.SUCCESS);
                 newPlayer.setStatus(Status.ONLINE);
                 connectedPlayers.put(newPlayer.getUsername(), this);
-                sendMsg(newPlayer);
+                sendMsgUpdateplayer(newPlayer,newPlayer.getRequest());
                 updatePlayerList();
             } else {
                 newPlayer.setRespond(Respond.FAILURE);
