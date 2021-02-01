@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 
 import javafx.application.Application;
 import static javafx.application.Application.launch;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -58,7 +59,7 @@ class Server {
             System.out.println(startServerflag);
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
-            System.out.println("Server");
+            startServerflag = false;
         }
 
         thread = new Thread(new Runnable() {
@@ -66,16 +67,15 @@ class Server {
             public void run() {
 
                 while (startServerflag) {
-                    System.out.println("inside thread" + startServerflag);
                     try {
 
                         socket = serverSocket.accept();
-                        System.out.println("Request Recived");
                         new ClientHandler(socket);
 
                     } catch (IOException ex) {
                         System.out.println("socket closed");
                         // here we should add something to the client in case the server is down
+                        startServerflag = false;
                     }
                 }
 
@@ -126,6 +126,7 @@ public class ServerGUI extends Application {
     AnchorPane root;
     ArrayList<Player> players;
     private XoDataBase database;
+    Thread timer;
 
     @Override
     public void init() {
@@ -162,19 +163,7 @@ public class ServerGUI extends Application {
          */
         tableView = new TableView<Player>();
         playerData = FXCollections.observableArrayList();
-//        playerData.clear();
-//        playerData.addAll(ASD);
-
-//        playerNameServer.setCellValueFactory(new PropertyValueFactory<Player, String>("username")
-//        );
-//        scoreServer.setCellValueFactory(
-//                new PropertyValueFactory<Player, String>("scour")
-//        );
-//        statusServer.setCellValueFactory(
-//                new PropertyValueFactory<Player, String>("state")
-//        );
-//
-//        tableView.setItems(playerData);
+        
         playerNameServer = new TableColumn();
         scoreServer = new TableColumn();
         statusServer = new TableColumn();
@@ -208,7 +197,6 @@ public class ServerGUI extends Application {
 
                 if (startFlag) {
                     Server.startServerX();
-                    System.out.println("The server is runnig");
                     startAndStopButton.setLayoutX(357.0);
                     startAndStopButton.setLayoutY(450.0);
                     startAndStopButton.setMnemonicParsing(false);
@@ -219,29 +207,20 @@ public class ServerGUI extends Application {
                     startAndStopButton.setTextFill(javafx.scene.paint.Color.WHITE);
                     startAndStopButton.setFont(new Font("Lucida Calligraphy Italic", 18.0));
                     startAndStopButton.setText("Stop");
-
+                    startTimer();
                     startFlag = false;
                 } else {
                     Server.stopServer();
                     startFlag = true;
+                    stopTimer();
                     startAndStopButton.setText("Start");
                 }
 
             }
         });
-        players = database.selectplayer();
-
-        PlayersList.setPlayerList(players);
+//        players = ;
+        PlayersList.setPlayerList(database.selectplayer());
         updateScreen();
-        new Timer().scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                updateScreen();
-            }
-        }, 0, 20000);
-
-        System.out.println(
-                "230 P " + players);
         tableView.getColumns()
                 .add(playerNameServer);
         tableView.getColumns()
@@ -259,6 +238,33 @@ public class ServerGUI extends Application {
 
     }
 
+    public void startTimer() {
+        timer = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+
+                    try {
+                        updateScreen();
+                        timer.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(ServerGUI.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        });
+        timer.start();
+    }
+
+    public void stopTimer() {
+        int updated = database.serverDown();
+        if (updated != 0) {
+            PlayersList.setPlayerList(database.selectplayer());
+            updateScreen();
+        }
+        timer.stop();
+    }
+
     @Override
     public void start(Stage stage) {
 
@@ -266,13 +272,14 @@ public class ServerGUI extends Application {
             //creating the image object
 
             Image image = new Image(new FileInputStream("ProjectImg/index.jpeg"));
+            stage.getIcons().add(image);
         } catch (FileNotFoundException ex) {
             System.out.println("can't load icon img");
         }
         //Creating the image view
         ImageView imageView = new ImageView();
         //Setting image to the image view
-//        stage.getIcons().add(image);
+        
 
         Scene scene = new Scene(root, 642, 540);
         stage.setScene(scene);
@@ -300,6 +307,7 @@ public class ServerGUI extends Application {
     }
 
     public void updatePlayerList() {
+//        players.clear();
         players = PlayersList.getPlayersList();
     }
 
@@ -308,6 +316,7 @@ public class ServerGUI extends Application {
         /* this function will handle case if user close the app from the close btn (X)
             it will close Server and thread*/
         Server.stopServer();
+        stopTimer();
     }
 
     /**

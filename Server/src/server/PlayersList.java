@@ -16,6 +16,7 @@ public abstract class PlayersList {
     static ArrayList<Player> players = new ArrayList<>();
 
     public static void setPlayerList(ArrayList<Player> _players) {
+//        players.clear();
         players = _players;
     }
 
