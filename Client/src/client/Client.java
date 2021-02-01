@@ -2526,20 +2526,20 @@ public class Client extends Application implements Serializable {
     public void stop() {
 
         p.setRequest(Request.DISCONNECT);
-        try {
-
-            obj = convert.fromPlayerToJson(p);
-            outStream.println(obj.toString());
-
-            socket.close();
-
-            outStream.close();
-            inStream.close();
-            System.out.println("Sent a disconnection request to the server");
-        } catch (IOException ex) {
-            System.out.println("problem in stop method ");
-
+        if (socket != null)
+        {
+            try {
+                obj = convert.fromPlayerToJson(p);
+                outStream.println(obj.toString());
+                System.out.println("Sent a disconnection request to the server");
+                socket.close();
+                outStream.close();
+                inStream.close();
+            } catch (IOException ex) {
+                Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
+        
         thread.stop();
 
     }
