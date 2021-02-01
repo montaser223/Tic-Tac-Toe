@@ -31,12 +31,12 @@ Network based Tic-Tac-Toe game, implemented with JavaFX as a project in ITI Open
    - clean and build the server project then Run ServerGUI.java file
    
  * How to run the Client
-  - open project in netbeans or intellij idea
-  - open File
-    - Project Properties
-    - Libraries and make sure that following libraries are included
-        - json-simple-1.1.1
-        - gson-2.6.2
+    - open project in netbeans or intellij idea
+    - open File
+      - Project Properties
+      - Libraries and make sure that following libraries are included
+          - json-simple-1.1.1
+          - gson-2.6.2
     - Make sure from existance of two packages in Client project first one is libs package and second is client
    - clean and build the client project then Run Client.java file
    
