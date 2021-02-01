@@ -19,37 +19,23 @@ import java.util.List;
  *
  */
 public class Player implements Serializable {
-<<<<<<< HEAD:Server/src/libs/Player.java
-
-    ArrayList<Player> players = new ArrayList<Player>();
-
-    String username, password, firstname, lastname, status, request, respond, buttonerespond, player2, scour;
-
-=======
 
     ArrayList<Player> players = new ArrayList<Player>();
 
     String username, password, firstname, lastname, status, request, respond, buttonerespond, player2;
     int scour;
 
->>>>>>> fa8fd07311cbc1c72e9d93f5bdda7eafc3e949a8:Client/src/libs/Player.java
     public Player(String _username, String _password) {
         username = _username;
         password = _password;
         request = Request.LOGIN;
     }
 
-<<<<<<< HEAD:Server/src/libs/Player.java
-    public Player() {}
-
-    public Player(String _username, String _scour, String _status) {
-=======
     public Player() {
 
     }
 
     public Player(String _username, int _scour, String _status) {
->>>>>>> fa8fd07311cbc1c72e9d93f5bdda7eafc3e949a8:Client/src/libs/Player.java
         username = _username;
         scour = _scour;
         status = _status;
@@ -91,7 +77,7 @@ public class Player implements Serializable {
         status = _status;
     }
 
-    public void setScour(String scour) {
+    public void setScour(int scour) {
         this.scour = scour;
     }
 
@@ -115,7 +101,7 @@ public class Player implements Serializable {
         return status;
     }
 
-    public String getScour() {
+    public int getScour() {
         return scour;
     }
 
@@ -143,8 +129,4 @@ public class Player implements Serializable {
     public ArrayList<Player> getPlayersList() {
         return players;
     }
-<<<<<<< HEAD:Server/src/libs/Player.java
-    
-=======
->>>>>>> fa8fd07311cbc1c72e9d93f5bdda7eafc3e949a8:Client/src/libs/Player.java
 }

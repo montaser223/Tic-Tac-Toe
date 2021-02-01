@@ -77,7 +77,7 @@ public class Player implements Serializable {
         status = _status;
     }
 
-    public void setScour(String scour) {
+    public void setScour(int scour) {
         this.scour = scour;
     }
 
@@ -101,7 +101,7 @@ public class Player implements Serializable {
         return status;
     }
 
-    public String getScour() {
+    public int getScour() {
         return scour;
     }
 

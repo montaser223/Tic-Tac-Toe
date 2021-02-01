@@ -13,12 +13,7 @@
             </extension>
         </buildExtensions>
         <data xmlns="http://www.netbeans.org/ns/j2se-project/3">
-<<<<<<< HEAD:Server/nbproject/project.xml
             <name>Server</name>
-=======
-            <name>Client</name>
-            <explicit-platform explicit-source-supported="true"/>
->>>>>>> fa8fd07311cbc1c72e9d93f5bdda7eafc3e949a8:Client/nbproject/project.xml
             <source-roots>
                 <root id="src.dir"/>
             </source-roots>

@@ -136,7 +136,7 @@ public class GameHandler extends Thread  implements Serializable{
         try {
             inStream.close();
         } catch (IOException ex) {
-            Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
+//            Logger.getLogger(GameHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
                     outStream.close();
     }
