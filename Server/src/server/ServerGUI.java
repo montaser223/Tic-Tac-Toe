@@ -50,13 +50,14 @@ class Server  {
     
     public static void startServerX(){
         try {
-            serverSocket = new ServerSocket(8888);
+            serverSocket = new ServerSocket(5005);
             startServerflag = true;
             System.out.println(startServerflag);
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
             System.out.println("Server");
         }
+        
         
         thread = new Thread(new Runnable(){
             @Override
