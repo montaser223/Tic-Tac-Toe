@@ -5,13 +5,13 @@ Network based Tic-Tac-Toe game, implemented with JavaFX as a project in ITI Open
 
 * [Install and config](#)
 
-* [Prerequisite](https://github.com/montaser223/Tic-Tac-Toe)
+* [Prerequisite](#)
 
-* [Features](https://github.com/montaser223/Tic-Tac-Toe)
+* [Features](#)
 
-* [Used Technologies](https://github.com/montaser223/Tic-Tac-Toe)
+* [Used Technologies](#)
 
-* [Team members](https://github.com/montaser223/Tic-Tac-Toe)
+* [Team members](#)
 
 # Getting Started
 # Install and config
