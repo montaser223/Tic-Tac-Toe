@@ -11,7 +11,7 @@ package libs;
  */
 public class Request {
 
-    public static final String LOGIN = "login";
+ public static final String LOGIN = "login";
     public static final String LOGOUT = "logout";
     public static final String SIGNUP = "signup";
     public static final String PlAYER_LIST = "playerList";
@@ -26,4 +26,5 @@ public class Request {
     public static final String Chat_Message = "chatMessage";
     public static final String RECORD_GAME = "recordGame";
     public static final String GET_RECORDEDGAME = "getRecordedGame";
+    public static final String DISCONNECT = "disconnect";
 }

@@ -26,4 +26,8 @@ public class Request {
     public static final String Chat_Message = "chatMessage";
     public static final String RECORD_GAME = "recordGame";
     public static final String GET_RECORDEDGAME = "getRecordedGame";
+<<<<<<< HEAD
+=======
+    public static final String DISCONNECT = "disconnect";
+>>>>>>> 45caedf04afdc65e2647359a98017ef7f7faba77
 }

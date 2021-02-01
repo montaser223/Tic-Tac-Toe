@@ -63,6 +63,8 @@ public class ClientHandler extends Thread implements Serializable {
             try {
 
                 obj = (JSONObject) parser.parse(inStream.readLine());
+                System.out.println("Line 77 " + obj);
+                System.out.println("Line 78 " + obj.get("request"));
                 messageHandler(obj);
 
 
@@ -110,6 +112,10 @@ public class ClientHandler extends Thread implements Serializable {
             case Request.GET_RECORDEDGAME:
                 break;
 
+            case Request.DISCONNECT:
+                disconnect();
+                break;
+            
         }
     }
 
@@ -295,7 +301,7 @@ public class ClientHandler extends Thread implements Serializable {
         this.outStream.println(game);
     }
 
-    private void login(JSONObject message) {
+   private void login(JSONObject message) {
         Player newPlayer = convert.fromJsonToPlayer(message);
             System.out.println("line 283" +newPlayer.getRequest());
         Player isExist = database.check_username_password(newPlayer.getUsername(), newPlayer.getPassword());
@@ -333,7 +339,6 @@ public class ClientHandler extends Thread implements Serializable {
                     database.updateStatus(Status.OFFLINE, player.getUsername());
                 }
             }
-
         }
     }
 
@@ -343,18 +348,10 @@ public class ClientHandler extends Thread implements Serializable {
         if (isOffline == 1) {
             Boolean isRemoved = connectedPlayers.remove(newPlayer.getUsername(), this);
             if (isRemoved) {
-                try {
-                    newPlayer.setRespond(Respond.SUCCESS);
-                    newPlayer.setStatus(Status.OFFLINE);
-                    sendMsg(newPlayer);
-                    updatePlayerList();
-                    connected = false;
-                    this.inStream.close();
-                    this.outStream.close();
-                    this.stop();
-                } catch (IOException ex) {
-                    System.out.println(ex.getMessage());
-                }
+                newPlayer.setRespond(Respond.SUCCESS);
+                newPlayer.setState(Status.OFFLINE);
+                sendMsg(newPlayer,newPlayer.getRequest());
+                updatePlayerList();
             } else {
                 newPlayer.setRespond(Respond.FAILURE);
                 sendMsg(newPlayer);
@@ -364,7 +361,20 @@ public class ClientHandler extends Thread implements Serializable {
             sendMsg(newPlayer);
         }
     }
-
+    private void disconnect()
+    {
+                    
+        try {
+            connected = false;
+            inStream.close();
+            outStream.close();
+        } catch (IOException ex) {
+//            Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Client Close the application");
+        }
+                    
+    
+    }
     private void sginUp(JSONObject message) {
 
         Player newPlayer = convert.fromJsonToPlayer(message);
