@@ -60,7 +60,7 @@ public class XoDataBase implements Serializable {
             queryString = new String("select *from player order by score desc");
             rs = stmt.executeQuery(queryString);
             players.clear();
-            rs.first();
+//            rs.first();
             while (rs.next()) {
                 Player newPlayer = new Player(rs.getString("username"), rs.getInt("score"), rs.getString("status"));
                 players.add(newPlayer);

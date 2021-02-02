@@ -58,7 +58,7 @@ public class GameHandler extends Thread  implements Serializable{
 //        
         
         
-        if(symbol == Game.X_MOVE){
+        if(symbol.equalsIgnoreCase(Game.X_MOVE)){
             
             // first player will take the symbol x
             gameRequest.setNextMove(symbol);
@@ -67,6 +67,8 @@ public class GameHandler extends Thread  implements Serializable{
             System.out.println(" game handler: adding the first player" );
             // send the sybol for the player to use it for the rest of the game
             System.out.println(" sending symbol" + symbol + " to first player");
+            gameRequest.setRequest(Request.GAME_MOVE);
+             System.out.println("gsme 71"+ gameRequest);
             player.sendMsg(new Gson().toJson(gameRequest));
             symbol = Game.O_MOVE;
             
@@ -83,6 +85,8 @@ public class GameHandler extends Thread  implements Serializable{
             // send the sybol for the player to use it for the rest of the game
             
             System.out.println(" sending symbol" + symbol + " to socend player");
+             gameRequest.setRequest(Request.GAME_MOVE);
+             System.out.println("gsme 88"+ gameRequest);
             player.sendMsg(new Gson().toJson(gameRequest));
             symbol = Game.X_MOVE;
             

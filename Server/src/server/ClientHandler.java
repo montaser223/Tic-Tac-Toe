@@ -210,7 +210,7 @@ public class ClientHandler extends Thread implements Serializable {
 
         if (getPlayerStatus(senderPlayer.getDestination()).equalsIgnoreCase(Status.ONLINE)) {
 
-            senderPlayer.setRequest(Request.GAME_INVITATION);
+            senderPlayer.setRequest(Request.GAME_INVITATION_RESPOND);
             connectedPlayers.get(senderPlayer.getDestination()).sendMsg(senderPlayer);
 
         } else {
@@ -237,9 +237,14 @@ public class ClientHandler extends Thread implements Serializable {
 
             connectedPlayers.get(destinationPlayer.getUsername()).sendMsg(destinationPlayer);
             players.get(getPlayerIndex(destinationPlayer.getUsername())).setStatus(Status.PLAYING);
-//            updatePlayerList();
-            // we need to send again for the destinationPlayer a Game Invitation Respond == success
-            // to join the game with
+            try {
+                //            updatePlayerList();
+                // we need to send again for the destinationPlayer a Game Invitation Respond == success
+                // to join the game with
+                this.sleep(5000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            }
             destinationPlayer.setRequest(Request.GAME_INVITATION);
             destinationPlayer.setRespond(Respond.SUCCESS);
             destinationPlayer.setStatus(Status.PLAYING);
@@ -297,7 +302,7 @@ public class ClientHandler extends Thread implements Serializable {
     }
 
     public void sendMsg(String game) {
-
+        System.out.println("client "+ game);
         this.outStream.println(game);
     }
 

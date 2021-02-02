@@ -82,6 +82,8 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -103,99 +105,108 @@ import org.json.simple.parser.ParseException;
  * @author hebaa
  */
 public class Client extends Application implements Serializable {
-    
-    
+
     /*
     ***************** multi mode game functino*********************************
-    */
-    
+     */
     private Game forwardedGameRequest;
-    private Game gameRequest;
-    private boolean isMySymbolReceved = false;
-    private  volatile boolean isGameRunning = true;
-    private String currentMove; 
+    private volatile Game gameRequest;
+    private volatile boolean isMySymbolReceved = false;
+    private volatile boolean isGameRunning = true;
+    private String currentMove;
     private static String[] recordedPositions;
-    
+    Alert alertForRespond = new Alert(Alert.AlertType.CONFIRMATION);
+    ButtonType okButton = new ButtonType("Yes", ButtonBar.ButtonData.YES);
+    ButtonType noButton = new ButtonType("no", ButtonBar.ButtonData.NO);
+    Scene scene;
     Game gameMessages;
     Game myGame;
     String mySymbol;
-    
-    
+
     private boolean recordGameFlag;
     private Thread gamethread;
-    
-    private void forwardGameRequest(JSONObject obj){
+
+    private void forwardGameRequest(JSONObject obj) {
+        System.out.println("Line 130");
         forwardedGameRequest = convert.fromJsonToGame(obj);
+        System.out.println("Line 131 " + forwardedGameRequest);
     }
-    
-    private Game getforwardGameRequest(){
-        
+
+    private Game getforwardGameRequest() {
+//        System.out.println("adasdd " + forwardedGameRequest);
         Game newGameRequest = forwardedGameRequest; // tmp varibale to save the request
         forwardedGameRequest = null;
         return newGameRequest;
-        
+
     }
-    
-    private void receveMySymbol(){
-        
-        while(!isMySymbolReceved){
-            
-            gameRequest = getforwardGameRequest();
-            
-            if(gameRequest != null){
-                
-                isMySymbolReceved = true;
-                mySymbol = gameRequest.getNextMove();
-                isGameRunning = true;
-                System.out.println("reciving game symbol " + mySymbol + " from gmae handler");
-                System.out.println("and this is my  symbol " + currentMove );
-                gamethread.start();
-                System.out.println("game Thread started");
+    Thread th5;
+
+    private void receveMySymbol() {
+        System.out.println("Line 142");
+        th5 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!isMySymbolReceved) {
+//                    System.out.println("");
+                    gameRequest = getforwardGameRequest();
+
+                    if (gameRequest != null) {
+
+                        isMySymbolReceved = true;
+                        mySymbol = gameRequest.getNextMove();
+                        isGameRunning = true;
+                        System.out.println("reciving game symbol " + mySymbol + " from gmae handler");
+                        System.out.println("and this is my  symbol " + currentMove);
+                        gamethread.start();
+                        System.out.println("game Thread started");
+                        th5.stop();
+                    }
+                }
             }
-        }
+        });
+        th5.start();
     }
-    
-    private void startGame(){
-        
+
+    private void startGame() {
+
         sendGameMove(Request.START_GAME);
         receveMySymbol();
-        
+
         gamethread = new Thread(new Runnable() {
             @Override
             public void run() {
-                
+
                 while (isGameRunning) {
-                    
+
                     gameRequest = getforwardGameRequest();
-            
-                    if(gameRequest != null){
-                        
+
+                    if (gameRequest != null) {
+
                         Platform.runLater(() -> {
-                        receiveGameMove(gameRequest);
+                            receiveGameMove(gameRequest);
                         });
                     }
                 }
             }
         });
-        
+
     }
-    
-    
-    private String checkWinner(){
+
+    private String checkWinner() {
         String winner = "";
-        List topRow = Arrays.asList(1,2,3);
-        List midRow = Arrays.asList(4,5,6);
-        List botRow = Arrays.asList(7,8,9);
-        
-        List liftCol = Arrays.asList(1,4,7);
-        List midtCol = Arrays.asList(2,5,8);
-        List righCol = Arrays.asList(3,6,9);
-        
-        List cross1 = Arrays.asList(1,5,9);
-        List cross2 = Arrays.asList(3,5,7);
-        
+        List topRow = Arrays.asList(1, 2, 3);
+        List midRow = Arrays.asList(4, 5, 6);
+        List botRow = Arrays.asList(7, 8, 9);
+
+        List liftCol = Arrays.asList(1, 4, 7);
+        List midtCol = Arrays.asList(2, 5, 8);
+        List righCol = Arrays.asList(3, 6, 9);
+
+        List cross1 = Arrays.asList(1, 5, 9);
+        List cross2 = Arrays.asList(3, 5, 7);
+
         List<List> winning = new ArrayList<List>();
-        
+
         winning.add(topRow);
         winning.add(midRow);
         winning.add(botRow);
@@ -204,211 +215,200 @@ public class Client extends Application implements Serializable {
         winning.add(righCol);
         winning.add(cross1);
         winning.add(cross2);
-        
-        for(List winningComp: winning){
-           
-            if(playerXpositions.containsAll(winningComp)){
+
+        for (List winningComp : winning) {
+
+            if (playerXpositions.containsAll(winningComp)) {
                 winner = Game.X_MOVE;
-                 playerXpositions.clear();
-                 playerXpositions.addAll(winningComp);
-            }
-            else if(playerOpositions.containsAll(winningComp)){
+                playerXpositions.clear();
+                playerXpositions.addAll(winningComp);
+            } else if (playerOpositions.containsAll(winningComp)) {
                 winner = Game.O_MOVE;
-                 playerOpositions.clear();
-                 playerOpositions.addAll(winningComp);
+                playerOpositions.clear();
+                playerOpositions.addAll(winningComp);
+            } else if (playerXpositions.size() + playerOpositions.size() == 9) {
+                winner = Game.DRAW;
             }
-            else if(playerXpositions.size() + playerOpositions.size() == 9)
-                winner =  Game.DRAW;
         }
         return winner;
     }
-    
-    private void highLightWinner(ArrayList<Integer> winner){
+
+    private void highLightWinner(ArrayList<Integer> winner) {
         // will take the winner position and highlight each button equl to this position
-        
-        for(int i=0; i<9; i++){
-            if( i+1 == (int) winner.get(0) || i+1 == (int) winner.get(1) || i+1 == (int) winner.get(2))
+
+        for (int i = 0; i < 9; i++) {
+            if (i + 1 == (int) winner.get(0) || i + 1 == (int) winner.get(1) || i + 1 == (int) winner.get(2)) {
                 buttons[i].setStyle("-fx-background-color: #90EE90");
-        }         
+            }
+        }
     }
-    
-    private void recordPositions(){
-        
+
+    private void recordPositions() {
+
         recordedPositions = new String[9];
         // save the value of each buttons of the 9'th, X or O or bull
-        for(int index = 0; index <9; index++){
+        for (int index = 0; index < 9; index++) {
             recordedPositions[index] = buttons[index].getText();
         }
     }
-    
-    private void drawOldPositions(){
-        
-         for(int index = 0; index <9; index++){
-             
-            if( recordedPositions[index].equalsIgnoreCase(Game.X_MOVE) || 
-                recordedPositions[index].equalsIgnoreCase(Game.O_MOVE)){
-                
-                
-                
-                
-                if(recordedPositions[index] == "X"){
-                    
+
+    private void drawOldPositions() {
+
+        for (int index = 0; index < 9; index++) {
+
+            if (recordedPositions[index].equalsIgnoreCase(Game.X_MOVE)
+                    || recordedPositions[index].equalsIgnoreCase(Game.O_MOVE)) {
+
+                if (recordedPositions[index] == "X") {
+
                     buttons[index].setTextFill(javafx.scene.paint.Color.rgb(255, 157, 10));
                     buttons[index].setText(recordedPositions[index]);
                     buttons[index].setDisable(true);
-                    playerXpositions.add(index+1);
-                    
-                }else{
+                    playerXpositions.add(index + 1);
+
+                } else {
                     buttons[index].setTextFill(javafx.scene.paint.Color.rgb(255, 157, 10));
                     buttons[index].setText(recordedPositions[index]);
-                buttons[index].setDisable(true);
-                    playerOpositions.add(index+1);
+                    buttons[index].setDisable(true);
+                    playerOpositions.add(index + 1);
                 }
-                    
+
             }
         }
         //change the current move to the right turn
         // the defualt move at the begining is x,
         // so we need to check if it correct or no
-        if(playerXpositions.size() > playerOpositions.size()){
+        if (playerXpositions.size() > playerOpositions.size()) {
             currentMove = Game.O_MOVE;
-            
+
         }
     }
-    
-    private void resetBoard(){
-        
+
+    private void resetBoard() {
+
         currentMove = Game.X_MOVE;
         playerXpositions.clear();
         playerOpositions.clear();
         recordGame.setText("Record Game");
         recordGameFlag = true;
-        
+
         Button tmpButton = new Button();
-        for(Button btn: buttons){
-            
+        for (Button btn : buttons) {
+
             // reset the old style
             btn.setStyle(tmpButton.getStyle());
             btn.setFont(new Font("Engravers MT", 36.0));
             btn.setText(null);
-            btn.setDisable(false); 
-            
+            btn.setDisable(false);
+
         }
     }
-    
-    private void playAgainMultiMode(){
-        
+
+    private void playAgainMultiMode() {
+
         sendGameMove(Request.GAME_PLAYAGAIN);
     }
-    
-    private void updateScoreIndataBase(){
-        
+
+    private void updateScoreIndataBase() {
+
         this.recordGame.setText("Play Again!");
         this.recordGameFlag = false;
 
     }
-    
-    private void drawTie(){
-        
-        
-        for(Button btn: buttons){
+
+    private void drawTie() {
+
+        for (Button btn : buttons) {
             btn.setText(Game.DRAW);
             btn.setDisable(true);
         }
-        
+
     }
-    
-    private void drawXO(){
-        for(String str: recordedPositions){
+
+    private void drawXO() {
+        for (String str : recordedPositions) {
             System.out.println(str);
         }
     }
-    
-   
-    private void updateBoard(Long buttonsPosition){
-        
+
+    private void updateBoard(Long buttonsPosition) {
+
         System.out.println("is  game turn " + currentMove + " == " + mySymbol);
-                
-                if(mySymbol.equalsIgnoreCase(currentMove)){
-                    buttons[buttonsPosition.intValue()-1].setDisable(true);
-                    
-                    if(currentMove.equalsIgnoreCase(Game.X_MOVE)){
-                        
-                        
-                        if(checkWinner() == Game.X_MOVE){
-                            myGame.setWinner(Game.X_MOVE);
-                            myGame.setPlayedMove(currentMove);
-                            myGame.setNextMove(Game.GAME_OVER); 
-                            myGame.setPosition(buttonsPosition);
-                            sendGameMove(Request.GAME_MOVE);
-                            
-                        }else if(checkWinner() == Game.DRAW){
-                            drawTie();
-                            myGame.setPlayedMove(currentMove);
-                            myGame.setPosition(buttonsPosition);
-                            sendGameMove(Request.GAME_MOVE);
-                            
-                        }else{                        
-                            myGame.setPlayedMove(currentMove); 
-                            myGame.setPosition(buttonsPosition);  
-                            myGame.setNextMove(Game.O_MOVE); 
-                            sendGameMove(Request.GAME_MOVE);
-                        }
-                    }
-                    else{
-                        
-                        if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
-                            myGame.setWinner(Game.O_MOVE);
-                            myGame.setPlayedMove(currentMove);
-                            myGame.setNextMove(Game.GAME_OVER);
-                            myGame.setPosition(buttonsPosition);
-                            sendGameMove(Request.GAME_MOVE);
-                        }
-                        else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
-                            drawTie();
-                            myGame.setPlayedMove(currentMove);
-                            myGame.setPosition(buttonsPosition);
-                            sendGameMove(Request.GAME_MOVE);
-                        }else{
-                            myGame.setPlayedMove(currentMove);
-                            myGame.setPosition(buttonsPosition);
-                            myGame.setNextMove(Game.X_MOVE);
-                            sendGameMove(Request.GAME_MOVE);
-                        }
-                        
-                        
-                    }   
+
+        if (mySymbol.equalsIgnoreCase(currentMove)) {
+            buttons[buttonsPosition.intValue() - 1].setDisable(true);
+
+            if (currentMove.equalsIgnoreCase(Game.X_MOVE)) {
+
+                if (checkWinner() == Game.X_MOVE) {
+                    myGame.setWinner(Game.X_MOVE);
+                    myGame.setPlayedMove(currentMove);
+                    myGame.setNextMove(Game.GAME_OVER);
+                    myGame.setPosition(buttonsPosition);
+                    sendGameMove(Request.GAME_MOVE);
+
+                } else if (checkWinner() == Game.DRAW) {
+                    drawTie();
+                    myGame.setPlayedMove(currentMove);
+                    myGame.setPosition(buttonsPosition);
+                    sendGameMove(Request.GAME_MOVE);
+
+                } else {
+                    myGame.setPlayedMove(currentMove);
+                    myGame.setPosition(buttonsPosition);
+                    myGame.setNextMove(Game.O_MOVE);
+                    sendGameMove(Request.GAME_MOVE);
                 }
+            } else {
+
+                if (checkWinner().equalsIgnoreCase(Game.O_MOVE)) {
+                    myGame.setWinner(Game.O_MOVE);
+                    myGame.setPlayedMove(currentMove);
+                    myGame.setNextMove(Game.GAME_OVER);
+                    myGame.setPosition(buttonsPosition);
+                    sendGameMove(Request.GAME_MOVE);
+                } else if (checkWinner().equalsIgnoreCase(Game.DRAW)) {
+                    drawTie();
+                    myGame.setPlayedMove(currentMove);
+                    myGame.setPosition(buttonsPosition);
+                    sendGameMove(Request.GAME_MOVE);
+                } else {
+                    myGame.setPlayedMove(currentMove);
+                    myGame.setPosition(buttonsPosition);
+                    myGame.setNextMove(Game.X_MOVE);
+                    sendGameMove(Request.GAME_MOVE);
+                }
+
+            }
+        }
     }
-    
-    private void sendGameMessage(String gameMessage){
-        
+
+    private void sendGameMessage(String gameMessage) {
+
         gameMessages.setRequest(gameMessage);
         obj = convert.fromGameToJson(gameMessages);
         this.outStream.println(obj.toString());
     }
-    
-    private void sendGameMove(String gameRequest){
-        
+
+    private void sendGameMove(String gameRequest) {
+
         myGame.setRequest(gameRequest);
         JSONObject obj = convert.fromGameToJson(myGame);
         System.out.println("Sending move to handlers " + "+ chat message: ");
         this.outStream.println(obj.toString());
     }
-    
-    private void receiveGameMove(Game gameMove){
-        
-        
-        if(gameMove.getRequest().equalsIgnoreCase(Request.Chat_Message)){
+
+    private void receiveGameMove(Game gameMove) {
+
+        if (gameMove.getRequest().equalsIgnoreCase(Request.Chat_Message)) {
             gameMessages = gameMove;
             appendMessage();
-        }
-        else{
-            
+        } else {
+
             myGame = gameMove;
-            
-            switch(myGame.getRequest()){
-                
+
+            switch (myGame.getRequest()) {
+
                 case Request.RECORD_GAME:
                     checkRecordGameRespond();
                     break;
@@ -418,120 +418,108 @@ public class Client extends Application implements Serializable {
                 case Request.GAME_PLAYAGAIN:
                     resetBoard();
                     break;
-                    
+
                 default:
-                    
+
                     drawAndSaveMove(myGame.getPosition(), myGame.getPlayedMove());
                     currentMove = myGame.getNextMove();
-            
-                    if(checkWinner().equalsIgnoreCase(Game.X_MOVE)){
+
+                    if (checkWinner().equalsIgnoreCase(Game.X_MOVE)) {
                         highLightWinner(playerXpositions);
                         updateScore();
-                    }else if(checkWinner().equalsIgnoreCase(Game.O_MOVE)){
+                    } else if (checkWinner().equalsIgnoreCase(Game.O_MOVE)) {
                         highLightWinner(playerOpositions);
                         updateScore();
-                    }else if(checkWinner().equalsIgnoreCase(Game.DRAW)){
+                    } else if (checkWinner().equalsIgnoreCase(Game.DRAW)) {
                         drawTie();
                         updateScore();
                     }
-                break;
+                    break;
             }
-           
-            
-                
-            
+
         }
-            
-            
-            
-            
-        }
-    
-    private void drawAndSaveMove(Long position,String playedMove){
-        
-        
-        
-        if(playedMove.equalsIgnoreCase(Game.X_MOVE)){
-            
-            buttons[position.intValue()-1].setTextFill(javafx.scene.paint.Color.rgb(5, 112, 255));
-            buttons[position.intValue()-1].setText(playedMove);
-            buttons[position.intValue()-1].setDisable(true);
-            
+
+    }
+
+    private void drawAndSaveMove(Long position, String playedMove) {
+
+        if (playedMove.equalsIgnoreCase(Game.X_MOVE)) {
+
+            buttons[position.intValue() - 1].setTextFill(javafx.scene.paint.Color.rgb(5, 112, 255));
+            buttons[position.intValue() - 1].setText(playedMove);
+            buttons[position.intValue() - 1].setDisable(true);
+
             System.out.println("adding position in x " + position.intValue());
             playerXpositions.add(position.intValue());
-            
-        }else{
-            
-            buttons[position.intValue()-1].setTextFill(javafx.scene.paint.Color.rgb(255, 88, 66));
-            buttons[position.intValue()-1].setText(playedMove);
-            buttons[position.intValue()-1].setDisable(true);
-            
+
+        } else {
+
+            buttons[position.intValue() - 1].setTextFill(javafx.scene.paint.Color.rgb(255, 88, 66));
+            buttons[position.intValue() - 1].setText(playedMove);
+            buttons[position.intValue() - 1].setDisable(true);
+
             System.out.println("adding position in o " + position.intValue());
             playerOpositions.add(position.intValue());
         }
-        
-        
-        
+
     }
-    
-    private void sendChat(){
-        
+
+    private void sendChat() {
+
         gameMessages = new Game();
         gameMessages.setMessage(messageField.getText());
         sendGameMessage(Request.Chat_Message);
         messageField.clear();
-        
+
     }
-    
-    private void appendMessage(){
-        
-        if(!gameMessages.getMessage().equalsIgnoreCase(null)){
+
+    private void appendMessage() {
+
+        if (!gameMessages.getMessage().equalsIgnoreCase(null)) {
             chatArea.appendText(gameMessages.getMessage() + "\n");
         }
     }
-    
-    public static void setRecordedPosition(String[] oldGame){
+
+    public static void setRecordedPosition(String[] oldGame) {
         recordedPositions = oldGame;
     }
-    
-    public static String[] getRecordedPosition(){
-        
+
+    public static String[] getRecordedPosition() {
+
         return recordedPositions;
     }
-    
-    private void sendRecordedPosition(){
+
+    private void sendRecordedPosition() {
         recordPositions();
         sendGamePosition(Request.RECORD_GAME);
     }
-    
-    private void sendGamePosition(String request){
-        
+
+    private void sendGamePosition(String request) {
+
         JSONArray positions = new JSONArray();
         positions = convert.fromRecordedGamePositionTOJsonArray(recordedPositions);
         myGame.setRequest(request);
         obj = convert.fromGameToJsonWithArray(myGame, positions);
         this.outStream.println(obj.toString());
     }
-    
-    private void checkRecordGameRespond(){
+
+    private void checkRecordGameRespond() {
         System.out.println(myGame.getRespond());
-        if(myGame.getRespond().equalsIgnoreCase(Respond.SUCCESS)){
+        if (myGame.getRespond().equalsIgnoreCase(Respond.SUCCESS)) {
             System.out.println("Record game success");
             drawXO();
-        }else if(myGame.getRespond().equalsIgnoreCase(Respond.FAILURE)){
+        } else if (myGame.getRespond().equalsIgnoreCase(Respond.FAILURE)) {
             System.out.println("Record game faliure");
         }
     }
-    
-    private void sendExitGameRequest(){
-        
+
+    private void sendExitGameRequest() {
+
         sendGameMove(Request.END_GAME);
         isGameRunning = false;
         gameRequest = null;
         gamethread.stop();
-        
-        
-                    
+
     }
 
     ArrayList<Player> ASD;
@@ -541,7 +529,7 @@ public class Client extends Application implements Serializable {
     private JSONObject obj;
 
     JSONParser parser = new JSONParser();
-    JsonConverter convert = new JsonConverter();
+    JsonConverter convert;
 //      PrintStream  outStream  ;
     DataInputStream inStream;
 
@@ -552,7 +540,7 @@ public class Client extends Application implements Serializable {
 //    ObjectOutputStream writeObj;
     PrintStream outStream;
     Thread thread;
-    
+
     /**
      * ********Player class**************************
      */
@@ -582,7 +570,8 @@ public class Client extends Application implements Serializable {
     AnchorPane ScreenSingleMode;
     AnchorPane ScreenMultiMode;
     /**
-     * ********************************Screen one variables***********************************************
+     * ********************************Screen one
+     * variables***********************************************
      */
     public ImageView LoginImg;
     public Label LoginLabel;
@@ -636,9 +625,9 @@ public class Client extends Application implements Serializable {
      */
     ImageView TableImg;
     TableView PlayerTable;
-    TableColumn PlayerName;
-    TableColumn Score;
-    TableColumn Status;
+    TableColumn PlayerName = new TableColumn();
+    TableColumn Score = new TableColumn();
+    TableColumn Status = new TableColumn();
     Label TableLabel;
     Button playBtn4;
     Button backBtn4;
@@ -702,8 +691,10 @@ public class Client extends Application implements Serializable {
     Label playerTwoScore;
     Label scoreSeperator2;
     Button recordGame2;
+
     /**
-     * *******************************MultiMode variables***********************************************************
+     * *******************************MultiMode
+     * variables***********************************************************
      */
 
     /* ********************************************************************************************/
@@ -711,11 +702,14 @@ public class Client extends Application implements Serializable {
     public void init() {
         p = new Player("", "");
         Game game = new Game();
+        myGame = new Game();
+        buttons = new Button[9];
         convert = new JsonConverter();
         alertWrongLogIn1.setTitle("LogIn ");
         alertWrongLogIn1.setHeaderText(null);
         alertWrongLogIn1.setContentText("Invalid User Name or Password");
-
+        alertForRespond.getButtonTypes()
+                .setAll(okButton, noButton);
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -735,19 +729,16 @@ public class Client extends Application implements Serializable {
 
                         System.out.println("line 216");
 
-                        obj = (JSONObject) parser.parse(inStream.readLine());
-                        Player p2 = convert.fromJsonToPlayer(obj,
-                                convert.fromJSONArrayToPlayerList((JSONArray) obj.get("playersList")));
-                        ASD = p2.getPlayersList();
-                        System.out.println("line 225 " + obj);
-                        System.out.println("line 226 " + p2.getRequest());
-                        messageHandelr(p2);
+                        JSONObject message = (JSONObject) parser.parse(inStream.readLine());
+//                        Player p2 = convert.fromJsonToPlayer(obj,
+//                                convert.fromJSONArrayToPlayerList((JSONArray) obj.get("playersList")));
+//                        ASD = p2.getPlayersList();
+                        System.out.println("line 225 " + message);
+//                        System.out.println("line 226 " + p2.getRequest());
+                        messageHandelr(message);
 
                     } catch (IOException ex) {
                         System.out.println("Line 100: " + p.getRespond());
-                        System.out.println(ex.getMessage());
-                    } catch (NullPointerException ex) {
-                        System.out.println("You should run server first Line 111: " + p.getRespond());
                         System.out.println(ex.getMessage());
                     } catch (ParseException ex) {
 //                        Logger.getLogger(TicTacToe.class.getName()).log(Level.SEVERE, null, ex);
@@ -758,6 +749,13 @@ public class Client extends Application implements Serializable {
         });
         thread.start();
 
+        /*
+        
+        catch (NullPointerException ex) {
+                        System.out.println("You should run server first Line 111: " + p.getRespond());
+                        System.out.println(ex.getMessage());
+                    }
+         */
     }
 
     /**
@@ -912,7 +910,7 @@ public class Client extends Application implements Serializable {
         return userText1.getText();
 
     }
-    
+
     public AnchorPane ScreenTwo() {
         ScreenTwo = new AnchorPane();
         GridOfImageAndForm = new GridPane();
@@ -1279,10 +1277,21 @@ public class Client extends Application implements Serializable {
 //        PlayerTable = new TableView();
         TableView<Player> PlayerTable = new TableView<Player>();
         ObservableList<Player> playerData = FXCollections.observableArrayList();
-        playerData.clear();
-        playerData.addAll(ASD);
-//        System.out.println("lll " + ASD);
+//        playerData.clear();
+//        playerData.addAll(ASD);
+//         PlayerName.setCellValueFactory(
+//                        new PropertyValueFactory<Player, String>("username")
+//                );
+//        Score.setCellValueFactory(
+//                new PropertyValueFactory<Player, String>("scour")
+//        );
+//        Status.setCellValueFactory(
+//                new PropertyValueFactory<Player, String>("status")
+//        );//        PlayerTable.setItems(playerData);
 
+//
+//        PlayerTable.setItems(playerData);
+//        System.out.println("lll " + ASD);
         PlayerName = new TableColumn();
         Score = new TableColumn();
         Status = new TableColumn();
@@ -1365,18 +1374,19 @@ public class Client extends Application implements Serializable {
         ScreenFour.getChildren().add(TableLabel);
         ScreenFour.getChildren().add(playBtn4);
         ScreenFour.getChildren().add(backBtn4);
+        playerData.addAll(ASD);
         PlayerName.setCellValueFactory(
                 new PropertyValueFactory<Player, String>("username")
         );
         Score.setCellValueFactory(
-                new PropertyValueFactory<Player, String>("scour")
+                new PropertyValueFactory<Player, String>("score")
         );
         Status.setCellValueFactory(
-                new PropertyValueFactory<Player, String>("state")
+                new PropertyValueFactory<Player, String>("status")
         );
+        PlayerTable.setItems(playerData);
 
-//       PlayerTable.setItems(playerData);
-
+        PlayerTable.setItems(playerData);
         unSelected4.setTitle("player list");
         unSelected4.setHeaderText(null);
         unSelected4.setContentText("please select player ");
@@ -1399,16 +1409,27 @@ public class Client extends Application implements Serializable {
                     //get selected item from table
 //                    Player p = PlayerTable.getSelectionModel().getSelectedItem();
 //                    System.out.println(p.getUsername());
+                    String a = PlayerTable.getSelectionModel().getSelectedItem().getUsername();
 
-                    Platform.runLater(() -> {
-                        ScreenMultiMode().getChildren().clear();
-                    });
-                    Platform.runLater(() -> {
-                       playBtn4.getScene().setRoot(ScreenMultiMode());
-                    });
-                      
+//                      System.out.println(a);
+                    System.out.println(userText1.getText());
+
+                    Player p = new Player();
+                    p.setUsername(userText1.getText());
+                    p.setRequest(Request.GAME_INVITATION);
+                    p.setDestination(a);
+
+                    obj = convert.fromPlayerToJson(p);
+                    outStream.println(obj.toString());
+
+//                    Platform.runLater(() -> {
+//                        ScreenMultiMode().getChildren().clear();
+//                    });
+//                    Platform.runLater(() -> {
+//                        playBtn4.getScene().setRoot(ScreenMultiMode());
+//                    });
+//
                     System.out.println("player multimode");
-
                 } catch (NullPointerException q) {
 
                     unSelected4.showAndWait();
@@ -1888,18 +1909,17 @@ public class Client extends Application implements Serializable {
         return ScreenSingleMode;
     }
 
-    
     public AnchorPane ScreenMultiMode() {
-        
+
         myGame = new Game();
         convert = new JsonConverter();
         currentMove = Game.X_MOVE;
         recordGameFlag = true;
         
-        if(recordedPositions == null){
+        if (recordedPositions == null) {
             recordedPositions = new String[9];
         }
-        
+
         ScreenMultiMode = new AnchorPane();
         MultiGameImage = new ImageView();
         chatArea = new TextArea();
@@ -1914,7 +1934,6 @@ public class Client extends Application implements Serializable {
         btn7 = new Button();
         btn8 = new Button();
         btn9 = new Button();
-        
         buttons[0] = btn1;
         buttons[1] = btn2;
         buttons[2] = btn3;
@@ -1924,90 +1943,80 @@ public class Client extends Application implements Serializable {
         buttons[6] = btn7;
         buttons[7] = btn8;
         buttons[8] = btn9;
-        
-        btn1.setOnAction(new EventHandler<ActionEvent>(){
+
+        btn1.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Long buttonPosition = 1l;
                 updateBoard(buttonPosition);
             }
-        
+
         });
-        btn2.setOnAction(new EventHandler<ActionEvent>(){
+        btn2.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Long buttonPosition = 2l;
                 updateBoard(buttonPosition);
             }
-            
-        
-        
+
         });
-        btn3.setOnAction(new EventHandler<ActionEvent>(){
+        btn3.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Long buttonPosition = 3l;
                 updateBoard(buttonPosition);
             }
-        
-        
+
         });
-        btn4.setOnAction(new EventHandler<ActionEvent>(){
+        btn4.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Long buttonPosition = 4l;
                 updateBoard(buttonPosition);
             }
-        
-        
+
         });
-        btn5.setOnAction(new EventHandler<ActionEvent>(){
+        btn5.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Long buttonPosition = 5l;
                 updateBoard(buttonPosition);
             }
-        
-        
+
         });
-        btn6.setOnAction(new EventHandler<ActionEvent>(){
+        btn6.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Long buttonPosition = 6l;
                 updateBoard(buttonPosition);
             }
-        
-        
+
         });
-        btn7.setOnAction(new EventHandler<ActionEvent>(){
+        btn7.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Long buttonPosition = 7l;
                 updateBoard(buttonPosition);
             }
-        
-        
+
         });
-        btn8.setOnAction(new EventHandler<ActionEvent>(){
+        btn8.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Long buttonPosition = 8l;
                 updateBoard(buttonPosition);
             }
-        
-        
+
         });
-        btn9.setOnAction(new EventHandler<ActionEvent>(){
+        btn9.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 Long buttonPosition = 9l;
                 updateBoard(buttonPosition);
             }
-        
-        
+
         });
-        
-        
+
         exitGame = new Button();
         playerOneName = new Label();
         playerTwoName = new Label();
@@ -2018,19 +2027,18 @@ public class Client extends Application implements Serializable {
         playerTwoScore = new Label();
         scoreSeperator2 = new Label();
         recordGame2 = new Button();
-        
-        recordGame2.setOnAction(new EventHandler<ActionEvent>(){
+        recordGame2.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                
-                if(recordGameFlag){
+
+                if (recordGameFlag) {
                     sendRecordedPosition();
                     drawXO();
-                }else{
+                } else {
                     playAgain();
                 }
             }
-        
+
         });
 
         ScreenMultiMode.setMaxHeight(USE_PREF_SIZE);
@@ -2045,7 +2053,7 @@ public class Client extends Application implements Serializable {
         MultiGameImage.setPickOnBounds(true);
 //        MultiGameImage.setImage(new Image(getClass().getResource("../../../Project/Img/image.jpg").toExternalForm()));
         try {
-            FileInputStream stream = new FileInputStream("ProjectImg/image.jpg");
+            FileInputStream stream = new FileInputStream("F:\\ITI\\Java\\Project\\Img\\image.jpg");
             Image image = new Image(stream);
             MultiGameImage.setImage(image);
 
@@ -2074,21 +2082,19 @@ public class Client extends Application implements Serializable {
         sendMsg.setText("Send");
         sendMsg.setTextFill(javafx.scene.paint.Color.WHITE);
         sendMsg.setFont(new Font("Lucida Calligraphy Italic", 20.0));
-        
-        sendMsg.setOnAction(new EventHandler<ActionEvent> () {
+        sendMsg.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 sendChat();
             }
         });
-
         btn1.setLayoutX(40.0);
         btn1.setLayoutY(113.0);
         btn1.setMnemonicParsing(false);
         btn1.setPrefHeight(68.0);
         btn1.setPrefWidth(86.0);
         //add text from palyer
-        btn1.setText("X");
+//        btn1.setText("X");
         btn1.setFont(new Font("Engravers MT", 36.0));
 
         btn2.setLayoutX(152.0);
@@ -2117,8 +2123,8 @@ public class Client extends Application implements Serializable {
         btn5.setMnemonicParsing(false);
         btn5.setPrefHeight(68.0);
         btn5.setPrefWidth(86.0);
-        //add text from palyer
-        btn5.setText("O");
+//        add text from palyer
+//        btn5.setText("O");
         btn5.setFont(new Font("Engravers MT", 36.0));
 
         btn6.setLayoutX(263.0);
@@ -2148,7 +2154,7 @@ public class Client extends Application implements Serializable {
         btn9.setPrefHeight(68.0);
         btn9.setPrefWidth(86.0);
         //add text from palyer
-        btn9.setText("X");
+//        btn9.setText("X");
         btn9.setFont(new Font("Engravers MT", 36.0));
 
         exitGame.setLayoutX(405.0);
@@ -2160,14 +2166,12 @@ public class Client extends Application implements Serializable {
         exitGame.setText("Exit");
         exitGame.setTextFill(javafx.scene.paint.Color.WHITE);
         exitGame.setFont(new Font("Lucida Calligraphy Italic", 20.0));
-        
-        exitGame.setOnAction(new EventHandler<ActionEvent>(){
+        exitGame.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                sendExitGameRequest(); 
+                sendExitGameRequest();
             }
         });
-        
         playerOneName.setLayoutX(55.0);
         playerOneName.setPrefHeight(27.0);
         playerOneName.setPrefWidth(78.0);
@@ -2240,9 +2244,7 @@ public class Client extends Application implements Serializable {
         recordGame2.setText("Record Game");
         recordGame2.setTextFill(javafx.scene.paint.Color.WHITE);
         recordGame2.setFont(new Font("Lucida Calligraphy Italic", 20.0));
-        
-        drawOldPositions();
-
+//        drawOldPositions();
         ScreenMultiMode.getChildren().add(MultiGameImage);
         ScreenMultiMode.getChildren().add(chatArea);
         ScreenMultiMode.getChildren().add(messageField);
@@ -2269,25 +2271,33 @@ public class Client extends Application implements Serializable {
         return ScreenMultiMode;
     }
 
-    public void messageHandelr(Player p) {
-
-        System.out.println("Line 212: " + p.getRespond());
-        switch (p.getRequest()) {
+    public void messageHandelr(JSONObject message) {
+        System.out.println("Message : " + message);
+        switch ((String) message.get("request")) {
             case Request.LOGIN:
+                Player p = convert.fromJsonToPlayer(message);
+                System.out.println("sda" + p.getRespond());
                 login(p);
                 break;
-            case Request.SIGNUP:
-                signup(p);
-                break;
             case Request.LOGOUT:
-                System.out.println("Line 313: " + p.getRespond());
-                logout(p);
+                logout(convert.fromJsonToPlayer(message));
+                break;
+            case Request.PlAYER_LIST:
+                System.out.println("dasdas" + message);
+                playlist(convert.fromJSONArrayToPlayerList((JSONArray) message.get("playersList")));
+                break;
+            case Request.SIGNUP:
+                signup(convert.fromJsonToPlayer(message));
                 break;
             case Request.GAME_INVITATION:
-                checkGameRespond();
+                System.out.println("dadsa");
+                checkGameRespond(message);
+                System.out.println("sdfsdfsdf");
                 break;
             case Request.GAME_INVITATION_RESPOND:
-                generateAlertToAskUserForRespond();
+                System.out.println("aaa");
+                generateAlertToAskUserForRespond(message);
+                System.out.println("bbbb");
                 break;
             case Request.GAME_MOVE:
             case Request.GAME_PLAYAGAIN:
@@ -2295,21 +2305,127 @@ public class Client extends Application implements Serializable {
             case Request.RECORD_GAME:
             case Request.END_GAME:
             case Request.GET_RECORDEDGAME:
-//                forwardedGameRequest(JSONObject obj);
+                System.out.println("2181 " + message);
+                forwardGameRequest(message);
                 break;
+        }
+//        switch ((String) message.get("request")) {
+//            case "login":
+//                Player p = convert.fromJsonToPlayer(obj);
+//                System.out.println("sda" + p.getRespond());
+//                login(p);
+//                break;
+//            case Request.SIGNUP:
+//                signup(convert.fromJsonToPlayer(obj));
+//                break;
+//            case Request.LOGOUT:
+////                System.out.println("Line 313: " + p.getRespond());
+//                logout(convert.fromJsonToPlayer(obj));
+//                break;
+//            case Request.GAME_INVITATION:
+//                checkGameRespond();
+//                break;
+//            case Request.GAME_INVITATION_RESPOND:
+//                generateAlertToAskUserForRespond();
+//                break;
+//            case Request.GAME_MOVE:
+//            case Request.GAME_PLAYAGAIN:
+//            case Request.Chat_Message:
+//            case Request.RECORD_GAME:
+//            case Request.END_GAME:
+//            case Request.GET_RECORDEDGAME:
+////                forwardedGameRequest(JSONObject obj);
+//                break;
+//            default:
+//                System.out.println(message.get("request"));
+//                System.out.println("asdasdasdsa");
+//                break;
+//        }
+
+    }
+
+    public void checkGameRespond(JSONObject message) {
+
+        Player p = convert.fromJsonToPlayer(message);
+        if (p.getRespond().equals(Respond.SUCCESS)) {
+            System.out.println("start game function and run here");
+            sendGameMove(Request.START_GAME);
+            receveMySymbol();
+
+            gamethread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+
+                    while (isGameRunning) {
+                        System.out.println("game running");
+                        gameRequest = getforwardGameRequest();
+
+                        if (gameRequest != null) {
+
+                            Platform.runLater(() -> {
+                                receiveGameMove(gameRequest);
+                            });
+                        }
+                    }
+                }
+            });
+
+            Platform.runLater(() -> {
+                ScreenMultiMode().getChildren().clear();
+            });
+            Platform.runLater(() -> {
+                scene.setRoot(ScreenMultiMode());
+            });
+
+            //---------
+        } else {
+
+            System.out.println(" request refused alert ");
+
         }
 
     }
-    
-    private void checkGameRespond(){
-        
-    }
-    private void generateAlertToAskUserForRespond(){
-        
-    }
-    public void login(Player newPalyer) {
-        System.out.println("Line 221: " + newPalyer.getRespond());
 
+    public void generateAlertToAskUserForRespond(JSONObject message) {
+        Player p3 = convert.fromJsonToPlayer(message);
+
+        alertForRespond.setTitle("want to play with " + p3.getUsername());
+        alertForRespond.setContentText("play?");
+        Platform.runLater(() -> {
+
+            alertForRespond.showAndWait().ifPresent(type -> {
+
+                if (type == okButton) {
+                    System.out.println("play");
+                    System.out.println(" a message send with success resond ");
+                    p3.setRespond(Respond.SUCCESS);
+                    obj = convert.fromPlayerToJson(p3);
+                    System.out.println("line 1837" + obj);
+                    outStream.println(obj.toString());
+
+                } else if (type == noButton) {
+//         p3.setRespond(Respond.FAILURE);
+//            obj = convert.fromPlayerToJson(p3) ; 
+//            this.outStream.println(obj.toString()); 
+//        System.out.println("refuse"); 
+                    // do something
+                } else {
+
+                    System.out.println("cancel");
+                }
+
+            });
+
+        });
+
+    }
+
+//    private void generateAlertToAskUserForRespond() {
+//
+//    }
+    public void login(Player newPalyer) {
+//        System.out.println("Line 221: " + newPalyer.getRespond());
+//        Player newPalyer = convert.fromJsonToPlayer(palyer);
         if (newPalyer.getRespond().equals(Respond.SUCCESS)) {
 
             System.out.println("Line 223: " + newPalyer.getRespond());
@@ -2356,7 +2472,7 @@ public class Client extends Application implements Serializable {
     }
 
     public void logout(Player p) {
-
+//        Player p = convert.fromJsonToPlayer(player);
         System.out.println("Logout function: " + p.getRespond());
 
         if (p.getRespond().equals(Respond.SUCCESS)) {
@@ -2431,6 +2547,7 @@ public class Client extends Application implements Serializable {
         }
 
     }
+
     int computerMove() {
         Random random = new Random();
         int cpuPosition = random.nextInt(9) + 1;
@@ -2501,8 +2618,6 @@ public class Client extends Application implements Serializable {
         computerScore.setText(String.valueOf(computerScoreCounter));
         recordGame.setText("Play Again!");
     }
-
-   
 
     /**
      * *******************************Multi*******************************************************************
@@ -2576,7 +2691,6 @@ public class Client extends Application implements Serializable {
     /**
      * *******************************Multi*******************************************************************
      */
-   
     private void drawTie2() {
 
         for (Button btn : buttons) {
@@ -2600,8 +2714,8 @@ public class Client extends Application implements Serializable {
      */
     /**
      * *******************************Multi*******************************************************************
-
-    /**
+     *
+     * /**
      * *******************************Multi*******************************************************************
      */
     @Override
@@ -2609,7 +2723,7 @@ public class Client extends Application implements Serializable {
 
         try {
             Parent root = ScreenOne();
-            Scene scene = new Scene(root);
+            scene = new Scene(root);
 
             try {
                 //creating the image object
@@ -2637,8 +2751,7 @@ public class Client extends Application implements Serializable {
     public void stop() {
 
         p.setRequest(Request.DISCONNECT);
-        if (socket != null)
-        {
+        if (socket != null) {
             try {
                 obj = convert.fromPlayerToJson(p);
                 outStream.println(obj.toString());
@@ -2650,14 +2763,17 @@ public class Client extends Application implements Serializable {
                 Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
         thread.stop();
 
     }
 
-    public void playlist(ArrayList<Player> arrayOfPlayers) throws ParseException {
+    public void playlist(ArrayList<Player> arrayOfPlayers) {
 
         ASD = arrayOfPlayers;
+        for (Player aa : ASD) {
+            System.out.println("asd " + aa.getUsername());
+        }
         System.out.println("Line:1727");
         System.out.println(arrayOfPlayers + "line 1731");
     }
