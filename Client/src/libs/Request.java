@@ -15,12 +15,12 @@ public class Request {
     public static final String LOGOUT = "logout";
     public static final String SIGNUP = "signup";
     public static final String PlAYER_LIST = "playerList";
-    
+    public static final String UPDATE_SCORE = "updateScore";
     public static final String GAME_MOVE = "gameMove";
     public static final String GAME_PLAYAGAIN = "playAgain";
     public static final String GAME_INVITATION = "gameInvitation";
     public static final String GAME_INVITATION_RESPOND = "gameInvitationRespond";
-    
+
     public static final String START_GAME = "startGame";
     public static final String END_GAME = "endGame";
     public static final String Chat_Message = "chatMessage";

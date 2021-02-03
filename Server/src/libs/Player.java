@@ -29,6 +29,7 @@ public class Player implements Serializable {
         username = _username;
         password = _password;
         request = Request.LOGIN;
+//        scour=0;
     }
 
     public Player() {}

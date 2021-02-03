@@ -16,7 +16,7 @@ import org.json.simple.JSONObject;
 public class JsonConverter {
 
     private static JSONObject obj;
-   private static Game game;
+    private static Game game;
 
     public Player fromJsonToPlayer(JSONObject obj) {
         Player newPlayer = new Player();
@@ -28,6 +28,8 @@ public class JsonConverter {
         newPlayer.setRespond((String) obj.get("respond"));
         newPlayer.setPassword((String) obj.get("password"));
         newPlayer.setDestination((String) obj.get("destination"));
+        System.out.println("sf "+obj.get("scour"));
+        newPlayer.setScour((int) (long) obj.get("scour"));
         return newPlayer;
     }
 
@@ -40,6 +42,7 @@ public class JsonConverter {
         newPlayer.setStatus((String) obj.get("status"));
         newPlayer.setRespond((String) obj.get("respond"));
         newPlayer.setPassword((String) obj.get("password"));
+        newPlayer.setScour((int) (long) obj.get("scour"));
         newPlayer.setPlayerList(players);
         return newPlayer;
     }
@@ -54,6 +57,7 @@ public class JsonConverter {
         jsonObj.put("respond", newPlayer.getRespond());
         jsonObj.put("password", newPlayer.getPassword());
         jsonObj.put("destination", newPlayer.getDestination());
+        jsonObj.put("scour", newPlayer.getScour());
         return jsonObj;
     }
 
@@ -65,6 +69,7 @@ public class JsonConverter {
         jsonObj.put("respond", newPlayer.getRespond());
         jsonObj.put("password", newPlayer.getPassword());
         jsonObj.put("playersList", players);
+        jsonObj.put("scour", newPlayer.getScour());
         return jsonObj;
     }
 
@@ -85,82 +90,78 @@ public class JsonConverter {
 
         return jsonPlayersList;
     } // done
-    
-    
-    
-    /******************************game***************************************/
 
-    public  Game fromJsonToGame(JSONObject obj) {
-       game = new Game();
-       game.setWinner((String) obj.get("winner"));
-       game.setRequest((String) obj.get("request"));
-       game.setPlayedMove((String) obj.get("playedMove"));
-       game.setPosition((Long) obj.get("position"));
-       game.setNextMove((String) obj.get("nextMove"));
-       game.setMessage((String) obj.get("message"));
-       game.setRespond((String) obj.get("respond"));
-       
+    /**
+     * ****************************game**************************************
+     */
+    public Game fromJsonToGame(JSONObject obj) {
+        game = new Game();
+        game.setWinner((String) obj.get("winner"));
+        game.setRequest((String) obj.get("request"));
+        game.setPlayedMove((String) obj.get("playedMove"));
+        game.setPosition((Long) obj.get("position"));
+        game.setNextMove((String) obj.get("nextMove"));
+        game.setMessage((String) obj.get("message"));
+        game.setRespond((String) obj.get("respond"));
 
-       return game;
-   }
-    public  JSONObject fromGameToJson(Game game) {
+        return game;
+    }
 
-       obj = new JSONObject();
-       obj.put("winner", game.getWinner());
-       obj.put("request", game.getRequest());
-       obj.put("playedMove", game.getPlayedMove());
-       obj.put("position", game.getPosition());
-       obj.put("nextMove", game.getNextMove());
-       obj.put("message", game.getMessage());
-       obj.put("respond", game.getRespond());
+    public JSONObject fromGameToJson(Game game) {
 
-       return obj;
-   }
-    
-    
-    
-    
-    public  JSONObject fromGameToJsonWithArray(Game game, JSONArray recordedArray) {
+        obj = new JSONObject();
+        obj.put("winner", game.getWinner());
+        obj.put("request", game.getRequest());
+        obj.put("playedMove", game.getPlayedMove());
+        obj.put("position", game.getPosition());
+        obj.put("nextMove", game.getNextMove());
+        obj.put("message", game.getMessage());
+        obj.put("respond", game.getRespond());
 
-       obj = new JSONObject();
-       obj.put("recordedPosition", recordedArray);
-       obj.put("playerX", game.getPlayerX());
-       obj.put("playerO", game.getPlayerO());
-       obj.put("request", game.getRequest());
-       
-       obj.put("playedMove", game.getPlayedMove());
-       obj.put("position", game.getPosition());
-       obj.put("nextMove", game.getNextMove());
-       obj.put("winner", game.getWinner());
+        return obj;
+    }
 
-       return obj;
-   }
-    public JSONArray fromRecordedGamePositionTOJsonArray(String[] positionToRecord){
+    public JSONObject fromGameToJsonWithArray(Game game, JSONArray recordedArray) {
+
+        obj = new JSONObject();
+        obj.put("recordedPosition", recordedArray);
+        obj.put("playerX", game.getPlayerX());
+        obj.put("playerO", game.getPlayerO());
+        obj.put("request", game.getRequest());
+
+        obj.put("playedMove", game.getPlayedMove());
+        obj.put("position", game.getPosition());
+        obj.put("nextMove", game.getNextMove());
+        obj.put("winner", game.getWinner());
+
+        return obj;
+    }
+
+    public JSONArray fromRecordedGamePositionTOJsonArray(String[] positionToRecord) {
         JSONArray recordedList = new JSONArray();
-        for(String position: positionToRecord){
+        for (String position : positionToRecord) {
             recordedList.add(position);
         }
         return recordedList;
     }
-    
-           
-    
-    public  Game fromJsonWithArrayToGame(JSONObject obj,String[] recordedGamePosition) {
-       game = new Game();
-       
-       game.setRecordedGamePosition(recordedGamePosition);
-       game.setWinner((String) obj.get("winner"));
-       game.setRequest((String) obj.get("request"));
-       game.setPlayedMove((String) obj.get("playedMove"));
-       game.setPosition((Long) obj.get("position"));
-       game.setNextMove((String) obj.get("nextMove"));
-       game.setMessage((String) obj.get("message"));
 
-       return game;
-   }
-    public String[] fromJsonArrayToRecordedGame(JSONArray recordedArray){
+    public Game fromJsonWithArrayToGame(JSONObject obj, String[] recordedGamePosition) {
+        game = new Game();
+
+        game.setRecordedGamePosition(recordedGamePosition);
+        game.setWinner((String) obj.get("winner"));
+        game.setRequest((String) obj.get("request"));
+        game.setPlayedMove((String) obj.get("playedMove"));
+        game.setPosition((Long) obj.get("position"));
+        game.setNextMove((String) obj.get("nextMove"));
+        game.setMessage((String) obj.get("message"));
+
+        return game;
+    }
+
+    public String[] fromJsonArrayToRecordedGame(JSONArray recordedArray) {
         String[] recordedPosition = new String[9];
-        for(int index = 0; index <9; index++){
+        for (int index = 0; index < 9; index++) {
             recordedPosition[index] = (String) recordedArray.get(index);
         }
         return recordedPosition;

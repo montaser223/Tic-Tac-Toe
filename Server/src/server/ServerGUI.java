@@ -5,25 +5,18 @@
  */
 package server;
 
-import server.*;
 import libs.*;
-import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javafx.application.Application;
 import static javafx.application.Application.launch;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -36,7 +29,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
@@ -56,9 +48,7 @@ class Server {
         try {
             serverSocket = new ServerSocket(5005);
             startServerflag = true;
-            System.out.println(startServerflag);
         } catch (IOException ex) {
-            System.out.println(ex.getMessage());
             startServerflag = false;
         }
 
@@ -73,8 +63,6 @@ class Server {
                         new ClientHandler(socket);
 
                     } catch (IOException ex) {
-                        System.out.println("socket closed");
-                        // here we should add something to the client in case the server is down
                         startServerflag = false;
                     }
                 }
@@ -94,13 +82,10 @@ class Server {
             try {
                 serverSocket.close();
             } catch (IOException ex) {
-//                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             }
             try {
                 socket.close();
             } catch (NullPointerException ex) {
-                System.out.println("Server is down");
-                // will send to all the online player meesge to say the serve is down
 
             } catch (IOException ex) {
 
@@ -149,7 +134,6 @@ public class ServerGUI extends Application {
             serverImg.setImage(image);
 
         } catch (FileNotFoundException ex) {
-            System.out.println("Cann't load server background image");
         };
         /**
          * *************************Button text
@@ -163,7 +147,7 @@ public class ServerGUI extends Application {
          */
         tableView = new TableView<Player>();
         playerData = FXCollections.observableArrayList();
-        
+
         playerNameServer = new TableColumn();
         scoreServer = new TableColumn();
         statusServer = new TableColumn();
@@ -218,7 +202,6 @@ public class ServerGUI extends Application {
 
             }
         });
-//        players = ;
         PlayersList.setPlayerList(database.selectplayer());
         updateScreen();
         tableView.getColumns()
@@ -257,29 +240,26 @@ public class ServerGUI extends Application {
     }
 
     public void stopTimer() {
-        int updated = database.serverDown();
-        if (updated != 0) {
-            PlayersList.setPlayerList(database.selectplayer());
-            updateScreen();
+        if (timer != null) {
+            int updated = database.serverDown();
+            if (updated != 0) {
+                PlayersList.setPlayerList(database.selectplayer());
+                updateScreen();
+            }
+            timer.stop();
         }
-        timer.stop();
     }
 
     @Override
     public void start(Stage stage) {
 
         try {
-            //creating the image object
 
             Image image = new Image(new FileInputStream("ProjectImg/index.jpeg"));
             stage.getIcons().add(image);
         } catch (FileNotFoundException ex) {
-            System.out.println("can't load icon img");
         }
-        //Creating the image view
         ImageView imageView = new ImageView();
-        //Setting image to the image view
-        
 
         Scene scene = new Scene(root, 642, 540);
         stage.setScene(scene);
@@ -307,7 +287,6 @@ public class ServerGUI extends Application {
     }
 
     public void updatePlayerList() {
-//        players.clear();
         players = PlayersList.getPlayersList();
     }
 
