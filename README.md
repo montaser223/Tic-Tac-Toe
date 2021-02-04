@@ -61,6 +61,7 @@ Network based Tic-Tac-Toe game, implemented with JavaFX as a project in ITI Open
       - Allow the player to play in single mode( play with the computer)
       - Player can ask any online player to play with him.
       - Allow two players to play together after the second player accepts the invitation.
+      - Player can chat with the other player through game chat
  - The application give the user an option to record the game and store it at the server for replay later.
  - The application give the player bounce points when the player wins.
  # Used Technolgies
