@@ -36,6 +36,8 @@ public class ClientHandler extends Thread implements Serializable {
     public static HashMap<String, ClientHandler> connectedPlayers = new HashMap<String, ClientHandler>();
     public static Game gameHandlerRequest = null;
     private GameHandler gameHandel;
+    private String playerOneName;
+    private String playerTwoName;
 
     ClientHandler(Socket socket) {
 
@@ -94,7 +96,7 @@ public class ClientHandler extends Thread implements Serializable {
                 startGame();
                 break;
             case Request.END_GAME:
-                endGame();
+                endGame(message);
             case Request.GAME_MOVE:
             case Request.GAME_PLAYAGAIN:
             case Request.Chat_Message:
@@ -113,6 +115,10 @@ public class ClientHandler extends Thread implements Serializable {
             case Request.UPDATE_SCORE:
                 updateScore(message);
                 break;
+            case Request.STOPGAME:
+                gameHandel.disConnect();
+                break;
+                
 
         }
     }
@@ -122,12 +128,23 @@ public class ClientHandler extends Thread implements Serializable {
 
     }
 
+    private void changePlayerState(){
+       
+       database.updateStatus(Status.ONLINE,playerOneName);
+       database.updateStatus(Status.ONLINE,playerTwoName);
+        
+        updatePlayerList();
+    }
+
     private void startGame() {
         gameHandel = new GameHandler(this);
     }
 
-    private void endGame() {
-        gameHandel.disConnect();
+    private void endGame(JSONObject message) {
+        sendRequestToGameHandler(message);
+        changePlayerState();
+//        gameHandel.disConnect();
+        
     }
 
     private void sendRequestToGameHandler(JSONObject message) {
@@ -190,26 +207,43 @@ public class ClientHandler extends Thread implements Serializable {
 
         return status;
     }
-
+    
+//     private int getPlayerScore(String username) {
+//        int score = 0;
+//        for (Player player : players) {
+//            if (player.getUsername().equalsIgnoreCase(username)) {
+//                score = player.getScour();
+//            }
+//        }
+//
+//        return score;
+//    }
+    
     private int getPlayerIndex(String username) {
-        int index = -1;
-        for (Player player : players) {
-            if (player.getUsername().equalsIgnoreCase(username)) {
-                index++;
+        int plyerIndex = -1;
+        for (int index = 0; index < players.size() ; index++) {
+
+            if (players.get(index).getUsername().equals(username)) {
+
+                return index;  
             }
+            
         }
 
-        return index;
+        return plyerIndex;
     }
 
     private void gameInvitation(JSONObject message) {
 
         Player senderPlayer = convert.fromJsonToPlayer(message);
 
-        if (getPlayerStatus(senderPlayer.getDestination()).equalsIgnoreCase(Status.ONLINE)) {
+        if (getPlayerStatus(senderPlayer.getDestination()).equalsIgnoreCase(Status.ONLINE) && 
+                !senderPlayer.getDestination().equalsIgnoreCase(senderPlayer.getUsername()) ) {
 
             senderPlayer.setRequest(Request.GAME_INVITATION_RESPOND);
             connectedPlayers.get(senderPlayer.getDestination()).sendMsg(senderPlayer);
+            playerOneName = senderPlayer.getUsername();
+            playerTwoName = senderPlayer.getDestination();
 
         } else {
 
@@ -226,25 +260,28 @@ public class ClientHandler extends Thread implements Serializable {
         if (destinationPlayer.getRespond().equals(Respond.SUCCESS)) {
             destinationPlayer.setRequest(Request.GAME_INVITATION);
             destinationPlayer.setRespond(Respond.SUCCESS);
-            destinationPlayer.setStatus(Status.PLAYING);
             database.updateStatus(Status.PLAYING, destinationPlayer.getUsername());
 
             connectedPlayers.get(destinationPlayer.getUsername()).sendMsg(destinationPlayer);
             players.get(getPlayerIndex(destinationPlayer.getUsername())).setStatus(Status.PLAYING);
+
             try {
                
-                this.sleep(3000);
+                this.sleep(1000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
-            destinationPlayer.setRequest(Request.GAME_INVITATION);
-            destinationPlayer.setRespond(Respond.SUCCESS);
-            destinationPlayer.setStatus(Status.PLAYING);
+//            destinationPlayer.setRequest(Request.GAME_INVITATION);
+//            destinationPlayer.setRespond(Respond.SUCCESS);
+
             database.updateStatus(Status.PLAYING, destinationPlayer.getDestination());
 
             connectedPlayers.get(destinationPlayer.getDestination()).sendMsg(destinationPlayer);
 
-            players.get(getPlayerIndex(destinationPlayer.getDestination())).setStatus(Status.PLAYING);
+            
+            playerTwoName = destinationPlayer.getDestination();
+
+            
             updatePlayerList();
 
         } else {
@@ -283,15 +320,18 @@ public class ClientHandler extends Thread implements Serializable {
     }
 
     private void updateScore(JSONObject game) {
+       
         Game newGame = convert.fromJsonToGame(game);
         if (newGame.getWinner().equalsIgnoreCase(Game.X_MOVE)) {
-
+            
             int playerScore = players.get(getPlayerIndex(newGame.getPlayerX())).getScour();
+
             playerScore++;
             database.updateScore(playerScore, newGame.getPlayerX());
         } else if (newGame.getWinner().equalsIgnoreCase(Game.O_MOVE)) {
 
-            int playerScore = players.get(getPlayerIndex(newGame.getPlayerX())).getScour();
+            int playerScore = players.get(getPlayerIndex(newGame.getPlayerO())).getScour();
+
             playerScore++;
             database.updateScore(playerScore, newGame.getPlayerO()
             );
