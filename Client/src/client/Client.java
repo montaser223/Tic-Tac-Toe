@@ -92,9 +92,7 @@ public class Client extends Application implements Serializable {
     private boolean recordGameFlag;
     private Thread gamethread;
 
-    private void forwardGameRequest(JSONObject obj) {
-        forwardedGameRequest = convert.fromJsonToGame(obj);
-    }
+    
 
     private Game getforwardGameRequest() {
         Game newGameRequest = forwardedGameRequest;
@@ -104,35 +102,7 @@ public class Client extends Application implements Serializable {
     }
     Thread th5;
 
-    private void receveMySymbol() {
-        th5 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (!isMySymbolReceved) {
-                    gameRequest = getforwardGameRequest();
-
-                    if (gameRequest != null) {
-
-                        isMySymbolReceved = true;
-                        mySymbol = gameRequest.getNextMove();
-                        isGameRunning = true;
-                        if (!isNameSetUp) {
-                            if (mySymbol.equalsIgnoreCase(Game.X_MOVE)) {
-                                xName = username;
-                                oName = enmy;
-                            } else {
-                                oName = username;
-                                xName = enmy;
-                            }
-                        }
-                        gamethread.start();
-                        th5.stop();
-                    }
-                }
-            }
-        });
-        th5.start();
-    }
+    
 
     private String checkWinner() {
         String winner = "";
@@ -201,13 +171,13 @@ public class Client extends Application implements Serializable {
 
                 if (recordedPositions[index] == "X") {
 
-                    buttons[index].setTextFill(javafx.scene.paint.Color.rgb(255, 157, 10));
+                    buttons[index].setTextFill(javafx.scene.paint.Color.rgb(0, 0, 0));
                     buttons[index].setText(recordedPositions[index]);
                     buttons[index].setDisable(true);
                     playerXpositions.add(index + 1);
 
                 } else {
-                    buttons[index].setTextFill(javafx.scene.paint.Color.rgb(255, 157, 10));
+                    buttons[index].setTextFill(javafx.scene.paint.Color.rgb(0, 0, 0));
                     buttons[index].setText(recordedPositions[index]);
                     buttons[index].setDisable(true);
                     playerOpositions.add(index + 1);
@@ -256,6 +226,7 @@ public class Client extends Application implements Serializable {
 
         for (Button btn : buttons) {
             btn.setText(Game.DRAW);
+            btn.setFont(Font.font("Engravers MT", FontWeight.BOLD, 14));
             btn.setDisable(true);
         }
 
@@ -348,6 +319,19 @@ public class Client extends Application implements Serializable {
                 case Request.GAME_PLAYAGAIN:
                     resetBoard();
                     break;
+                case Request.END_GAME:
+                    // you need to generate a popup to tell the user thar the enmy is exite the game, thne change the screen scene
+                    sendGameMove(Request.STOPGAME); // to close the game handler thread connected with the server
+                    resetBoard();
+                    playerXcounter = 0;
+                    playerOcounter = 0;
+                    Platform.runLater(() -> {
+                        ScreenThree().getChildren().clear();
+                    });
+                    Platform.runLater(() -> {
+                        scene.setRoot(ScreenThree());
+                    });
+                    break;
 
                 default:
 
@@ -357,11 +341,13 @@ public class Client extends Application implements Serializable {
                     if (checkWinner().equalsIgnoreCase(Game.X_MOVE)) {
                         highLightWinner(playerXpositions);
                         playerXcounter++;
+                        myGame.setWinner(Game.X_MOVE);
                         myGame.setPlayerX(playerOneName.getText());
                         updateScoreMultiMode();
                     } else if (checkWinner().equalsIgnoreCase(Game.O_MOVE)) {
                         highLightWinner(playerOpositions);
                         playerOcounter++;
+                        myGame.setWinner(Game.O_MOVE);
                         myGame.setPlayerO(playerTwoName.getText());
                         updateScoreMultiMode();
                     } else if (checkWinner().equalsIgnoreCase(Game.DRAW)) {
@@ -379,14 +365,14 @@ public class Client extends Application implements Serializable {
 
         if (playedMove.equalsIgnoreCase(Game.X_MOVE)) {
 
-            buttons[position.intValue() - 1].setTextFill(javafx.scene.paint.Color.rgb(5, 112, 255));
+            buttons[position.intValue() - 1].setTextFill(javafx.scene.paint.Color.rgb(0, 0, 0));
             buttons[position.intValue() - 1].setText(playedMove);
             buttons[position.intValue() - 1].setDisable(true);
             playerXpositions.add(position.intValue());
 
         } else {
 
-            buttons[position.intValue() - 1].setTextFill(javafx.scene.paint.Color.rgb(255, 88, 66));
+            buttons[position.intValue() - 1].setTextFill(javafx.scene.paint.Color.rgb(0, 0, 0));
             buttons[position.intValue() - 1].setText(playedMove);
             buttons[position.intValue() - 1].setDisable(true);
             playerOpositions.add(position.intValue());
@@ -443,9 +429,7 @@ public class Client extends Application implements Serializable {
     private void sendExitGameRequest() {
 
         sendGameMove(Request.END_GAME);
-        isGameRunning = false;
-        gameRequest = null;
-        gamethread.stop();
+
 
     }
 
@@ -626,11 +610,11 @@ public class Client extends Application implements Serializable {
     public void init() {
         alertServerNotConnected.setTitle("Server connection");
         alertServerNotConnected.setHeaderText(null);
-        alertServerNotConnected.setContentText("failed to connect with Server");
+        alertServerNotConnected.setContentText("Failed to connect with Server");
 
-        alertRejection.setTitle("play request ");
+        alertRejection.setTitle("Play request ");
         alertRejection.setHeaderText(null);
-        alertRejection.setContentText("the other player refused to play with you ");
+        alertRejection.setContentText("The other player refused to play with you ");
         p = new Player("", "");
         Game game = new Game();
         myGame = new Game();
@@ -653,7 +637,7 @@ public class Client extends Application implements Serializable {
                     startAPP = true;
 
                 } catch (IOException ex) {
-                    alertServerNotConnected.showAndWait();
+                    Platform.runLater(()->{alertServerNotConnected.showAndWait();});
                 }
                 while (startAPP) {
                     try {
@@ -661,14 +645,17 @@ public class Client extends Application implements Serializable {
                         messageHandelr(message);
 
                     } catch (NullPointerException ex) {
-                        alertServerNotConnected.showAndWait();
+                        Platform.runLater(()->{alertServerNotConnected.showAndWait();});
+                        
                         startAPP = false;
 
                     } catch (IOException ex) {
                         alertServerNotConnected.showAndWait();
+                        
                         startAPP = false;
                     } catch (ParseException ex) {
-                        alertServerNotConnected.showAndWait();
+                        Platform.runLater(()->{alertServerNotConnected.showAndWait();});
+                        
                         startAPP = false;
                     }
                 }
@@ -1288,14 +1275,17 @@ public class Client extends Application implements Serializable {
             public void handle(ActionEvent event) {
                 try {
                     String a = PlayerTable.getSelectionModel().getSelectedItem().getUsername();
-
+                    
                     Player p = new Player();
                     p.setUsername(userText1.getText());
                     p.setRequest(Request.GAME_INVITATION);
                     p.setDestination(a);
-
+                    
+                    xName = userText1.getText();
+                    oName = a;
                     obj = convert.fromPlayerToJson(p);
                     outStream.println(obj.toString());
+                    
                 } catch (NullPointerException q) {
 
                     unSelected4.showAndWait();
@@ -2132,6 +2122,7 @@ public class Client extends Application implements Serializable {
     }
 
     public void messageHandelr(JSONObject message) {
+        System.out.println(" client messageHandelr "+message);
         switch ((String) message.get("request")) {
             case Request.LOGIN:
                 Player p = convert.fromJsonToPlayer(message);
@@ -2155,12 +2146,16 @@ public class Client extends Application implements Serializable {
             case Request.GET_RECORDEDGAME:
                 loadOldPosition(message);
                 break;
-
+            case Request.RECEVE_GAME_SYMBOL:
+                System.out.println("recive symbol"+message);
+                receveMySymbol(message);
+                break;
             case Request.GAME_MOVE:
             case Request.GAME_PLAYAGAIN:
             case Request.Chat_Message:
             case Request.RECORD_GAME:
             case Request.END_GAME:
+                System.out.println("forwardgame reqq"+message);
                 forwardGameRequest(message);
                 break;
         }
@@ -2176,34 +2171,11 @@ public class Client extends Application implements Serializable {
 
     }
 
-    public void checkGameRespond(JSONObject message) {
+    private void receveMySymbol(JSONObject obj) {
 
-        Player p = convert.fromJsonToPlayer(message);
-        if (p.getRespond().equals(Respond.SUCCESS)) {
-            username = p.getUsername();
-            enmy = p.getDestination();
-            sendGameMove(Request.START_GAME);
-            gamethread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-
-                    while (isGameRunning) {
-                        gameRequest = getforwardGameRequest();
-
-                        if (gameRequest != null) {
-                            Game testGame = gameRequest;
-                            Platform.runLater(() -> {
-                                receiveGameMove(testGame);
-                            });
-                        }
-                    }
-
-                }
-
-            });
-            receveMySymbol();
-
-            Platform.runLater(
+        gameRequest = convert.fromJsonToGame(obj);
+        mySymbol = gameRequest.getNextMove();
+        Platform.runLater(
                     () -> {
                         ScreenMultiMode().getChildren().clear();
                     }
@@ -2213,6 +2185,23 @@ public class Client extends Application implements Serializable {
                         scene.setRoot(ScreenMultiMode());
                     }
             );
+    }
+
+    private void forwardGameRequest(JSONObject obj) {
+        forwardedGameRequest = convert.fromJsonToGame(obj);
+        Game gameMove = forwardedGameRequest;
+
+        Platform.runLater(() -> {
+            receiveGameMove(gameMove);
+        });
+    }
+
+    public void checkGameRespond(JSONObject message) {
+
+        Player p = convert.fromJsonToPlayer(message);
+        if (p.getRespond().equals(Respond.SUCCESS)) {
+            sendGameMove(Request.START_GAME);
+           
         } else {
             Platform.runLater(() -> {
                 alertRejection.showAndWait();
@@ -2224,8 +2213,8 @@ public class Client extends Application implements Serializable {
     public void generateAlertToAskUserForRespond(JSONObject message) {
         Player p3 = convert.fromJsonToPlayer(message);
 
-        alertForRespond.setTitle("want to play with " + p3.getUsername());
-        alertForRespond.setContentText("play?");
+        alertForRespond.setTitle("Play invitation " + p3.getUsername());
+        alertForRespond.setContentText("Do you want to play?");
         Platform.runLater(() -> {
 
             alertForRespond.showAndWait().ifPresent(type -> {
@@ -2234,7 +2223,8 @@ public class Client extends Application implements Serializable {
                     p3.setRespond(Respond.SUCCESS);
                     obj = convert.fromPlayerToJson(p3);
                     outStream.println(obj.toString());
-
+                    xName = p3.getUsername();
+                    oName = getusername();
                 } else {
                     p3.setRespond(Respond.FAILURE);
                     obj = convert.fromPlayerToJson(p3);
@@ -2413,6 +2403,7 @@ public class Client extends Application implements Serializable {
     private void updateScoreMultiMode() {
         playerOneScore.setText(Integer.toString(playerXcounter));
         playerTwoScore.setText(Integer.toString(playerOcounter));
+        sendGameMove(Request.UPDATE_SCORE);
         this.recordGame2.setText("Play Again!");
         this.recordGameFlag = false;
     }
