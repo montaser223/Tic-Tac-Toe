@@ -43,7 +43,7 @@ Network based Tic-Tac-Toe game, implemented with JavaFX as a project in ITI Open
    - clean and build the client project then Run Client.java file
 ## [Demo](https://drive.google.com/file/d/1eHO6xEs0CjBr6oCaYjRK4kw3a83UucfK/view?usp=sharing)
 
-                                                ![picture](Demo.gif)
+                                                ![picture](https://github.com/montaser223/Tic-Tac-Toe/blob/master/Demo.gif)
                                                 
 # Prerequisites
 * java 8 or higher recommended
