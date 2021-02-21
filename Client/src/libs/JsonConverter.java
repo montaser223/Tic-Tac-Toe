@@ -29,6 +29,7 @@ public class JsonConverter {
         newPlayer.setPassword((String) obj.get("password"));
         newPlayer.setDestination((String) obj.get("destination"));
         newPlayer.setScour((int) (long) obj.get("scour"));
+        newPlayer.setResumeOldGame((boolean) obj.get("resumeOldGame"));
         return newPlayer;
     }
 
@@ -41,8 +42,9 @@ public class JsonConverter {
         newPlayer.setStatus((String) obj.get("status"));
         newPlayer.setRespond((String) obj.get("respond"));
         newPlayer.setPassword((String) obj.get("password"));
-        newPlayer.setPlayerList(players);
         newPlayer.setScour((int) (long) obj.get("scour"));
+        newPlayer.setPlayerList(players);
+        newPlayer.setResumeOldGame((boolean) obj.get("resumeOldGame"));
         return newPlayer;
     }
 
@@ -57,6 +59,7 @@ public class JsonConverter {
         jsonObj.put("password", newPlayer.getPassword());
         jsonObj.put("destination", newPlayer.getDestination());
         jsonObj.put("scour", newPlayer.getScour());
+        jsonObj.put("resumeOldGame", newPlayer.isResumeOldGame());
         return jsonObj;
     }
 
@@ -69,6 +72,7 @@ public class JsonConverter {
         jsonObj.put("password", newPlayer.getPassword());
         jsonObj.put("playersList", players);
         jsonObj.put("scour", newPlayer.getScour());
+        jsonObj.put("resumeOldGame", newPlayer.isResumeOldGame());
         return jsonObj;
     }
 
@@ -120,7 +124,7 @@ public class JsonConverter {
         obj.put("respond", game.getRespond());
         obj.put("playerx", game.getPlayerX());
         obj.put("playero", game.getPlayerO());
-        
+
         return obj;
     }
 

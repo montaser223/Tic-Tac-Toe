@@ -68,6 +68,7 @@ public class ClientHandler extends Thread implements Serializable {
                 obj = (JSONObject) parser.parse(inStream.readLine());
                 messageHandler(obj);
 
+
             } catch (IOException ex) {
                 this.stop();
             } catch (ParseException ex) {
@@ -380,10 +381,13 @@ public class ClientHandler extends Thread implements Serializable {
     }
 
     public void sendMsg(Player player) {
+       
+//        obj = convert.fromPlayerToJson(player);
+        System.out.println("player inside send meesage = "+ player);
+        obj = convert.fromPlayerToJson(player); 
 
         obj = convert.fromPlayerToJson(player);
         this.outStream.println(obj);
-
     }
 
     public void sendMsgUpdateplayer(Player player, String request) {
@@ -433,7 +437,7 @@ public class ClientHandler extends Thread implements Serializable {
                 newPlayer.setRespond(Respond.SUCCESS);
                 newPlayer.setStatus(Status.ONLINE);
                 connectedPlayers.put(newPlayer.getUsername(), this);
-                sendMsg(newPlayer);
+                sendMsgUpdateplayer(newPlayer,newPlayer.getRequest());
                 updatePlayerList();
             } else {
                 newPlayer.setRespond(Respond.FAILURE);
