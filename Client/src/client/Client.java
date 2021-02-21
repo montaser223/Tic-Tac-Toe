@@ -830,9 +830,69 @@ public class Client extends Application implements Serializable {
 
             @Override
             public void handle(ActionEvent event) {
+                   try {
 
+                        socket = new Socket(InetAddress.getLocalHost(), 5005);
+                        inStream = new DataInputStream(socket.getInputStream());
+                        outStream = new PrintStream(socket.getOutputStream());
+                        startAPP = true;
+                        thread = new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+
+                                    while (startAPP) {
+                                        try {
+                                            JSONObject message = (JSONObject) parser.parse(inStream.readLine());
+                                            messageHandelr(message);
+
+                                        } 
+                                        catch (NullPointerException ex) {
+                                            Platform.runLater(()->{alertServerNotConnected.showAndWait();});
+                                            startAPP = false;
+                                            Platform.runLater(() -> {
+                                            ScreenOne().getChildren().clear();
+                                                System.out.println("Thread should stoped..");
+                                            thread.stop();
+                                                try {
+                                                    socket.close();
+                                                    inStream.close();
+                                                    outStream.close();
+                                                } catch (IOException ex1) {
+                                                }
+
+                                        });
+                                        Platform.runLater(() -> {
+                                            scene.setRoot(ScreenOne());
+                                        });
+
+                                        } 
+                                        catch (IOException ex) {
+                    //                        alertServerNotConnected.showAndWait();
+                    //                        System.out.println("cannot start app");
+                                            System.out.println(ex);
+
+                                            startAPP = false;
+                                            thread.stop();
+                                                try {
+                                                    socket.close();
+                                                    inStream.close();
+                                                    outStream.close();
+                                                } catch (IOException ex1) {
+                                                }
+                                        } 
+                                        catch (ParseException ex) {
+                                            Platform.runLater(()->{alertServerNotConnected.showAndWait();});
+
+                                            startAPP = false;
+                                        }
+                                    }
+                                }
+                            });
+                        thread.start();
+                    } catch (IOException ex) {
+                        Platform.runLater(()->{alertServerNotConnected.showAndWait();});
+                    }
                 ScreenTwo().getChildren().clear();
-
                 signupBtn1.getScene().setRoot(ScreenTwo());
 
             }
@@ -851,58 +911,57 @@ public class Client extends Application implements Serializable {
                         outStream = new PrintStream(socket.getOutputStream());
                         startAPP = true;
                         thread = new Thread(new Runnable() {
+                                @Override
+                                public void run() {
 
-                @Override
-                public void run() {
+                                    while (startAPP) {
+                                        try {
+                                            JSONObject message = (JSONObject) parser.parse(inStream.readLine());
+                                            messageHandelr(message);
 
-                    while (startAPP) {
-                        try {
-                            JSONObject message = (JSONObject) parser.parse(inStream.readLine());
-                            messageHandelr(message);
+                                        } 
+                                        catch (NullPointerException ex) {
+                                            Platform.runLater(()->{alertServerNotConnected.showAndWait();});
+                                            startAPP = false;
+                                            Platform.runLater(() -> {
+                                            ScreenOne().getChildren().clear();
+                                                System.out.println("Thread should stoped..");
+                                            thread.stop();
+                                                try {
+                                                    socket.close();
+                                                    inStream.close();
+                                                    outStream.close();
+                                                } catch (IOException ex1) {
+                                                }
 
-                        } 
-                        catch (NullPointerException ex) {
-                            Platform.runLater(()->{alertServerNotConnected.showAndWait();});
-                            startAPP = false;
-                            Platform.runLater(() -> {
-                            ScreenOne().getChildren().clear();
-                                System.out.println("Thread should stoped..");
-                            thread.stop();
-                                try {
-                                    socket.close();
-                                    inStream.close();
-                                    outStream.close();
-                                } catch (IOException ex1) {
+                                        });
+                                        Platform.runLater(() -> {
+                                            scene.setRoot(ScreenOne());
+                                        });
+
+                                        } 
+                                        catch (IOException ex) {
+                    //                        alertServerNotConnected.showAndWait();
+                    //                        System.out.println("cannot start app");
+                                            System.out.println(ex);
+
+                                            startAPP = false;
+                                            thread.stop();
+                                                try {
+                                                    socket.close();
+                                                    inStream.close();
+                                                    outStream.close();
+                                                } catch (IOException ex1) {
+                                                }
+                                        } 
+                                        catch (ParseException ex) {
+                                            Platform.runLater(()->{alertServerNotConnected.showAndWait();});
+
+                                            startAPP = false;
+                                        }
+                                    }
                                 }
-
-                        });
-                        Platform.runLater(() -> {
-                            scene.setRoot(ScreenOne());
-                        });
-
-                        } 
-                        catch (IOException ex) {
-    //                        alertServerNotConnected.showAndWait();
-    //                        System.out.println("cannot start app");
-                            System.out.println(ex);
-
-                            startAPP = false;
-                            thread.stop();
-                                try {
-                                    socket.close();
-                                    inStream.close();
-                                    outStream.close();
-                                } catch (IOException ex1) {
-                                }
-                        } 
-                        catch (ParseException ex) {
-                            Platform.runLater(()->{alertServerNotConnected.showAndWait();});
-
-                            startAPP = false;
-                        }
-                    }
-                }
-            });
+                            });
                         thread.start();
                         System.out.println("connected to server");
                     } catch (IOException ex) {
@@ -1116,7 +1175,6 @@ public class Client extends Application implements Serializable {
 
                     alertEmptySignUp1.showAndWait();
                 } else {
-
                     Player signUpPlayer = new Player(userText2.getText(), passText2.getText(), FirstText2.getText(), LastText2.getText());
 
                     obj = convert.fromPlayerToJson(signUpPlayer);
@@ -2374,12 +2432,24 @@ public class Client extends Application implements Serializable {
             Platform.runLater(() -> {
                 signupBtn2.getScene().setRoot(ScreenOne());
             });
+            
+            thread.stop();
+            try {
+                socket.close();
+                inStream.close();
+                outStream.close();
+                startAPP = false;
+            } catch (IOException ex) {
+                System.out.println("line(2445) sign up respond: the streams does not closed");
+            }
+            
         } else {
             Platform.runLater(() -> {
                 alertUserExists.showAndWait();
             });
 
         }
+        
     }
 
     public void logout(Player p) {
