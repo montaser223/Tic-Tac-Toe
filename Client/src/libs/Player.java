@@ -23,8 +23,18 @@ public class Player implements Serializable {
     ArrayList<Player> players = new ArrayList<Player>();
 
     String username, password, firstname, lastname, status, request, respond,  destination;
-    int scour;
+    boolean resumeOldGame;
 
+    public boolean isResumeOldGame() {
+        return resumeOldGame;
+    }
+
+    public void setResumeOldGame(boolean resumeOldGame) {
+        this.resumeOldGame = resumeOldGame;
+    }
+
+    int scour;
+    
     public Player(String _username, String _password) {
         username = _username;
         password = _password;
