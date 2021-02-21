@@ -42,18 +42,44 @@ public class XoDataBase implements Serializable {
     public XoDataBase() {
 
         try {
-            String q = new String("select * from student");
-            DriverManager.registerDriver(new com.mysql.jdbc.Driver());
+                    DriverManager.registerDriver(new com.mysql.jdbc.Driver());
 
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/xo_db", "root", "");
+                    con = DriverManager.getConnection("jdbc:mysql://localhost:3306/xo_db", "root", "");
+                    
+            String q = new String("select username from player where username='Computre'");
+
             stmt = con.createStatement();
-
+             rs = stmt.executeQuery(q);
+             if (! rs.next())
+             {
+                 insertComputerData();
+             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
     }
-
+    public void insertComputerData()
+    {
+        try {
+            queryString = " insert into player (firstname,lastname,username, password,score,status)"
+                    + " values (?, ?, ?, ?,?,?)";
+            
+            PreparedStatement preparedStmt = con.prepareStatement(queryString);
+            
+            preparedStmt.setString(1, "Computre");
+            preparedStmt.setString(2, "Computre");
+            preparedStmt.setString(3, "Computre");
+            preparedStmt.setString(4, "123");
+            preparedStmt.setInt(5, 0);
+            preparedStmt.setString(6, "offline");
+            
+            preparedStmt.execute();
+        } catch (SQLException ex) {
+            Logger.getLogger(XoDataBase.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    
+    }
     public ArrayList<Player> selectplayer() {
 
         try {

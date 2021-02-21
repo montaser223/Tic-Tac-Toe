@@ -17,9 +17,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import libs.Game;
 public class GameDataBase {
     
-     int ID;
+    int ID;
     int player1_id, player2_id, game_id;
     String positions[] = new String[9];
     Connection con = null;
@@ -30,7 +31,7 @@ public class GameDataBase {
     GameDataBase(){
     
     
-   try {
+    try {
             // String q = new String("select * from student");
             DriverManager.registerDriver(new com.mysql.jdbc.Driver());
 
@@ -41,17 +42,18 @@ public class GameDataBase {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
-      public String[] return_positions_of_tow_players( String username1, String username2){
+    
+    public Game return_positions_of_tow_players(Game newGame){
         try {
-            select_player1_id(username1);
-            select_player2_id(username2);
+            select_player1_id(newGame.getPlayerX());
+            select_player2_id(newGame.getPlayerO());
             select_game_id_specific_player(player1_id,player2_id);
-               System.out.println(game_id);
-            queryString = " select bn1,bn2,bn3,bn4,bn5,bn6,bn7,bn8,bn9 from game where ID='"+game_id+"'";
+            System.out.println(game_id);
+            queryString = " select bn1,bn2,bn3,bn4,bn5,bn6,bn7,bn8,bn9,playerX,playerO from game where ID='"+game_id+"'";
             
             rs = stmt.executeQuery(queryString);
+            
             
             while (rs.next()) {
                 positions[0] = rs.getString("bn1");
@@ -63,49 +65,102 @@ public class GameDataBase {
                 positions[6] = rs.getString("bn7");
                 positions[7] = rs.getString("bn8");
                 positions[8] = rs.getString("bn9");
-
+                
+                
                 //System.out.println(rs.getInt("ID"));
             }
-        } catch (SQLException ex) {
-            System.out.println(ex.getMessage());
+            newGame.setRecordedGamePosition(positions);
+            
+            
+        }catch (SQLException ex) {
+            System.out.println("server.GameDataBase.return_positions_of_tow_players()");
         }
-    return  positions;
+//            queryString = "delete from game where  ID='"+game_id+"'";
+//            stmt = con.createStatement();
+//            stmt.executeUpdate(queryString);
+//            System.out.println("Record deleted successfully");
+//            
+//            queryString = "delete from players_record_games where  game_id='"+game_id+"'";
+//            stmt = con.createStatement();
+//            stmt.executeUpdate(queryString);
+//            System.out.println("Record deleted successfully");
+//            Logger.getLogger(game.class.getName()).log(Level.SEVERE, null, ex);
+              return  newGame;
     
     }
 
-    public void game_record(String[] _posstions, String username1, String username2) {
+    public void game_record_inreverse_order(String Position[],String use2,String use1) {
 
         try {
-            int j = 1;
+            System.out.println("enter_reverse_order");
+            
+            queryString = " insert into game (bn1,bn2,bn3,bn4,bn5,bn6,bn7,bn8,bn9,playerX,playerO)"
+                    + " values (?,?,?,?,?,?,?,?,?,?,?)";
+            
+            PreparedStatement preparedStmt = con.prepareStatement(queryString);
+            int i;
+            for (i = 0; i < 9; i++) {
+                preparedStmt.setString(i + 1,Position[i]);
+                
+            }
+            preparedStmt.setString(i + 1,use2);
+            preparedStmt.setString(i + 2, use1);
+            preparedStmt.execute();
+            
+            select_game_id();
+            
+            insert_into_recorded_game();
+        } catch (SQLException ex) {
+            Logger.getLogger(GameDataBase.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
+
+    }
+    
+    public void game_record(String[] positions,String username1, String username2) {
+//        String[] positions = new String[9];
+        try {
+//            int j = 1;
             select_player1_id(username1);
             select_player2_id(username2);
-            select_game_id();
+//            select_game_id();
+            select_game_id_specific_player(player1_id, player2_id);
+            System.out.println(player1_id +" "+ player2_id);
             if (select_from_recorded_game() == false) {
                 System.out.println("enter");
 
-                queryString = " insert into game (bn1,bn2,bn3,bn4,bn5,bn6,bn7,bn8,bn9)"
-                        + " values (?,?,?,?,?,?,?,?,?)";
+                queryString = " insert into game (bn1,bn2,bn3,bn4,bn5,bn6,bn7,bn8,bn9,playerX,playerO)"
+                        + " values (?,?,?,?,?,?,?,?,?,?,?)";
 
                 PreparedStatement preparedStmt = con.prepareStatement(queryString);
-
-                for (int i = 0; i < 9; i++) {
-                    preparedStmt.setString(i + 1, _posstions[i]);
+                    int i;
+                for (i = 0; i < 9; i++) {
+                    System.out.println("GameDataBase.for" + positions[i]);
+                    preparedStmt.setString(i + 1,positions[i]);
 
                 }
+                
+                preparedStmt.setString(i + 1,username1);
+                preparedStmt.setString(i + 2, username2);
                 preparedStmt.execute();
-
+                System.out.println("GameDataBase execute");
+                
                 select_game_id();
-
+                
                 insert_into_recorded_game();
+//                game_record_inreverse_order(positions,username2,username1);
             } else {
                 System.out.println("updated");
-                update_into_recorded_game(_posstions);
+                update_into_recorded_game(positions);
             }
         } catch (SQLException ex) {
+//            Logger.getLogger(game.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println(ex.getMessage());
         }
 
     }
+
 
     public void select_player1_id(String username1) {
         try {
@@ -302,24 +357,48 @@ public class GameDataBase {
 
     }
 
-    public static void main(String args[]) {
+   public static void main(String args[]) {
+//
+//        GameDataBase g = new GameDataBase();
+//        String _postions[] = {"", "o", "o", "o", "o", "x", "x", "x", "x"};
+//        System.out.println(_postions[0]);
+//        g.game_record(_postions, "heba", "eman");
 
-//        game g = new game();
-       // String _postions[] = {"o", "o", "x", "x", "x", "null", "x", "x", "x"};
-        //g.game_record(_postions1, "ahemreda", "omnyamostafa");
-       // g.game_record(_postions, "ahemreda", "omnyamostafa");
-        //g.game_record(_postions, "ahemreda", "kaledAshraf");
-        
-        //g.select_Positions();
-       //_postions=g.get_position();
+
+//        g.game_record(_postions, "mohamed", "baker");
+//        System.out.println(g.get_player1_id()+"     " + g.get_player2_id()+ "    " + g.get_game_id());
+//        g.game_record(_postions, "ahemreda", "omnyamostafa");
+//        g.game_record(_postions, "ahemreda", "kaledAshraf");
+//        
+//        g.select_Positions();
+//       _postions=g.get_position();
      
         
-//       String _postions[]=g.return_positions_of_tow_players( "ahemreda", "kaledAshraf");
-//        
+//      String _postions[]=g.return_positions_of_tow_players( "heba", "baker");
+//        if(_postions != null){
+//        System.out.println("Eman Null");
+//           }
+//        else
+//        {
+//               System.out.println("Not Null"); 
+//        }
 //         for(int i=0 ;i<9;i++)
 //       {
+//           
 //           System.out.println(_postions[i]);
 //       }
+//
+
+//        Game gh = new Game();
+//        gh.setPlayerX("heba");
+//        gh.setPlayerO("baker");
+//        gh = g.return_positions_of_tow_players(gh);
+//        for(int i = 0 ; i< gh.getRecordedGamePosition().length ;i++)
+//        {
+//            System.out.println(gh.getRecordedGamePosition()[i]);
+//        }
+        
+
 
     }
 

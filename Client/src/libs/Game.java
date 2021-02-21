@@ -16,7 +16,7 @@ public class Game  implements Serializable {
     
     public static final String X_MOVE = "X";
     public static final String O_MOVE = "O";
-    public static final String DRAW = "draw";
+    public static final String DRAW = "Tie";
     public static final String GAME_OVER = "gameOver";
     
 

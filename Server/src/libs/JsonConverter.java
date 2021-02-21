@@ -28,8 +28,8 @@ public class JsonConverter {
         newPlayer.setRespond((String) obj.get("respond"));
         newPlayer.setPassword((String) obj.get("password"));
         newPlayer.setDestination((String) obj.get("destination"));
-        System.out.println("sf "+obj.get("scour"));
         newPlayer.setScour((int) (long) obj.get("scour"));
+        newPlayer.setResumeOldGame((boolean) obj.get("resumeOldGame"));
         return newPlayer;
     }
 
@@ -44,6 +44,7 @@ public class JsonConverter {
         newPlayer.setPassword((String) obj.get("password"));
         newPlayer.setScour((int) (long) obj.get("scour"));
         newPlayer.setPlayerList(players);
+        newPlayer.setResumeOldGame((boolean) obj.get("resumeOldGame"));
         return newPlayer;
     }
 
@@ -58,6 +59,7 @@ public class JsonConverter {
         jsonObj.put("password", newPlayer.getPassword());
         jsonObj.put("destination", newPlayer.getDestination());
         jsonObj.put("scour", newPlayer.getScour());
+        jsonObj.put("resumeOldGame", newPlayer.isResumeOldGame());
         return jsonObj;
     }
 
@@ -70,6 +72,7 @@ public class JsonConverter {
         jsonObj.put("password", newPlayer.getPassword());
         jsonObj.put("playersList", players);
         jsonObj.put("scour", newPlayer.getScour());
+        jsonObj.put("resumeOldGame", newPlayer.isResumeOldGame());
         return jsonObj;
     }
 
@@ -103,7 +106,9 @@ public class JsonConverter {
         game.setNextMove((String) obj.get("nextMove"));
         game.setMessage((String) obj.get("message"));
         game.setRespond((String) obj.get("respond"));
-
+        game.setPlayerX((String) obj.get("playerx"));
+        game.setPlayerO((String) obj.get("playero"));
+        
         return game;
     }
 
@@ -117,6 +122,8 @@ public class JsonConverter {
         obj.put("nextMove", game.getNextMove());
         obj.put("message", game.getMessage());
         obj.put("respond", game.getRespond());
+        obj.put("playerx", game.getPlayerX());
+        obj.put("playero", game.getPlayerO());
 
         return obj;
     }
@@ -155,6 +162,8 @@ public class JsonConverter {
         game.setPosition((Long) obj.get("position"));
         game.setNextMove((String) obj.get("nextMove"));
         game.setMessage((String) obj.get("message"));
+        game.setPlayerX((String) obj.get("playerX"));
+        game.setPlayerO((String) obj.get("playerO"));
 
         return game;
     }

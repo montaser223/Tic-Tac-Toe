@@ -102,7 +102,9 @@ public class JsonConverter {
         game.setNextMove((String) obj.get("nextMove"));
         game.setMessage((String) obj.get("message"));
         game.setRespond((String) obj.get("respond"));
-
+        game.setPlayerX((String) obj.get("playerx"));
+        game.setPlayerO((String) obj.get("playero"));
+        
         return game;
     }
 
@@ -116,7 +118,9 @@ public class JsonConverter {
         obj.put("nextMove", game.getNextMove());
         obj.put("message", game.getMessage());
         obj.put("respond", game.getRespond());
-
+        obj.put("playerx", game.getPlayerX());
+        obj.put("playero", game.getPlayerO());
+        
         return obj;
     }
 

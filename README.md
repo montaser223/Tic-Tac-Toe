@@ -5,6 +5,8 @@ Network based Tic-Tac-Toe game, implemented with JavaFX as a project in ITI Open
 
 * [Install and config](#)
 
+* [Demo](#)
+
 * [Prerequisite](#)
 
 * [Features](#)
@@ -39,7 +41,10 @@ Network based Tic-Tac-Toe game, implemented with JavaFX as a project in ITI Open
           - gson-2.6.2
     - Make sure from existance of two packages in Client project first one is libs package and second is client
    - clean and build the client project then Run Client.java file
-   
+## [Demo](https://drive.google.com/file/d/1eHO6xEs0CjBr6oCaYjRK4kw3a83UucfK/view?usp=sharing)
+
+![picture](Demo.gif)
+                                                
 # Prerequisites
 * java 8 or higher recommended
 * firewall configured for socket communications
@@ -56,6 +61,7 @@ Network based Tic-Tac-Toe game, implemented with JavaFX as a project in ITI Open
       - Allow the player to play in single mode( play with the computer)
       - Player can ask any online player to play with him.
       - Allow two players to play together after the second player accepts the invitation.
+      - Player can chat with the other player through game chat
  - The application give the user an option to record the game and store it at the server for replay later.
  - The application give the player bounce points when the player wins.
  # Used Technolgies

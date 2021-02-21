@@ -271,7 +271,15 @@ public class ServerGUI extends Application {
     public void updateScreen() {
         updatePlayerList();
         playerData.clear();
-        playerData.addAll(players);
+//        playerData.addAll(players);
+        for (int i=0 ; i< players.size();i++)
+        {
+            if (!(players.get(i).getUsername().equals("Computre")))
+            {
+                playerData.add(players.get(i));
+            }
+           
+        }
         playerNameServer
                 .setCellValueFactory(
                         new PropertyValueFactory<Player, String>("username")
