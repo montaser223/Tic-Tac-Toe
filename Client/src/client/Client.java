@@ -1,16 +1,37 @@
-package tictactoe;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package client;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import libs.*;
-import java.io.IOException;
 import java.io.InputStream;
-//import java.io.ObjectInputStream;
-//import java.io.ObjectOutputStream;
+import javafx.application.Application;
+import static javafx.application.Application.launch;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TablePosition;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+import static javafx.scene.layout.Region.USE_PREF_SIZE;
+import javafx.stage.Stage;
+
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,45 +39,23 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.application.Application;
-import static javafx.application.Application.launch;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TablePosition;
-import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import static javafx.scene.layout.Region.USE_PREF_SIZE;
 import javafx.scene.layout.RowConstraints;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.stage.Screen;
-import javafx.stage.Stage;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -67,42 +66,399 @@ import org.json.simple.parser.ParseException;
  * @author hebaa
  */
 public class Client extends Application implements Serializable {
+
+    /*
+    ***************** multi mode game functino*********************************
+     */
+    private Game forwardedGameRequest;
+    private volatile Game gameRequest;
+    private volatile boolean isMySymbolReceved = false;
+    private volatile boolean isGameRunning = true;
+    private String currentMove;
+    String oName, xName;
+    Label playerOneName = new Label();
+    Label playerTwoName = new Label();
+    int playerXcounter = 0;
+    int playerOcounter = 0;
+    private static String[] recordedPositions;
+    Alert alertForRespond = new Alert(Alert.AlertType.CONFIRMATION);
+    ButtonType okButton = new ButtonType("Yes", ButtonBar.ButtonData.YES);
+    ButtonType noButton = new ButtonType("no", ButtonBar.ButtonData.NO);
+    Scene scene;
+    Game gameMessages;
+    Game myGame;
+    volatile Boolean isNameSetUp = false;
+    String mySymbol;
+    private String enmy;
+    private boolean recordGameFlag;
+    private Thread gamethread;
+
     
-     Alert alertForRespond = new Alert(Alert.AlertType.CONFIRMATION);
-          ButtonType okButton = new ButtonType("Yes", ButtonBar.ButtonData.YES);
-        ButtonType noButton = new ButtonType("no", ButtonBar.ButtonData.NO);
+
+    private Game getforwardGameRequest() {
+        Game newGameRequest = forwardedGameRequest;
+        forwardedGameRequest = null;
+        return newGameRequest;
+
+    }
+    Thread th5;
+
     
-        
+
+    private String checkWinner() {
+        String winner = "";
+        List topRow = Arrays.asList(1, 2, 3);
+        List midRow = Arrays.asList(4, 5, 6);
+        List botRow = Arrays.asList(7, 8, 9);
+
+        List liftCol = Arrays.asList(1, 4, 7);
+        List midtCol = Arrays.asList(2, 5, 8);
+        List righCol = Arrays.asList(3, 6, 9);
+
+        List cross1 = Arrays.asList(1, 5, 9);
+        List cross2 = Arrays.asList(3, 5, 7);
+
+        List<List> winning = new ArrayList<List>();
+
+        winning.add(topRow);
+        winning.add(midRow);
+        winning.add(botRow);
+        winning.add(liftCol);
+        winning.add(midtCol);
+        winning.add(righCol);
+        winning.add(cross1);
+        winning.add(cross2);
+
+        for (List winningComp : winning) {
+
+            if (playerXpositions.containsAll(winningComp)) {
+                winner = Game.X_MOVE;
+                playerXpositions.clear();
+                playerXpositions.addAll(winningComp);
+            } else if (playerOpositions.containsAll(winningComp)) {
+                winner = Game.O_MOVE;
+                playerOpositions.clear();
+                playerOpositions.addAll(winningComp);
+            } else if (playerXpositions.size() + playerOpositions.size() == 9) {
+                winner = Game.DRAW;
+            }
+        }
+        return winner;
+    }
+
+    private void highLightWinner(ArrayList<Integer> winner) {
+
+        for (int i = 0; i < 9; i++) {
+            if (i + 1 == (int) winner.get(0) || i + 1 == (int) winner.get(1) || i + 1 == (int) winner.get(2)) {
+                buttons[i].setStyle("-fx-background-color: #128dba");
+            }
+        }
+    }
+
+    private void recordPositions() {
+
+        recordedPositions = new String[9];
+        for (int index = 0; index < 9; index++) {
+            recordedPositions[index] = buttons[index].getText();
+        }
+    }
+
+    private void drawOldPositions() {
+
+        for (int index = 0; index < 9; index++) {
+
+            if (recordedPositions[index].equalsIgnoreCase(Game.X_MOVE)
+                    || recordedPositions[index].equalsIgnoreCase(Game.O_MOVE)) {
+
+                if (recordedPositions[index] == "X") {
+
+                    buttons[index].setTextFill(javafx.scene.paint.Color.rgb(0, 0, 0));
+                    buttons[index].setText(recordedPositions[index]);
+                    buttons[index].setDisable(true);
+                    playerXpositions.add(index + 1);
+
+                } else {
+                    buttons[index].setTextFill(javafx.scene.paint.Color.rgb(0, 0, 0));
+                    buttons[index].setText(recordedPositions[index]);
+                    buttons[index].setDisable(true);
+                    playerOpositions.add(index + 1);
+                }
+
+            }
+        }
+        if (playerXpositions.size() > playerOpositions.size()) {
+            currentMove = Game.O_MOVE;
+
+        }
+    }
+
+    private void resetBoard() {
+
+        currentMove = Game.X_MOVE;
+        playerXpositions.clear();
+        playerOpositions.clear();
+        recordGame2.setText("Record Game");
+        recordGameFlag = true;
+        currentTurn.setText(currentMove + " Turn");
+
+        Button tmpButton = new Button();
+        for (Button btn : buttons) {
+            btn.setStyle(tmpButton.getStyle());
+            btn.setFont(new Font("Engravers MT", 36.0));
+            btn.setText(null);
+            btn.setDisable(false);
+
+        }
+    }
+
+    private void playAgainMultiMode() {
+
+        sendGameMove(Request.GAME_PLAYAGAIN);
+    }
+
+    private void updateScoreIndataBase() {
+
+        this.recordGame.setText("Play Again!");
+        this.recordGameFlag = false;
+
+    }
+
+    private void drawTie() {
+
+        for (Button btn : buttons) {
+            btn.setText(Game.DRAW);
+            btn.setFont(Font.font("Engravers MT", FontWeight.BOLD, 14));
+            btn.setDisable(true);
+        }
+
+    }
+
+    private void drawXO() {
+        for (String str : recordedPositions) {
+        }
+    }
+
+    private void updateBoard(Long buttonsPosition) {
+        if (mySymbol.equalsIgnoreCase(currentMove)) {
+            buttons[buttonsPosition.intValue() - 1].setDisable(true);
+
+            if (currentMove.equalsIgnoreCase(Game.X_MOVE)) {
+
+                if (checkWinner() == Game.X_MOVE) {
+                    myGame.setWinner(Game.X_MOVE);
+                    myGame.setPlayedMove(currentMove);
+                    myGame.setNextMove(Game.GAME_OVER);
+                    myGame.setPosition(buttonsPosition);
+                    sendGameMove(Request.GAME_MOVE);
+
+                } else if (checkWinner() == Game.DRAW) {
+                    drawTie();
+                    myGame.setPlayedMove(currentMove);
+                    myGame.setPosition(buttonsPosition);
+                    sendGameMove(Request.GAME_MOVE);
+
+                } else {
+                    myGame.setPlayedMove(currentMove);
+                    myGame.setPosition(buttonsPosition);
+                    myGame.setNextMove(Game.O_MOVE);
+                    sendGameMove(Request.GAME_MOVE);
+                }
+            } else {
+
+                if (checkWinner().equalsIgnoreCase(Game.O_MOVE)) {
+                    myGame.setWinner(Game.O_MOVE);
+                    myGame.setPlayedMove(currentMove);
+                    myGame.setNextMove(Game.GAME_OVER);
+                    myGame.setPosition(buttonsPosition);
+                    sendGameMove(Request.GAME_MOVE);
+                } else if (checkWinner().equalsIgnoreCase(Game.DRAW)) {
+                    drawTie();
+                    myGame.setPlayedMove(currentMove);
+                    myGame.setPosition(buttonsPosition);
+                    sendGameMove(Request.GAME_MOVE);
+                } else {
+                    myGame.setPlayedMove(currentMove);
+                    myGame.setPosition(buttonsPosition);
+                    myGame.setNextMove(Game.X_MOVE);
+                    sendGameMove(Request.GAME_MOVE);
+                }
+
+            }
+        }
+    }
+
+    private void sendGameMessage(String gameMessage) {
+
+        gameMessages.setRequest(gameMessage);
+        obj = convert.fromGameToJson(gameMessages);
+        this.outStream.println(obj.toString());
+    }
+
+    private void sendGameMove(String gameRequest) {
+
+        myGame.setRequest(gameRequest);
+        JSONObject obj = convert.fromGameToJson(myGame);
+        this.outStream.println(obj.toString());
+    }
+
+    private void receiveGameMove(Game game) {
+        if (game.getRequest().equalsIgnoreCase(Request.Chat_Message)) {
+            gameMessages = game;
+            appendMessage();
+        } else {
+
+            myGame = game;
+
+            switch (myGame.getRequest()) {
+
+                case Request.RECORD_GAME:
+                    checkRecordGameRespond();
+                    break;
+                case Request.GET_RECORDEDGAME:
+                    drawOldPositions();
+                    break;
+                case Request.GAME_PLAYAGAIN:
+                    resetBoard();
+                    break;
+                case Request.END_GAME:
+                    // you need to generate a popup to tell the user thar the enmy is exite the game, thne change the screen scene
+                    sendGameMove(Request.STOPGAME); // to close the game handler thread connected with the server
+                    resetBoard();
+                    playerXcounter = 0;
+                    playerOcounter = 0;
+                    Platform.runLater(() -> {
+                        ScreenThree().getChildren().clear();
+                    });
+                    Platform.runLater(() -> {
+                        scene.setRoot(ScreenThree());
+                    });
+                    break;
+
+                default:
+
+                    drawAndSaveMove(myGame.getPosition(), myGame.getPlayedMove());
+                    currentMove = myGame.getNextMove();
+                    currentTurn.setText(currentMove + " Turn");
+                    if (checkWinner().equalsIgnoreCase(Game.X_MOVE)) {
+                        highLightWinner(playerXpositions);
+                        playerXcounter++;
+                        myGame.setWinner(Game.X_MOVE);
+                        myGame.setPlayerX(playerOneName.getText());
+                        updateScoreMultiMode();
+                    } else if (checkWinner().equalsIgnoreCase(Game.O_MOVE)) {
+                        highLightWinner(playerOpositions);
+                        playerOcounter++;
+                        myGame.setWinner(Game.O_MOVE);
+                        myGame.setPlayerO(playerTwoName.getText());
+                        updateScoreMultiMode();
+                    } else if (checkWinner().equalsIgnoreCase(Game.DRAW)) {
+                        drawTie();
+                        updateScoreMultiMode();
+                    }
+                    break;
+            }
+
+        }
+
+    }
+
+    private void drawAndSaveMove(Long position, String playedMove) {
+
+        if (playedMove.equalsIgnoreCase(Game.X_MOVE)) {
+
+            buttons[position.intValue() - 1].setTextFill(javafx.scene.paint.Color.rgb(0, 0, 0));
+            buttons[position.intValue() - 1].setText(playedMove);
+            buttons[position.intValue() - 1].setDisable(true);
+            playerXpositions.add(position.intValue());
+
+        } else {
+
+            buttons[position.intValue() - 1].setTextFill(javafx.scene.paint.Color.rgb(0, 0, 0));
+            buttons[position.intValue() - 1].setText(playedMove);
+            buttons[position.intValue() - 1].setDisable(true);
+            playerOpositions.add(position.intValue());
+        }
+
+    }
+
+    private void sendChat() {
+
+        gameMessages = new Game();
+        gameMessages.setMessage(messageField.getText());
+        sendGameMessage(Request.Chat_Message);
+        messageField.clear();
+
+    }
+
+    private void appendMessage() {
+
+        if (!gameMessages.getMessage().equalsIgnoreCase(null)) {
+            chatArea.appendText(gameMessages.getMessage() + "\n");
+        }
+    }
+
+    public static void setRecordedPosition(String[] oldGame) {
+        recordedPositions = oldGame;
+    }
+
+    public static String[] getRecordedPosition() {
+
+        return recordedPositions;
+    }
+
+    private void sendRecordedPosition() {
+        recordPositions();
+        sendGamePosition(Request.RECORD_GAME);
+    }
+
+    private void sendGamePosition(String request) {
+
+        JSONArray positions = new JSONArray();
+        positions = convert.fromRecordedGamePositionTOJsonArray(recordedPositions);
+        myGame.setRequest(request);
+        obj = convert.fromGameToJsonWithArray(myGame, positions);
+        this.outStream.println(obj.toString());
+    }
+
+    private void checkRecordGameRespond() {
+        if (myGame.getRespond().equalsIgnoreCase(Respond.SUCCESS)) {
+            drawXO();
+        } else if (myGame.getRespond().equalsIgnoreCase(Respond.FAILURE)) {
+        }
+    }
+
+    private void sendExitGameRequest() {
+
+        sendGameMove(Request.END_GAME);
+
+
+    }
 
     ArrayList<Player> ASD;
     /**
-     * ***********socket***********************
+     * ************socket***********************
      */
     private JSONObject obj;
 
     JSONParser parser = new JSONParser();
-    JsonConverter convert = new JsonConverter();
-//      PrintStream  outStream  ;
+    JsonConverter convert;
     DataInputStream inStream;
 
     Socket socket;
-//    ObjectInputStream readObj;
-//    DataInputStream   readObj;
 
-//    ObjectOutputStream writeObj;
     PrintStream outStream;
     Thread thread;
+
     /**
-     * *******Player class**************************
+     * ********Player class**************************
      */
     Player p;
     /**
-     * *********Single Mode Game**************************
+     * **********Single Mode Game**************************
      */
     int count = 0;
-//    SingleModeGame single ;
     /**
-     * **********Alert************************
+     * ***********************************Alert*************************************************************************
      */
     Alert alertEmptyLogIn1 = new Alert(Alert.AlertType.ERROR);
     Alert alertWrongLogIn1 = new Alert(Alert.AlertType.ERROR);
@@ -112,16 +468,17 @@ public class Client extends Application implements Serializable {
     Alert alertWrongLogout1;
     Alert unSelected4 = new Alert(Alert.AlertType.ERROR);
     /**
-     * **********AnchorPane Screens***************************
+     * *******************************AnchorPaneScreens***************************************************************
      */
-    
     AnchorPane ScreenOne;
     AnchorPane ScreenTwo;
     AnchorPane ScreenThree;
     AnchorPane ScreenFour;
     AnchorPane ScreenSingleMode;
+    AnchorPane ScreenMultiMode;
     /**
-     * **********Screen one variables**********************
+     * ********************************Screen one
+     * variables***********************************************
      */
     public ImageView LoginImg;
     public Label LoginLabel;
@@ -136,7 +493,8 @@ public class Client extends Application implements Serializable {
     ImageView imageView;
     InputStream stream;
     /**
-     * ************Screen two variables**********************
+     * *************************************Screen two
+     * variables*****************************************************
      */
     public GridPane GridOfImageAndForm;
     public ColumnConstraints columnConstraints;
@@ -156,7 +514,8 @@ public class Client extends Application implements Serializable {
     public Button signupBtn2;
     public Button backBtn2;
     /**
-     * ************Screen three variables*********************
+     * ***************************************Screen three
+     * variables*********************************************
      */
     public GridPane GridOfPlay;
     public ColumnConstraints tableColumnConstraints;
@@ -168,18 +527,19 @@ public class Client extends Application implements Serializable {
     public Button multiBtn3;
     public Button logOutBtn3;
     /**
-     * ************Screen four variables*************************
+     * *****************************************Screen four
+     * variables******************************************************************
      */
     ImageView TableImg;
     TableView PlayerTable;
-    TableColumn PlayerName;
-    TableColumn Score;
-    TableColumn Status;
+    TableColumn PlayerName = new TableColumn();
+    TableColumn Score = new TableColumn();
+    TableColumn Status = new TableColumn();
     Label TableLabel;
     Button playBtn4;
     Button backBtn4;
     /**
-     * **************ScreenSingleMode**********************
+     * *******************************************ScreenSingleMode*************************************************************
      */
     ImageView GameImg;
     Button exit;
@@ -200,9 +560,8 @@ public class Client extends Application implements Serializable {
     Label computerName;
     Label playerScore;
     Label computerScore;
-    Label scoreSeperator;//remove
+    Label scoreSeperator;
     Button[] buttons;
-    String[] recordedPositions;
     String symbol;
     boolean gameFlag;
     int move;
@@ -211,77 +570,104 @@ public class Client extends Application implements Serializable {
     int index;
 
     private static String username;
+    /**
+     * ******************************************ScreenMultiMode******************************************************************
+     */
+
+    ImageView MultiGameImage;
+    TextArea chatArea;
+    TextField messageField;
+    Button sendMsg;
+    Button btn1;
+    Button btn2;
+    Button btn3;
+    Button btn4;
+    Button btn5;
+    Button btn6;
+    volatile boolean startAPP = false;
+    Button btn7;
+    Button btn8;
+    Button btn9;
+    Button exitGame;
+    Label playerO;
+    Label currentTurn;
+    Label playerX;
+    Label playerOneScore;
+    Label playerTwoScore;
+    Label scoreSeperator2;
+    Button recordGame2;
 
     /**
-     * ***********************************
+     * *******************************MultiMode
+     * variables***********************************************************
      */
+    Alert alertRejection = new Alert(Alert.AlertType.ERROR);
+    Alert alertServerNotConnected = new Alert(Alert.AlertType.ERROR);
+
+    ;
+
+    /* ********************************************************************************************/
     @Override
     public void init() {
-        
-       
+        alertServerNotConnected.setTitle("Server connection");
+        alertServerNotConnected.setHeaderText(null);
+        alertServerNotConnected.setContentText("Failed to connect with Server");
 
-
-alertForRespond.getButtonTypes().setAll(okButton, noButton);
-                      
-     
-  
-
+        alertRejection.setTitle("Play request ");
+        alertRejection.setHeaderText(null);
+        alertRejection.setContentText("The other player refused to play with you ");
         p = new Player("", "");
+        Game game = new Game();
+        myGame = new Game();
+        buttons = new Button[9];
+        convert = new JsonConverter();
         alertWrongLogIn1.setTitle("LogIn ");
         alertWrongLogIn1.setHeaderText(null);
         alertWrongLogIn1.setContentText("Invalid User Name or Password");
-
+        alertForRespond.getButtonTypes()
+                .setAll(okButton, noButton);
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
 
                 try {
-                    socket = new Socket("127.0.0.1", 5005);
+                    socket = new Socket(InetAddress.getLocalHost(), 5005);
 
-//               outStream = new PrintStream(socket.getOutputStream());
                     inStream = new DataInputStream(socket.getInputStream());
-
-//                    outStream = new ObjectOutputStream(socket.getOutputStream());
                     outStream = new PrintStream(socket.getOutputStream());
+                    startAPP = true;
 
-//               readObj =  new DataInputStream(socket.getInputStream());                   
                 } catch (IOException ex) {
-                    System.out.println(ex.getMessage());
+                    Platform.runLater(()->{alertServerNotConnected.showAndWait();});
                 }
-                System.out.println("hoooo");
-                while (true) {
+                while (startAPP) {
                     try {
+                        JSONObject message = (JSONObject) parser.parse(inStream.readLine());
+                        messageHandelr(message);
 
-
-                        obj = (JSONObject) parser.parse(inStream.readLine());
-                        
-//                        Player p2 = convert.fromJsonToPlayer(obj,
-//                                convert.fromJSONArrayToPlayerList((JSONArray) obj.get("playersList")));
-
-                        System.out.println("line 225 " + obj);
-                            
-
-                        messageHandelr(obj);
-                    System.out.println("line 250 ");
-
-//                        System.out.println("Line 98: " + p.getRespond());
-//                        System.out.println("Line 196: " + p.getUsername() + p.getPassword());
-                    } catch (IOException ex) {
-                        System.out.println(ex.getMessage());
                     } catch (NullPointerException ex) {
-                        System.out.println(ex.getMessage());
+                        Platform.runLater(()->{alertServerNotConnected.showAndWait();});
+                        
+                        startAPP = false;
+
+                    } catch (IOException ex) {
+                        alertServerNotConnected.showAndWait();
+                        
+                        startAPP = false;
                     } catch (ParseException ex) {
-                        Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                        Platform.runLater(()->{alertServerNotConnected.showAndWait();});
+                        
+                        startAPP = false;
                     }
                 }
             }
         });
         thread.start();
-
     }
 
     /**
-     * ***********Screens methods**************************
+     * **********************************Screens
+     * methods*******************************************************************************
      */
     public AnchorPane ScreenOne() {
         ScreenOne = new AnchorPane();
@@ -294,12 +680,12 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         logInBtn1 = new Button();
         signupBtn1 = new Button();
 
-//        ScreenOne.setMaxHeight(USE_PREF_SIZE);
-//        ScreenOne.setMaxWidth(USE_PREF_SIZE);
-//        ScreenOne.setMinHeight(USE_PREF_SIZE);
-//        ScreenOne.setMinWidth(USE_PREF_SIZE);
+        ScreenOne.setMaxHeight(USE_PREF_SIZE);
+        ScreenOne.setMaxWidth(USE_PREF_SIZE);
+        ScreenOne.setMinHeight(USE_PREF_SIZE);
+        ScreenOne.setMinWidth(USE_PREF_SIZE);
         ScreenOne.setPrefHeight(540.0);
-        ScreenOne.setPrefWidth(642.0);
+        ScreenOne.setPrefWidth(700.0);
         ScreenOne.setStyle("-fx-background-color: linear-gradient(to right, #5c258d, #4389a2);;");
 
         LoginImg.setFitHeight(540.0);
@@ -307,13 +693,11 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         LoginImg.setPickOnBounds(true);
 
         try {
-            FileInputStream stream = new FileInputStream("/media/mohamed/4CEA8043EA802B72/ITI/java/pro2021/Tic-Tac-Toe/XoPro1/src/xopro1/login.jpg");
+            FileInputStream stream = new FileInputStream("ProjectImg/login.jpg");
             Image image = new Image(stream);
             LoginImg.setImage(image);
 
         } catch (FileNotFoundException ex) {
-
-            System.out.println("Faild to load login image");
         }
         
         LoginLabel.setAlignment(javafx.geometry.Pos.CENTER);
@@ -386,7 +770,7 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         alertEmptyLogIn1.setContentText("All Fields are Required");
 
         /**
-         * **Screen One Button Action******
+         * ***********Screen One Button Action*******************
          */
         signupBtn1.setOnAction(new EventHandler<ActionEvent>() {
 
@@ -409,23 +793,13 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
                 if (userText1.getText().isEmpty() || passText1.getText().isEmpty()) {
                     alertEmptyLogIn1.showAndWait();
                 } else {
-                    try {
-                        Player newPlayer = new Player(userText1.getText(), passText1.getText());
-//                           setPlayerName( userText1.getText() );
-                      System.out.println("line 402" + newPlayer);
+                    Player newPlayer = new Player(userText1.getText(), passText1.getText());
+                    setPlayerName(userText1.getText());
 
-                        obj = convert.fromPlayerToJson(newPlayer);
-                      System.out.println("line 404" + obj);
-
-                        outStream.println(obj.toString());
-//                           outStream.println(obj.toString()) ;
-                        System.out.println("object sent!");
-
-                    } catch (Exception e) {
-
-                        e.printStackTrace();
-                    }
-
+                    convert = new JsonConverter();
+                    JSONObject obj = new JSONObject();
+                    obj = convert.fromPlayerToJson(newPlayer);
+                    outStream.println(obj.toString());
                 }
 
             }
@@ -436,7 +810,6 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
     }
 
     public String getusername() {
-        System.out.println(userName3);
         return userText1.getText();
 
     }
@@ -460,16 +833,16 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         passText2 = new PasswordField();
         signupBtn2 = new Button();
         backBtn2 = new Button();
-//
-//        ScreenTwo.setMaxHeight(USE_PREF_SIZE);
-//        ScreenTwo.setMaxWidth(USE_PREF_SIZE);
-//        ScreenTwo.setMinHeight(USE_PREF_SIZE);
-//        ScreenTwo.setMinWidth(USE_PREF_SIZE);
+
+        ScreenTwo.setMaxHeight(USE_PREF_SIZE);
+        ScreenTwo.setMaxWidth(USE_PREF_SIZE);
+        ScreenTwo.setMinHeight(USE_PREF_SIZE);
+        ScreenTwo.setMinWidth(USE_PREF_SIZE);
         ScreenTwo.setPrefHeight(540.0);
-        ScreenTwo.setPrefWidth(642.0);
+        ScreenTwo.setPrefWidth(700.0);
 
         GridOfImageAndForm.setPrefHeight(540.0);
-        GridOfImageAndForm.setPrefWidth(642.0);
+        GridOfImageAndForm.setPrefWidth(700.0);
         GridOfImageAndForm.setStyle("-fx-background-color: linear-gradient(to right, #5c258d, #4389a2);;");
 
         columnConstraints.setHgrow(javafx.scene.layout.Priority.SOMETIMES);
@@ -488,12 +861,11 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         SignUpImg.setFitWidth(321.0);
         SignUpImg.setPickOnBounds(true);
         try {
-            FileInputStream stream = new FileInputStream("/media/mohamed/4CEA8043EA802B72/ITI/java/pro2021/Tic-Tac-Toe/XoPro1/src/xopro1/registration.jpg");
+            FileInputStream stream = new FileInputStream("ProjectImg/registration.jpg");
             Image image = new Image(stream);
             SignUpImg.setImage(image);
 
         } catch (FileNotFoundException ex) {
-            System.out.println("Faild load signup image");
         }
         GridPane.setColumnIndex(SignUpFormPanel, 1);
         SignUpFormPanel.setPrefHeight(200.0);
@@ -625,7 +997,6 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
 
                     obj = convert.fromPlayerToJson(signUpPlayer);
                     outStream.println(obj.toString());
-                    System.out.println("New Player has sign up!");
 
                 }
 
@@ -655,15 +1026,15 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         multiBtn3 = new Button();
         logOutBtn3 = new Button();
 
-//        ScreenThree.setMaxHeight(USE_PREF_SIZE);
-//        ScreenThree.setMaxWidth(USE_PREF_SIZE);
-//        ScreenThree.setMinHeight(USE_PREF_SIZE);
-//        ScreenThree.setMinWidth(USE_PREF_SIZE);
+        ScreenThree.setMaxHeight(USE_PREF_SIZE);
+        ScreenThree.setMaxWidth(USE_PREF_SIZE);
+        ScreenThree.setMinHeight(USE_PREF_SIZE);
+        ScreenThree.setMinWidth(USE_PREF_SIZE);
         ScreenThree.setPrefHeight(540.0);
-        ScreenThree.setPrefWidth(642.0);
+        ScreenThree.setPrefWidth(700.0);
 
         GridOfPlay.setPrefHeight(540.0);
-        GridOfPlay.setPrefWidth(642.0);
+        GridOfPlay.setPrefWidth(700.0);
 
         tableColumnConstraints.setHgrow(javafx.scene.layout.Priority.SOMETIMES);
         tableColumnConstraints.setMinWidth(10.0);
@@ -678,15 +1049,14 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         PlayPanel.setStyle("-fx-background-image: <?xml version='1.0' encoding='UTF-8'?><?import javafx.scene.control.Button?><?import javafx.scene.text.Font?><Button fx:id='signupBtn2' layoutX='226.0' layoutY='153.0' mnemonicParsing='false' prefHeight='53.0' prefWidth='173.0' style='-fx-background-color: linear-gradient(to right, #283048, #859398);;' text='Sign UP' textFill='WHITE' xmlns='http://javafx.com/javafx/8.0.171' xmlns:fx='http://javafx.com/fxml/1'>   <font>      <Font name='Lucida Calligraphy Italic' size='18.0' />   </font></Button>;");
 
         PlayImg.setFitHeight(540.0);
-        PlayImg.setFitWidth(642.0);
+        PlayImg.setFitWidth(700.0);
         PlayImg.setPickOnBounds(true);
         try {
-            FileInputStream stream = new FileInputStream("/media/mohamed/4CEA8043EA802B72/ITI/java/pro2021/Tic-Tac-Toe/XoPro1/src/xopro1/rocket.jpg");
+            FileInputStream stream = new FileInputStream("ProjectImg/rocket.jpg");
             Image image = new Image(stream);
             PlayImg.setImage(image);
 
         } catch (FileNotFoundException ex) {
-            System.out.println("Fsild to load menu image");
         }
 
         PlayLable.setAlignment(javafx.geometry.Pos.CENTER);
@@ -744,17 +1114,14 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
                 Player logOutPlayer = new Player(userText1.getText(), passText1.getText());
                 logOutPlayer.setRequest(Request.LOGOUT);
                 try {
-                    System.out.println(logOutPlayer.getRequest());
 
                     obj = convert.fromPlayerToJson(logOutPlayer);
                     outStream.println(obj.toString());
-                    System.out.println("User send logout Request!");
 
                 } catch (Exception e) {
 
                     e.printStackTrace();
                 }
-
             }
 
         });
@@ -763,31 +1130,13 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
 
             @Override
             public void handle(ActionEvent event) {
-               
-//                    
-//                        Player p3 = new Player()  ;
-//                        p3.setRequest(Request.USERS);
-//                      obj = convert.fromPlayerToJson(p3) ;
-//                        writeObj.println(obj.toString()) ;
-//
-//                    for (Player player : ASD) {
-//
-////                        System.out.println("Player :" + player.getUsername() + " Status= " + player.getState());
-//                    }
+                try {
+                    ScreenFour().getChildren().clear();
+                    multiBtn3.getScene().setRoot(ScreenFour());
 
-                    Platform.runLater(() -> {
-                      
-                              ScreenFour().getChildren().clear();
-                             multiBtn3.getScene().setRoot(ScreenFour());
-                            
-                        
-                        
-                      
-
-                    });
-                    
-//                    
-            
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
             }
 
@@ -808,17 +1157,12 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         return ScreenThree;
     }
 
-    public AnchorPane ScreenFour()  {
-        ScreenFour = new AnchorPane();
+    public AnchorPane ScreenFour() throws ParseException, IOException {
         TableImg = new ImageView();
+        ScreenFour = new AnchorPane();
 
-//        PlayerTable = new TableView();
         TableView<Player> PlayerTable = new TableView<Player>();
-        ObservableList<Player> playerData =   FXCollections.observableArrayList();
-                    playerData.clear(); 
-                    playerData.addAll(ASD);
-                    
-        
+        ObservableList<Player> playerData = FXCollections.observableArrayList();
 
         PlayerName = new TableColumn();
         Score = new TableColumn();
@@ -826,25 +1170,22 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         TableLabel = new Label();
         playBtn4 = new Button();
         backBtn4 = new Button();
-//        ScreenFour.setMaxHeight(USE_PREF_SIZE);
-//        ScreenFour.setMaxWidth(USE_PREF_SIZE);
-//        ScreenFour.setMinHeight(USE_PREF_SIZE);
-//        ScreenFour.setMinWidth(USE_PREF_SIZE);
+        ScreenFour.setMaxHeight(USE_PREF_SIZE);
+        ScreenFour.setMaxWidth(USE_PREF_SIZE);
+        ScreenFour.setMinHeight(USE_PREF_SIZE);
+        ScreenFour.setMinWidth(USE_PREF_SIZE);
         ScreenFour.setPrefHeight(540.0);
-        ScreenFour.setPrefWidth(642.0);
-//        ScreenFour.setStyle("-fx-background-color: linear-gradient(to right, #0f0c29, #302b63, #24243e);");
+        ScreenFour.setPrefWidth(700.0);
 
         TableImg.setFitHeight(540.0);
-        TableImg.setFitWidth(642.0);
+        TableImg.setFitWidth(700.0);
         TableImg.setPickOnBounds(true);
-//        TableImg.setImage(new Image(getClass().getResource("../../../Project/Img/image.jpg").toExternalForm()));
         try {
-            FileInputStream stream = new FileInputStream("/media/mohamed/4CEA8043EA802B72/ITI/java/pro2021/Tic-Tac-Toe/XoPro1/src/xopro1/image.jpg");
+            FileInputStream stream = new FileInputStream("ProjectImg/image.jpg");
             Image image = new Image(stream);
             TableImg.setImage(image);
 
         } catch (FileNotFoundException ex) {
-//            Logger.getLogger(FXMLScreenOne.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         PlayerTable.setLayoutX(89.0);
@@ -902,6 +1243,7 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         ScreenFour.getChildren().add(TableLabel);
         ScreenFour.getChildren().add(playBtn4);
         ScreenFour.getChildren().add(backBtn4);
+        playerData.addAll(ASD);
         PlayerName.setCellValueFactory(
                 new PropertyValueFactory<Player, String>("username")
         );
@@ -911,9 +1253,9 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         Status.setCellValueFactory(
                 new PropertyValueFactory<Player, String>("status")
         );
-
         PlayerTable.setItems(playerData);
 
+        PlayerTable.setItems(playerData);
         unSelected4.setTitle("player list");
         unSelected4.setHeaderText(null);
         unSelected4.setContentText("please select player ");
@@ -935,46 +1277,23 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
 
             @Override
             public void handle(ActionEvent event) {
-           //     try {
+                try {
+                    String a = PlayerTable.getSelectionModel().getSelectedItem().getUsername();
                     
-         
+                    Player p = new Player();
+                    p.setUsername(userText1.getText());
+                    p.setRequest(Request.GAME_INVITATION);
+                    p.setDestination(a);
                     
-                    String a= PlayerTable.getSelectionModel().getSelectedItem().getUsername() ;
+                    xName = userText1.getText();
+                    oName = a;
+                    obj = convert.fromPlayerToJson(p);
+                    outStream.println(obj.toString());
                     
-//                      System.out.println(a);
-                  System.out.println(userText1.getText());
-                   
-                      Player  p  = new Player()  ;
-                      p.setUsername(userText1.getText());
-                      p.setRequest(Request.GAME_INVITATION);
-                      p.setDestination(a);
-                      
-                   obj = convert.fromPlayerToJson(p);
-                 outStream.println(obj.toString());
-                 
-                 
-                        
-                        
-                        
-                        
-                      
-                      
-                      
-                      
-                    
-//                    Player pl = PlayerTable.getSelectionModel().getSelectedItem();
-//                    System.out.println( PlayerTable.getSelectionModel().getSelectedItem());     
-//                    Platform.runLater(() -> {
-//                        ScreenOne().getChildren().clear();
-//                    });
-//                    Platform.runLater(() -> {
-//                        playBtn4.getScene().setRoot(ScreenOne());
-//                    });
-//
-//                } catch (NullPointerException q) {
-//
-//                    unSelected4.showAndWait();
-//                }
+                } catch (NullPointerException q) {
+
+                    unSelected4.showAndWait();
+                }
 
             }
         });
@@ -1005,25 +1324,23 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         scoreSeperator = new Label();
         username = getusername();
 
-//
-//        ScreenSingleMode.setMaxHeight(USE_PREF_SIZE);
-//        ScreenSingleMode.setMaxWidth(USE_PREF_SIZE);
-//        ScreenSingleMode.setMinHeight(USE_PREF_SIZE);
-//        ScreenSingleMode.setMinWidth(USE_PREF_SIZE);
+        ScreenSingleMode.setMaxHeight(USE_PREF_SIZE);
+        ScreenSingleMode.setMaxWidth(USE_PREF_SIZE);
+        ScreenSingleMode.setMinHeight(USE_PREF_SIZE);
+        ScreenSingleMode.setMinWidth(USE_PREF_SIZE);
         ScreenSingleMode.setPrefHeight(540.0);
-        ScreenSingleMode.setPrefWidth(642.0);
+        ScreenSingleMode.setPrefWidth(700.0);
         ScreenSingleMode.setStyle("-fx-background-color: linear-gradient(to right, #0f0c29, #302b63, #24243e);");
 
         GameImg.setFitHeight(540.0);
-        GameImg.setFitWidth(642.0);
+        GameImg.setFitWidth(700.0);
         GameImg.setPickOnBounds(true);
         try {
-            FileInputStream stream = new FileInputStream("/media/mohamed/4CEA8043EA802B72/ITI/java/pro2021/Tic-Tac-Toe/XoPro1/src/xopro1/image.jpg");
+            FileInputStream stream = new FileInputStream("ProjectImg/image.jpg");
             Image image = new Image(stream);
             GameImg.setImage(image);
 
         } catch (FileNotFoundException ex) {
-//            Logger.getLogger(FXMLScreenOne.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         exit.setAlignment(javafx.geometry.Pos.CENTER);
@@ -1451,65 +1768,487 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         return ScreenSingleMode;
     }
 
-    public void messageHandelr(JSONObject message) {
-        
-        System.out.println("hi from message handler 1453");
-        
-        System.out.println("line 1452 "+(String)message.get("request") );
+    public AnchorPane ScreenMultiMode() {
 
-//        try {
-            switch ((String)message.get("request")) {
-                case Request.LOGIN:
-                    login(message);
-                    break;
-                case Request.SIGNUP:
-                    signup(message);
-                    break;
-                case Request.LOGOUT:
-                
-                    logout(message);
-                    break;
-                case Request.PlAYER_LIST:
-                    
+        myGame = new Game();
+        convert = new JsonConverter();
+        currentMove = Game.X_MOVE;
+        recordGameFlag = true;
 
-                    playlist(message);
-                    break;
-                    
-                    
-               case Request.GAME_INVITATION:
-                checkGameRespond(message);
-                    break  ; 
-                    
-               case Request.GAME_INVITATION_RESPOND:
-                   System.out.println("hi 1475  inside  generateAlertToAskUserForRespond  " );
-                generateAlertToAskUserForRespond(message);
-                break;
+        if (recordedPositions == null) {
+            recordedPositions = new String[9];
+        }
 
+        ScreenMultiMode = new AnchorPane();
+        MultiGameImage = new ImageView();
+        chatArea = new TextArea();
+        messageField = new TextField();
+        sendMsg = new Button();
+        btn1 = new Button();
+        btn2 = new Button();
+        btn3 = new Button();
+        btn4 = new Button();
+        btn5 = new Button();
+        btn6 = new Button();
+        btn7 = new Button();
+        btn8 = new Button();
+        btn9 = new Button();
+        buttons[0] = btn1;
+        buttons[1] = btn2;
+        buttons[2] = btn3;
+        buttons[3] = btn4;
+        buttons[4] = btn5;
+        buttons[5] = btn6;
+        buttons[6] = btn7;
+        buttons[7] = btn8;
+        buttons[8] = btn9;
+
+        playerOneName.setText(xName);
+        playerTwoName.setText(oName);
+
+        btn1.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 1l;
+                updateBoard(buttonPosition);
             }
 
-//        } catch (Exception e) {
-//
-//            System.out.println("error in  messange handler 1475");
-//            System.out.println(e.getMessage());
-//        }
+        });
+        btn2.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 2l;
+                updateBoard(buttonPosition);
+            }
+
+        });
+        btn3.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 3l;
+                updateBoard(buttonPosition);
+            }
+
+        });
+        btn4.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 4l;
+                updateBoard(buttonPosition);
+            }
+
+        });
+        btn5.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 5l;
+                updateBoard(buttonPosition);
+            }
+
+        });
+        btn6.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 6l;
+                updateBoard(buttonPosition);
+            }
+
+        });
+        btn7.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 7l;
+                updateBoard(buttonPosition);
+            }
+
+        });
+        btn8.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 8l;
+                updateBoard(buttonPosition);
+            }
+
+        });
+        btn9.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Long buttonPosition = 9l;
+                updateBoard(buttonPosition);
+            }
+
+        });
+
+        exitGame = new Button();
+        playerO = new Label();
+
+        playerX = new Label();
+
+        scoreSeperator2 = new Label();
+        recordGame2 = new Button();
+        recordGame2.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+
+                if (recordGameFlag) {
+                    sendRecordedPosition();
+                    drawXO();
+                } else {
+                    playAgainMultiMode();
+                }
+            }
+
+        });
+
+        ScreenMultiMode.setMaxHeight(USE_PREF_SIZE);
+        ScreenMultiMode.setMaxWidth(USE_PREF_SIZE);
+        ScreenMultiMode.setMinHeight(USE_PREF_SIZE);
+        ScreenMultiMode.setMinWidth(USE_PREF_SIZE);
+        ScreenMultiMode.setPrefHeight(540.0);
+        ScreenMultiMode.setPrefWidth(700.0);
+
+        MultiGameImage.setFitHeight(540.0);
+        MultiGameImage.setFitWidth(700.0);
+        MultiGameImage.setPickOnBounds(true);
+        try {
+            FileInputStream stream = new FileInputStream("ProjectImg/image.jpg");
+            Image image = new Image(stream);
+            MultiGameImage.setImage(image);
+
+        } catch (FileNotFoundException ex) {
+        }
+
+        chatArea.setEditable(false);
+        chatArea.setLayoutX(383.0);
+        chatArea.setLayoutY(30.0);
+        chatArea.setPrefHeight(309.0);
+        chatArea.setPrefWidth(306.0);
+
+        messageField.setLayoutX(382.0);
+        messageField.setLayoutY(348.0);
+        messageField.setPrefHeight(43.0);
+        messageField.setPrefWidth(214.0);
+
+        sendMsg.setAlignment(javafx.geometry.Pos.CENTER);
+        sendMsg.setLayoutX(604.0);
+        sendMsg.setLayoutY(348.0);
+        sendMsg.setMnemonicParsing(false);
+        sendMsg.setPrefHeight(34.0);
+        sendMsg.setPrefWidth(93.0);
+        sendMsg.setStyle("-fx-background-color: linear-gradient(to right, #373b44, #4286f4);");
+        sendMsg.setText("Send");
+        sendMsg.setTextFill(javafx.scene.paint.Color.WHITE);
+        sendMsg.setFont(new Font("Lucida Calligraphy Italic", 20.0));
+        sendMsg.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                sendChat();
+            }
+        });
+        btn1.setLayoutX(40.0);
+        btn1.setLayoutY(113.0);
+        btn1.setMnemonicParsing(false);
+        btn1.setPrefHeight(68.0);
+        btn1.setPrefWidth(86.0);
+        btn1.setFont(new Font("Engravers MT", 36.0));
+
+        btn2.setLayoutX(152.0);
+        btn2.setLayoutY(113.0);
+        btn2.setMnemonicParsing(false);
+        btn2.setPrefHeight(68.0);
+        btn2.setPrefWidth(86.0);
+        btn2.setFont(new Font("Engravers MT", 36.0));
+
+        btn3.setLayoutX(261.0);
+        btn3.setLayoutY(113.0);
+        btn3.setMnemonicParsing(false);
+        btn3.setPrefHeight(68.0);
+        btn3.setPrefWidth(86.0);
+        btn3.setFont(new Font("Engravers MT", 36.0));
+
+        btn4.setLayoutX(40.0);
+        btn4.setLayoutY(196.0);
+        btn4.setMnemonicParsing(false);
+        btn4.setPrefHeight(68.0);
+        btn4.setPrefWidth(86.0);
+        btn4.setFont(new Font("Engravers MT", 36.0));
+
+        btn5.setLayoutX(152.0);
+        btn5.setLayoutY(196.0);
+        btn5.setMnemonicParsing(false);
+        btn5.setPrefHeight(68.0);
+        btn5.setPrefWidth(86.0);
+        btn5.setFont(new Font("Engravers MT", 36.0));
+
+        btn6.setLayoutX(263.0);
+        btn6.setLayoutY(196.0);
+        btn6.setMnemonicParsing(false);
+        btn6.setPrefHeight(68.0);
+        btn6.setPrefWidth(86.0);
+        btn6.setFont(new Font("Engravers MT", 36.0));
+
+        btn7.setLayoutX(40.0);
+        btn7.setLayoutY(280.0);
+        btn7.setMnemonicParsing(false);
+        btn7.setPrefHeight(68.0);
+        btn7.setPrefWidth(86.0);
+        btn7.setFont(new Font("Engravers MT", 36.0));
+
+        btn8.setLayoutX(152.0);
+        btn8.setLayoutY(280.0);
+        btn8.setMnemonicParsing(false);
+        btn8.setPrefHeight(68.0);
+        btn8.setPrefWidth(86.0);
+        btn8.setFont(new Font("Engravers MT", 36.0));
+
+        btn9.setLayoutX(263.0);
+        btn9.setLayoutY(280.0);
+        btn9.setMnemonicParsing(false);
+        btn9.setPrefHeight(68.0);
+        btn9.setPrefWidth(86.0);
+        btn9.setFont(new Font("Engravers MT", 36.0));
+
+        exitGame.setLayoutX(405.0);
+        exitGame.setLayoutY(470.0);
+        exitGame.setMnemonicParsing(false);
+        exitGame.setPrefHeight(46.0);
+        exitGame.setPrefWidth(191.0);
+        exitGame.setStyle("-fx-background-color: linear-gradient(to right, #373b44, #4286f4);;");
+        exitGame.setText("Exit");
+        exitGame.setTextFill(javafx.scene.paint.Color.WHITE);
+        exitGame.setFont(new Font("Lucida Calligraphy Italic", 20.0));
+        exitGame.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                sendExitGameRequest();
+
+                Platform.runLater(() -> {
+                    ScreenThree().getChildren().clear();
+                });
+                Platform.runLater(() -> {
+                    scene.setRoot(ScreenThree());
+                });
+            }
+        });
+        playerOneName.setLayoutX(55.0);
+        playerOneName.setPrefHeight(27.0);
+        playerOneName.setPrefWidth(78.0);
+        playerOneName.setTextFill(javafx.scene.paint.Color.WHITE);
+        playerOneName.setFont(new Font("Javanese Text", 20.0));
+
+        playerTwoName.setLayoutX(264.0);
+        playerTwoName.setTextFill(javafx.scene.paint.Color.WHITE);
+        playerTwoName.setFont(new Font("Javanese Text", 20.0));
+        currentTurn = new Label();
+        playerOneScore = new Label();
+        playerTwoScore = new Label();
+        playerO.setAlignment(javafx.geometry.Pos.CENTER);
+        playerO.setLayoutX(203.0);
+        playerO.setPrefHeight(27.0);
+        playerO.setPrefWidth(40.0);
+        playerO.setText("O");
+        playerO.setTextFill(javafx.scene.paint.Color.WHITE);
+        playerO.setFont(new Font("Javanese Text", 20.0));
+        currentTurn.setAlignment(javafx.geometry.Pos.CENTER);
+        currentTurn.setLayoutX(69.0);
+        currentTurn.setLayoutY(344.0);
+        currentTurn.setPrefHeight(41.0);
+        currentTurn.setPrefWidth(281.0);
+        currentTurn.setText("X Turn");
+        currentTurn.setTextFill(javafx.scene.paint.Color.WHITE);
+        currentTurn.setFont(new Font("Javanese Text", 36.0));
+
+        playerX.setAlignment(javafx.geometry.Pos.CENTER);
+        playerX.setLayoutX(126.0);
+        playerX.setLayoutY(-1.0);
+        playerX.setPrefHeight(27.0);
+        playerX.setPrefWidth(40.0);
+        playerX.setText("X");
+        playerX.setTextFill(javafx.scene.paint.Color.WHITE);
+        playerX.setFont(new Font("Javanese Text", 20.0));
+
+        playerOneScore.setLayoutX(69.0);
+        playerOneScore.setLayoutY(52.0);
+        playerOneScore.setPrefHeight(27.0);
+        playerOneScore.setPrefWidth(20.0);
+        playerOneScore.setText("0");
+        playerOneScore.setTextFill(javafx.scene.paint.Color.WHITE);
+        playerOneScore.setFont(new Font("Engravers MT", 36.0));
+
+        playerTwoScore.setLayoutX(281.0);
+        playerTwoScore.setLayoutY(52.0);
+        playerTwoScore.setPrefHeight(27.0);
+        playerTwoScore.setPrefWidth(20.0);
+        playerTwoScore.setText("0");
+        playerTwoScore.setTextFill(javafx.scene.paint.Color.WHITE);
+        playerTwoScore.setFont(new Font("Engravers MT", 36.0));
+
+        scoreSeperator2.setAlignment(javafx.geometry.Pos.CENTER);
+        scoreSeperator2.setLayoutX(183.0);
+        scoreSeperator2.setLayoutY(3.0);
+        scoreSeperator2.setText(":");
+        scoreSeperator2.setTextFill(javafx.scene.paint.Color.WHITE);
+        scoreSeperator2.setFont(new Font(36.0));
+
+        recordGame2.setLayoutX(55.0);
+        recordGame2.setLayoutY(471.0);
+        recordGame2.setMnemonicParsing(false);
+        recordGame2.setPrefHeight(46.0);
+        recordGame2.setPrefWidth(191.0);
+        recordGame2.setStyle("-fx-background-color: linear-gradient(to right, #373b44, #4286f4);;");
+        recordGame2.setText("Record Game");
+        recordGame2.setTextFill(javafx.scene.paint.Color.WHITE);
+        recordGame2.setFont(new Font("Lucida Calligraphy Italic", 20.0));
+        ScreenMultiMode.getChildren().add(MultiGameImage);
+        ScreenMultiMode.getChildren().add(chatArea);
+        ScreenMultiMode.getChildren().add(messageField);
+        ScreenMultiMode.getChildren().add(sendMsg);
+        ScreenMultiMode.getChildren().add(btn1);
+        ScreenMultiMode.getChildren().add(btn2);
+        ScreenMultiMode.getChildren().add(btn3);
+        ScreenMultiMode.getChildren().add(btn4);
+        ScreenMultiMode.getChildren().add(btn5);
+        ScreenMultiMode.getChildren().add(btn6);
+        ScreenMultiMode.getChildren().add(btn7);
+        ScreenMultiMode.getChildren().add(btn8);
+        ScreenMultiMode.getChildren().add(btn9);
+        ScreenMultiMode.getChildren().add(exitGame);
+        ScreenMultiMode.getChildren().add(playerOneName);
+        ScreenMultiMode.getChildren().add(playerTwoName);
+        ScreenMultiMode.getChildren().add(playerO);
+        ScreenMultiMode.getChildren().add(currentTurn);
+        ScreenMultiMode.getChildren().add(playerX);
+        ScreenMultiMode.getChildren().add(playerOneScore);
+        ScreenMultiMode.getChildren().add(playerTwoScore);
+        ScreenMultiMode.getChildren().add(scoreSeperator2);
+        ScreenMultiMode.getChildren().add(recordGame2);
+        return ScreenMultiMode;
+    }
+
+    public void messageHandelr(JSONObject message) {
+        System.out.println(" client messageHandelr "+message);
+        switch ((String) message.get("request")) {
+            case Request.LOGIN:
+                Player p = convert.fromJsonToPlayer(message);
+                login(p);
+                break;
+            case Request.LOGOUT:
+                logout(convert.fromJsonToPlayer(message));
+                break;
+            case Request.PlAYER_LIST:
+                playlist(convert.fromJSONArrayToPlayerList((JSONArray) message.get("playersList")));
+                break;
+            case Request.SIGNUP:
+                signup(convert.fromJsonToPlayer(message));
+                break;
+            case Request.GAME_INVITATION:
+                checkGameRespond(message);
+                break;
+            case Request.GAME_INVITATION_RESPOND:
+                generateAlertToAskUserForRespond(message);
+                break;
+            case Request.GET_RECORDEDGAME:
+                loadOldPosition(message);
+                break;
+            case Request.RECEVE_GAME_SYMBOL:
+                System.out.println("recive symbol"+message);
+                receveMySymbol(message);
+                break;
+            case Request.GAME_MOVE:
+            case Request.GAME_PLAYAGAIN:
+            case Request.Chat_Message:
+            case Request.RECORD_GAME:
+            case Request.END_GAME:
+                System.out.println("forwardgame reqq"+message);
+                forwardGameRequest(message);
+                break;
+        }
+    }
+
+    private void loadOldPosition(JSONObject meesage) {
+
+        Game newGame = convert.fromJsonWithArrayToGame(meesage, convert.fromJsonArrayToRecordedGame((JSONArray) meesage.get("recordedPosition")));
+        setRecordedPosition(newGame.getRecordedGamePosition());
+        xName = newGame.getPlayerX();
+        oName = newGame.getPlayerO();
+        isNameSetUp = true;
 
     }
 
-    public void login(JSONObject message) {
-        
-        Player newPlayer = convert.fromJsonToPlayer(message,
-                                convert.fromJSONArrayToPlayerList((JSONArray) message.get("playersList")));
+    private void receveMySymbol(JSONObject obj) {
 
-        if (newPlayer.getRespond().equals(Respond.SUCCESS)) {
+        gameRequest = convert.fromJsonToGame(obj);
+        mySymbol = gameRequest.getNextMove();
+        Platform.runLater(
+                    () -> {
+                        ScreenMultiMode().getChildren().clear();
+                    }
+            );
+            Platform.runLater(
+                    () -> {
+                        scene.setRoot(ScreenMultiMode());
+                    }
+            );
+    }
 
+    private void forwardGameRequest(JSONObject obj) {
+        forwardedGameRequest = convert.fromJsonToGame(obj);
+        Game gameMove = forwardedGameRequest;
 
+        Platform.runLater(() -> {
+            receiveGameMove(gameMove);
+        });
+    }
+
+    public void checkGameRespond(JSONObject message) {
+
+        Player p = convert.fromJsonToPlayer(message);
+        if (p.getRespond().equals(Respond.SUCCESS)) {
+            sendGameMove(Request.START_GAME);
+           
+        } else {
+            Platform.runLater(() -> {
+                alertRejection.showAndWait();
+            });
+        }
+
+    }
+
+    public void generateAlertToAskUserForRespond(JSONObject message) {
+        Player p3 = convert.fromJsonToPlayer(message);
+
+        alertForRespond.setTitle("Play invitation " + p3.getUsername());
+        alertForRespond.setContentText("Do you want to play?");
+        Platform.runLater(() -> {
+
+            alertForRespond.showAndWait().ifPresent(type -> {
+
+                if (type == okButton) {
+                    p3.setRespond(Respond.SUCCESS);
+                    obj = convert.fromPlayerToJson(p3);
+                    outStream.println(obj.toString());
+                    xName = p3.getUsername();
+                    oName = getusername();
+                } else {
+                    p3.setRespond(Respond.FAILURE);
+                    obj = convert.fromPlayerToJson(p3);
+                    outStream.println(obj.toString());
+                }
+
+            });
+
+        });
+
+    }
+
+    public void login(Player newPalyer) {
+        if (newPalyer.getRespond().equals(Respond.SUCCESS)) {
             Platform.runLater(() -> {
                 ScreenThree().getChildren().clear();
             });
             Platform.runLater(() -> {
                 logInBtn1.getScene().setRoot(ScreenThree());
             });
-
         } else {
             Platform.runLater(() -> alertWrongLogIn1.showAndWait());
 
@@ -1530,9 +2269,7 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
             Platform.runLater(() -> {
                 signupBtn2.getScene().setRoot(ScreenOne());
             });
-
         } else {
-            System.out.println("else" + p.getRespond());
             Platform.runLater(() -> {
                 alertUserExists.showAndWait();
             });
@@ -1540,12 +2277,7 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         }
     }
 
-    public void logout(JSONObject message) {
-         Player p = convert.fromJsonToPlayer(message,
-                                convert.fromJSONArrayToPlayerList((JSONArray) message.get("playersList")));
-
-        System.out.println("Logout function: " + p.getRespond());
-
+    public void logout(Player p) {
         if (p.getRespond().equals(Respond.SUCCESS)) {
 
             Platform.runLater(() -> {
@@ -1554,7 +2286,6 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
             Platform.runLater(() -> {
                 logOutBtn3.getScene().setRoot(ScreenOne());
             });
-            System.out.println("User logout successfully: " + p.getRespond());
         } else {
             alertWrongLogout1 = new Alert(Alert.AlertType.ERROR);
             alertWrongLogout1.setTitle("Logout ");
@@ -1565,72 +2296,29 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         }
     }
 
+    public void multiMode(Player p) {
+        if (p.getRespond().equals(Respond.SUCCESS)) {
+
+            Platform.runLater(() -> {
+                ScreenMultiMode().getChildren().clear();
+            });
+            Platform.runLater(() -> {
+                playBtn4.getScene().setRoot(ScreenMultiMode());
+            });
+        } else {
+            Platform.runLater(() -> {
+                alertUserExists.showAndWait();
+            });
+
+        }
+
+    }
+
     /**
-     * ***********Game methods**************************
+     * ********************************** Single Mode Game
+     * methods*******************************************************************************
      */
-    String checkWinner() {
-        String winner = null;
-        //winning conditions
-        List topRow = Arrays.asList(1, 2, 3);
-        List midRow = Arrays.asList(4, 5, 6);
-        List botRow = Arrays.asList(7, 8, 9);
-
-        List liftCol = Arrays.asList(1, 4, 7);
-        List midtCol = Arrays.asList(2, 5, 8);
-        List righCol = Arrays.asList(3, 6, 9);
-
-        List cross1 = Arrays.asList(1, 5, 9);
-        List cross2 = Arrays.asList(3, 5, 7);
-
-        List<List> winning = new ArrayList<List>();
-
-        winning.add(topRow);
-        winning.add(midRow);
-        winning.add(botRow);
-        winning.add(liftCol);
-        winning.add(midtCol);
-        winning.add(righCol);
-        winning.add(cross1);
-        winning.add(cross2);
-
-        for (List winningComp : winning) {
-
-            if (playerXpositions.containsAll(winningComp)) {
-                winner = "X";
-                playerXpositions.clear();
-                playerXpositions.addAll(winningComp);
-            } else if (playerOpositions.containsAll(winningComp)) {
-                winner = "O";
-                playerOpositions.clear();
-                playerOpositions.addAll(winningComp);
-            } else if (playerXpositions.size() + playerOpositions.size() == 9) {
-                winner = "tie";
-            }
-        }
-        return winner;
-    }
-
-    void highLightWinner(ArrayList<Integer> winner) {
-        // will take the winner position and highlight each button equl to this position
-
-        for (int i = 0; i < 9; i++) {
-            if (i + 1 == (int) winner.get(0) || i + 1 == (int) winner.get(1) || i + 1 == (int) winner.get(2)) {
-                buttons[i].setStyle("-fx-background-color: #128dba");
-            }
-        }
-    }
-
-    String[] recordPositions() {
-        // save the value of each buttons of the 9'th, X or O or bull
-        recordedPositions = new String[9];
-        for (int index = 0; index < 9; index++) {
-            recordedPositions[index] = buttons[index].getText();
-        }
-        return recordedPositions;
-    }
-
     void drawOldPositions(String[] positions) {
-        // will append symbol, and disable  buttons according to  last saved
         for (int index = 0; index < 9; index++) {
 
             if (positions[index] != null) {
@@ -1643,8 +2331,6 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
                 }
             }
         }
-
-        //change the symbol to the right turn
         if (playerXpositions.size() > playerOpositions.size()) {
             symbol = "O";
             playComputerMove();
@@ -1652,22 +2338,9 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
 
     }
 
-    void drawTie() {
-        for (Button btn : buttons) {
-            btn.setText("Tie");
-        }
-    }
-
-    void drawXO() {
-        for (String str : recordedPositions) {
-            System.out.println(str);
-        }
-    }
-
     int computerMove() {
         Random random = new Random();
         int cpuPosition = random.nextInt(9) + 1;
-        // make sure that this position is not taken before
         while (playerXpositions.contains(cpuPosition) || playerOpositions.contains(cpuPosition)) {
             cpuPosition = random.nextInt(9) + 1;
         }
@@ -1675,7 +2348,7 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
     }
 
     void drawCpuMove(int movePosition) {
-        movePosition--; // to indecate the index of the button
+        movePosition--;
         for (int index = 0; index < 9; index++) {
             if (index == movePosition) {
                 buttons[index].setText(symbol);
@@ -1710,10 +2383,7 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
         playerOpositions.clear();
         for (Button btn : buttons) {
             btn.setText("");
-            //btn.setStyle("-fx-background-color: #D2691E ");
             btn.setDisable(false);
-
-            // reset the old style
             Button tmpButton = new Button();
             btn.setStyle(tmpButton.getStyle());
         }
@@ -1732,27 +2402,127 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
     private void updateScore() {
         playerScore.setText(String.valueOf(playerScoreCounter));
         computerScore.setText(String.valueOf(computerScoreCounter));
-        recordGame.setText("Play Again!");
+        recordGame2.setText("Play Again!");
+        recordGameFlag = false;
     }
 
+    private void updateScoreMultiMode() {
+        playerOneScore.setText(Integer.toString(playerXcounter));
+        playerTwoScore.setText(Integer.toString(playerOcounter));
+        sendGameMove(Request.UPDATE_SCORE);
+        this.recordGame2.setText("Play Again!");
+        this.recordGameFlag = false;
+    }
+
+    /**
+     * *******************************Multi*******************************************************************
+     */
+    private String checkWinner2() {
+        String winner = "";
+        List topRow = Arrays.asList(1, 2, 3);
+        List midRow = Arrays.asList(4, 5, 6);
+        List botRow = Arrays.asList(7, 8, 9);
+
+        List liftCol = Arrays.asList(1, 4, 7);
+        List midtCol = Arrays.asList(2, 5, 8);
+        List righCol = Arrays.asList(3, 6, 9);
+
+        List cross1 = Arrays.asList(1, 5, 9);
+        List cross2 = Arrays.asList(3, 5, 7);
+
+        List<List> winning = new ArrayList<List>();
+
+        winning.add(topRow);
+        winning.add(midRow);
+        winning.add(botRow);
+        winning.add(liftCol);
+        winning.add(midtCol);
+        winning.add(righCol);
+        winning.add(cross1);
+        winning.add(cross2);
+
+        for (List winningComp : winning) {
+
+            if (playerXpositions.containsAll(winningComp)) {
+                winner = Game.X_MOVE;
+                playerXpositions.clear();
+                playerXpositions.addAll(winningComp);
+            } else if (playerOpositions.containsAll(winningComp)) {
+                winner = Game.O_MOVE;
+                playerOpositions.clear();
+                playerOpositions.addAll(winningComp);
+            } else if (playerXpositions.size() + playerOpositions.size() == 9) {
+                winner = Game.DRAW;
+            }
+        }
+        return winner;
+    }
+
+    /**
+     * *******************************Multi*******************************************************************
+     */
+    private void highLightWinner2(ArrayList<Integer> winner) {
+
+        for (int i = 0; i < 9; i++) {
+            if (i + 1 == (int) winner.get(0) || i + 1 == (int) winner.get(1) || i + 1 == (int) winner.get(2)) {
+                buttons[i].setStyle("-fx-background-color: #128dba");
+            }
+        }
+    }
+
+    /**
+     * *******************************Multi*******************************************************************
+     */
+    private void recordPositions2() {
+
+        recordedPositions = new String[9];
+        for (int index = 0; index < 9; index++) {
+            recordedPositions[index] = buttons[index].getText();
+        }
+    }
+
+    /**
+     * *******************************Multi*******************************************************************
+     */
+    private void drawTie2() {
+
+        for (Button btn : buttons) {
+            btn.setText(Game.DRAW);
+            btn.setDisable(true);
+        }
+
+    }
+
+    /**
+     * *******************************Multi*******************************************************************
+     */
+    private void drawXO2() {
+        for (String str : recordedPositions) {
+        }
+    }
+
+    /**
+     * *******************************Multi*******************************************************************
+     */
+    /**
+     * *******************************Multi*******************************************************************
+     *
+     * /**
+     * *******************************Multi*******************************************************************
+     */
     @Override
     public void start(Stage primaryStage) {
 
         try {
             Parent root = ScreenOne();
-            Scene scene = new Scene(root);
+            scene = new Scene(root);
 
             try {
-                //creating the image object
-                InputStream stream = new FileInputStream("/media/mohamed/4CEA8043EA802B72/ITI/java/pro2021/Tic-Tac-Toe/XoPro1/src/xopro1/xo.png");
+                InputStream stream = new FileInputStream("ProjectImg/xo.png");
                 Image image = new Image(stream);
-                //Creating the image view
                 ImageView imageView = new ImageView();
-                //Setting image to the image view
                 primaryStage.getIcons().add(image);
             } catch (FileNotFoundException ex) {
-
-                System.out.println("Cann't load background image in start method");
             }
 
             primaryStage.setScene(scene);
@@ -1760,63 +2530,34 @@ alertForRespond.getButtonTypes().setAll(okButton, noButton);
             primaryStage.setTitle("Tic Tac Toe");
             primaryStage.show();
         } catch (NullPointerException ex) {
-            System.out.println("Error");
         }
     }
 
     @Override
     public void stop() {
 
-//        p.setRequest(Request.DISCONNECT);
-        try {
-
-            obj = convert.fromPlayerToJson(p);
-            outStream.println(obj.toString());
-//            writeObj.outStreamect(p);
-            socket.close();
-//            readObj.close();
-            outStream.close();
-            System.out.println("Sent a disconnection request to the server");
-        } catch (IOException ex) {
-            System.out.println("problem in stop method ");
-
+        p.setRequest(Request.DISCONNECT);
+        p.setUsername(userText1.getText());
+        if (socket != null) {
+            startAPP = false;
+            try {
+                obj = convert.fromPlayerToJson(p);
+                outStream.println(obj.toString());
+                socket.close();
+                outStream.close();
+                inStream.close();
+            } catch (IOException ex) {
+                Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
+
         thread.stop();
 
     }
 
-    public void playlist(JSONObject message)  {
-        Player p = convert.fromJsonToPlayer(message,
-                                convert.fromJSONArrayToPlayerList((JSONArray) message.get("playersList")));
-        
-    
-        ASD  =  p.getPlayersList()  ;
-        
-        
-    }
-    
-    
-    
-    public void checkGameRespond(JSONObject message)
-    {
-        
-       Player p = convert.fromJsonToPlayer(message,
-                                convert.fromJSONArrayToPlayerList((JSONArray) message.get("playersList")));
-        if (p.getRespond().equals(Respond.SUCCESS))    
-        {
-            System.out.println("start game function and run here");  
-                //---------
-        }
-        else 
-        {
-            
-           System.out.println(" request refused alert ");  
+    public void playlist(ArrayList<Player> arrayOfPlayers) {
 
-            
-        }
-        
-        
-        
+        ASD = arrayOfPlayers;
     }
     
    public void  generateAlertToAskUserForRespond(JSONObject message)

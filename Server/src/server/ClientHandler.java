@@ -7,14 +7,12 @@ package server;
 
 import libs.*;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.simple.*;
@@ -37,12 +35,13 @@ public class ClientHandler extends Thread implements Serializable {
     private PrintStream outStream;
     public static HashMap<String, ClientHandler> connectedPlayers = new HashMap<String, ClientHandler>();
     public static Game gameHandlerRequest = null;
+    private GameHandler gameHandel;
+    private String playerOneName;
+    private String playerTwoName;
 
     ClientHandler(Socket socket) {
 
         try {
-
-            System.out.println("Player connected");
             database = new XoDataBase();
             outStream = new PrintStream(socket.getOutputStream());
             inStream = new DataInputStream(socket.getInputStream());
@@ -53,8 +52,6 @@ public class ClientHandler extends Thread implements Serializable {
             start();
 
         } catch (IOException ex) {
-            System.out.println(ex.getMessage());
-            System.out.println("Clinet socket is not work");
             connected = false;
         }
     }
@@ -66,12 +63,12 @@ public class ClientHandler extends Thread implements Serializable {
             try {
 
                 obj = (JSONObject) parser.parse(inStream.readLine());
-                System.out.println("line 68 : " + obj);
                 messageHandler(obj);
 
 
             } catch (IOException ex) {
-                System.out.println(ex.getMessage());
+                this.stop();
+
             } catch (ParseException ex) {
                 Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -100,36 +97,60 @@ public class ClientHandler extends Thread implements Serializable {
                 startGame();
                 break;
             case Request.END_GAME:
-                endGame();
+                endGame(message);
             case Request.GAME_MOVE:
             case Request.GAME_PLAYAGAIN:
             case Request.Chat_Message:
-                System.out.println(message);
                 sendRequestToGameHandler(message);
                 break;
             case Request.RECORD_GAME:
-                System.out.println(message);
                 recordGamePosition(message);
                 break;
             case Request.GET_RECORDEDGAME:
+                sendBackOldRecordedPosition(message);
                 break;
-            
+
+            case Request.DISCONNECT:
+                disconnect(message);
+                break;
+            case Request.UPDATE_SCORE:
+                updateScore(message);
+                break;
+            case Request.STOPGAME:
+                gameHandel.disConnect();
+                break;
+                
+
         }
     }
 
-    private void startGame() {
-        System.out.println("Sending start game to game handler");
-        new GameHandler(this);
+    private void sendBackOldRecordedPosition(JSONObject message) {
+        JSONArray positions = new JSONArray();
+
     }
 
-    private void endGame() {
+    private void changePlayerState(){
+       
+       database.updateStatus(Status.ONLINE,playerOneName);
+       database.updateStatus(Status.ONLINE,playerTwoName);
+        
+        updatePlayerList();
+    }
 
+    private void startGame() {
+        gameHandel = new GameHandler(this);
+    }
+
+    private void endGame(JSONObject message) {
+        sendRequestToGameHandler(message);
+        changePlayerState();
+//        gameHandel.disConnect();
+        
     }
 
     private void sendRequestToGameHandler(JSONObject message) {
 
         Game newGame = convert.fromJsonToGame(message);
-        System.out.println("134: Sending  gameMove to game handler");
         gameHandlerRequest = newGame;
 
     }
@@ -147,12 +168,10 @@ public class ClientHandler extends Thread implements Serializable {
     private void recordGamePosition(JSONObject obj) {
 
         Game game = convert.fromJsonWithArrayToGame(obj, convert.fromJsonArrayToRecordedGame((JSONArray) obj.get("recordedPosition")));
-        System.out.println("send positions to database");
 
         if (isGamePositionEmpty(game.getRecordedGamePosition())) {
             game.setRespond(Respond.FAILURE);
             game.setRecordedGamePosition(null);
-            System.out.println("set respond to  " + game.getRespond());
 
             sendMsg(convert.fromGameToJson(game).toString());
         } else {
@@ -164,7 +183,6 @@ public class ClientHandler extends Thread implements Serializable {
              */
             game.setRespond(Respond.SUCCESS);
             game.setRecordedGamePosition(null);
-            System.out.println("set respond to  " + game.getRespond());
 
             sendMsg(convert.fromGameToJson(game).toString());
         }
@@ -180,99 +198,105 @@ public class ClientHandler extends Thread implements Serializable {
         return isEmpty;
     }
 
-    
-    private String getPlayerStatus(String username){
+    private String getPlayerStatus(String username) {
         String status = "";
         for (Player player : players) {
             if (player.getUsername().equalsIgnoreCase(username)) {
-                    status  = player.getStatus();
+                status = player.getStatus();
             }
         }
-        
+
         return status;
     }
     
-    private int getPlayerIndex(String username){
-        int index = -1;
-        for(Player player: players){
-            if(player.getUsername().equalsIgnoreCase(username)){
-                index++;
-            }
-        }
-        
-        return index;
-    }
+//     private int getPlayerScore(String username) {
+//        int score = 0;
+//        for (Player player : players) {
+//            if (player.getUsername().equalsIgnoreCase(username)) {
+//                score = player.getScour();
+//            }
+//        }
+//
+//        return score;
+//    }
     
-    private  ClientHandler x  ; 
-    private void  gameInvitation(JSONObject message){
-        
-       Player senderPlayer = convert.fromJsonToPlayer(message);
-       
-       if(getPlayerStatus(senderPlayer.getDestination()).equalsIgnoreCase(Status.ONLINE)){
-           
-            senderPlayer.setRequest(Request.GAME_INVITATION_RESPOND); 
-//            x = connectedPlayers.get(senderPlayer.getDestination())  ;
-//            x.sendMsg(senderPlayer); 
-           connectedPlayers.get(senderPlayer.getDestination()).sendMsg(senderPlayer);
-            
-       }else{
-           
-             senderPlayer.setRespond(Respond.FAILURE);
-             senderPlayer.setRespond(Request.GAME_INVITATION);
-             sendMsg(senderPlayer);
+    private int getPlayerIndex(String username) {
+        int plyerIndex = -1;
+        for (int index = 0; index < players.size() ; index++) {
 
+            if (players.get(index).getUsername().equals(username)) {
+
+                return index;  
+            }
+            
+        }
+
+        return plyerIndex;
+    }
+
+    private void gameInvitation(JSONObject message) {
+
+        Player senderPlayer = convert.fromJsonToPlayer(message);
+
+        if (getPlayerStatus(senderPlayer.getDestination()).equalsIgnoreCase(Status.ONLINE) && 
+                !senderPlayer.getDestination().equalsIgnoreCase(senderPlayer.getUsername()) ) {
+
+            senderPlayer.setRequest(Request.GAME_INVITATION_RESPOND);
+            connectedPlayers.get(senderPlayer.getDestination()).sendMsg(senderPlayer);
+            playerOneName = senderPlayer.getUsername();
+            playerTwoName = senderPlayer.getDestination();
+
+        } else {
+
+            senderPlayer.setRespond(Respond.FAILURE);
+            senderPlayer.setRespond(Request.GAME_INVITATION);
+            sendMsg(senderPlayer);
         }
     }
-    
-    private void gameResponse(JSONObject message){
-        
-        
-        // this is the same object send from the gameInvitation sender,
-        // so the playerObj.getUsername -> the sender Username
-        // and the playerObj.getDestination -> the destination player
-        
+
+    private void gameResponse(JSONObject message) {
+
         Player destinationPlayer = convert.fromJsonToPlayer(message);
-        
-        if(destinationPlayer.getRespond().equals(Respond.SUCCESS)){
-            
+
+        if (destinationPlayer.getRespond().equals(Respond.SUCCESS)) {
             destinationPlayer.setRequest(Request.GAME_INVITATION);
             destinationPlayer.setRespond(Respond.SUCCESS);
-         destinationPlayer.setStatus(Status.PLAYING);
-          System.out.println("send back to SENDER "+ convert.fromPlayerToJson(destinationPlayer).toString());
-
+            database.updateStatus(Status.PLAYING, destinationPlayer.getUsername());
 
             connectedPlayers.get(destinationPlayer.getUsername()).sendMsg(destinationPlayer);
             players.get(getPlayerIndex(destinationPlayer.getUsername())).setStatus(Status.PLAYING);
-//            updatePlayerList();
-            // we need to send again for the destinationPlayer a Game Invitation Respond == success
-            // to join the game with
-            destinationPlayer.setRequest(Request.GAME_INVITATION);
-            destinationPlayer.setRespond(Respond.SUCCESS);
-            destinationPlayer.setStatus(Status.PLAYING);
-            System.out.println("send back to destination "+ convert.fromPlayerToJson(destinationPlayer).toString());
-        
-          connectedPlayers.get(destinationPlayer.getDestination()).sendMsg(destinationPlayer); 
 
-            players.get(getPlayerIndex(destinationPlayer.getDestination())).setStatus(Status.PLAYING);
+            try {
+               
+                this.sleep(1000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
+            }
+//            destinationPlayer.setRequest(Request.GAME_INVITATION);
+//            destinationPlayer.setRespond(Respond.SUCCESS);
+
+            database.updateStatus(Status.PLAYING, destinationPlayer.getDestination());
+
+            connectedPlayers.get(destinationPlayer.getDestination()).sendMsg(destinationPlayer);
+
+            
+            playerTwoName = destinationPlayer.getDestination();
+
+            
             updatePlayerList();
-                    
-        }else{
+
+        } else {
             destinationPlayer.setRequest(Request.GAME_INVITATION);
             destinationPlayer.setRespond(Respond.FAILURE);
             connectedPlayers.get(destinationPlayer.getUsername()).sendMsg(destinationPlayer);
         }
-        
+
     }
-
-
-
 
     public void stopClientHandler() {
 
-//        startFlag = false;
-//        for (ClientHandler client : clients) {
-//            logout(client.UserName);
-//        }
+        this.connected = false;
+        this.stop();
     }
 
     public void sendMsg(Player player) {
@@ -284,38 +308,49 @@ public class ClientHandler extends Thread implements Serializable {
         System.out.println("line 282 clinet handeler send message "+obj); 
         
         this.outStream.println(obj);
-        
     }
 
     public void sendMsgUpdateplayer(Player player, String request) {
 
         player.setRequest(request);
         obj = convert.fromPlayerToJson(player, convert.fromPlayerListToJSONArray(player.getPlayersList()));
-        System.out.println("line 291 "+ obj);
-            if (obj == null )
-            {
-                
-                System.out.println("tring to send null obj ");
-            }
-            else
-            {
-                        this.outStream.println(obj);
+        if (obj == null) {
 
-            }
+        } else {
+            this.outStream.println(obj);
+
+        }
 
     }
 
-    public void sendMsg(String game) {
+    private void updateScore(JSONObject game) {
+       
+        Game newGame = convert.fromJsonToGame(game);
+        if (newGame.getWinner().equalsIgnoreCase(Game.X_MOVE)) {
+            
+            int playerScore = players.get(getPlayerIndex(newGame.getPlayerX())).getScour();
 
+            playerScore++;
+            database.updateScore(playerScore, newGame.getPlayerX());
+        } else if (newGame.getWinner().equalsIgnoreCase(Game.O_MOVE)) {
+
+            int playerScore = players.get(getPlayerIndex(newGame.getPlayerO())).getScour();
+
+            playerScore++;
+            database.updateScore(playerScore, newGame.getPlayerO()
+            );
+        }
+        updatePlayerList();
+    }
+
+    public void sendMsg(String game) {
         this.outStream.println(game);
     }
 
     private void login(JSONObject message) {
         Player newPlayer = convert.fromJsonToPlayer(message);
-            System.out.println("line 283" +newPlayer.getRequest());
         Player isExist = database.check_username_password(newPlayer.getUsername(), newPlayer.getPassword());
         if (isExist.getRespond().equals(Respond.SUCCESS)) {
-               
 
             int isOnline = database.updateStatus(Status.ONLINE, newPlayer.getUsername());
             if (isOnline == 1) {
@@ -335,39 +370,20 @@ public class ClientHandler extends Thread implements Serializable {
     }
 
     private void updatePlayerList() {
-        ArrayList<Player> unTrackedPlayers = new ArrayList<Player>();
         players.clear();
         players = database.selectplayer();
         PlayersList.setPlayerList(players);
         for (Player player : players) {
-            System.out.println("Player :" + player.getUsername() + " Status= " + player.getStatus() + " score " + player.getScour());
             if (player.getStatus().equals(Status.ONLINE)) {
                 player.setPlayerList(PlayersList.getPlayersList());
                 ClientHandler user = connectedPlayers.get(player.getUsername());
                 if (user != null) {
-                    System.out.println("Line 332 : " + connectedPlayers.get(player.getUsername()));
                     user.sendMsgUpdateplayer(player, Request.PlAYER_LIST);
-                    //                    player
-                   // players.indexOf(player);
-                   //unTrackedPlayers.add();
+                } else {
+                    database.updateStatus(Status.OFFLINE, player.getUsername());
                 }
-                /*
-                
-                else {
-
-                }
-                */
             }
-            
         }
-//        logout(unTrackedPlayers);
-    }
-
-    private void logout(ArrayList<Player> players) {
-        for (Player player : players) {
-            int isOffline = database.updateStatus(Status.OFFLINE, player.getUsername());
-        }
-        updatePlayerList();
     }
 
     private void logout(JSONObject message) {
@@ -376,18 +392,10 @@ public class ClientHandler extends Thread implements Serializable {
         if (isOffline == 1) {
             Boolean isRemoved = connectedPlayers.remove(newPlayer.getUsername(), this);
             if (isRemoved) {
-                try {
-                    newPlayer.setRespond(Respond.SUCCESS);
-                    newPlayer.setStatus(Status.OFFLINE);
-                    sendMsg(newPlayer);
-                    updatePlayerList();
-                    connected = false;
-                    this.inStream.close();
-                    this.outStream.close();
-                    this.stop();
-                } catch (IOException ex) {
-                    System.out.println(ex.getMessage());
-                }
+                newPlayer.setRespond(Respond.SUCCESS);
+                newPlayer.setStatus(Status.OFFLINE);
+                sendMsg(newPlayer);
+                updatePlayerList();
             } else {
                 newPlayer.setRespond(Respond.FAILURE);
                 sendMsg(newPlayer);
@@ -396,6 +404,19 @@ public class ClientHandler extends Thread implements Serializable {
             newPlayer.setRespond(Respond.FAILURE);
             sendMsg(newPlayer);
         }
+    }
+
+    private void disconnect(JSONObject message) {
+        Player newPlayer = convert.fromJsonToPlayer(message);
+        database.updateStatus(Status.OFFLINE, newPlayer.getUsername());
+        try {
+            connected = false;
+            inStream.close();
+            outStream.close();
+            updatePlayerList();
+        } catch (IOException ex) {
+        }
+
     }
 
     private void sginUp(JSONObject message) {
@@ -411,6 +432,7 @@ public class ClientHandler extends Thread implements Serializable {
             database.sign_up(newPlayer.getFirstname(), newPlayer.getLastname(), newPlayer.getUsername(), newPlayer.getPassword());
             newPlayer.setRespond(Respond.SUCCESS);
             sendMsg(newPlayer);
+            updatePlayerList();
         }
 
     }
