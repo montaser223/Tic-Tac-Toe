@@ -193,9 +193,16 @@ public class ClientHandler extends Thread implements Serializable {
 
     private int getPlayerIndex(String username) {
         int index = -1;
+        players.forEach(action -> {
+            if (username.equals(action.getUsername())) {
+                int index2;
+                index2 = players.indexOf(action);
+            }
+        });
         for (Player player : players) {
+            index++;
             if (player.getUsername().equalsIgnoreCase(username)) {
-                index++;
+                return index;
             }
         }
 
@@ -232,7 +239,7 @@ public class ClientHandler extends Thread implements Serializable {
             connectedPlayers.get(destinationPlayer.getUsername()).sendMsg(destinationPlayer);
             players.get(getPlayerIndex(destinationPlayer.getUsername())).setStatus(Status.PLAYING);
             try {
-               
+
                 this.sleep(3000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(ClientHandler.class.getName()).log(Level.SEVERE, null, ex);
