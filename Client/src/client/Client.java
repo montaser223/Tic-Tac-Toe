@@ -2634,12 +2634,13 @@ public class Client extends Application implements Serializable {
                 socket.close();
                 outStream.close();
                 inStream.close();
+                thread.stop();
             } catch (IOException ex) {
                 Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
-        thread.stop();
+        
 
     }
 

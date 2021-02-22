@@ -44,7 +44,7 @@ public class XoDataBase implements Serializable {
         try {
                     DriverManager.registerDriver(new com.mysql.jdbc.Driver());
 
-                    con = DriverManager.getConnection("jdbc:mysql://localhost:3306/xo_db", "java", "java");
+                    con = DriverManager.getConnection("jdbc:mysql://localhost:3306/xo_db", "root", "");
                     
             String q = new String("select username from player where username='Computre'");
 
