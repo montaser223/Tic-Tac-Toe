@@ -118,7 +118,7 @@ public class ServerGUI extends Application {
     public void init() {
 
         root = new AnchorPane();
-
+        s = new Server();
         startAndStopButton = new Button("Start");
         database = new XoDataBase();
         tableView = new TableView();
@@ -181,7 +181,7 @@ public class ServerGUI extends Application {
             public void handle(ActionEvent event) {
 
                 if (startFlag) {
-                    s = new Server();
+                    
                     s.startServerX();
                     startAndStopButton.setLayoutX(357.0);
                     startAndStopButton.setLayoutY(450.0);
