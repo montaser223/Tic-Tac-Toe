@@ -81,17 +81,16 @@ public class Client extends Application implements Serializable {
     int playerOcounter = 0;
     private static String[] recordedPositions;
     Alert alertForRespond = new Alert(Alert.AlertType.CONFIRMATION);
-    
+
     Alert alertForOldGameRespond = new Alert(Alert.AlertType.CONFIRMATION);
-    
-    
+
     ButtonType okButton = new ButtonType("Yes", ButtonBar.ButtonData.YES);
     ButtonType noButton = new ButtonType("no", ButtonBar.ButtonData.NO);
-    
+
     ButtonType resumeGameButton = new ButtonType("Resume Game", ButtonBar.ButtonData.YES);
     ButtonType StartNewGameButton = new ButtonType("Start New Game", ButtonBar.ButtonData.YES);
     ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.NO);
-    
+
     Scene scene;
     Game gameMessages;
     Game myGame;
@@ -101,8 +100,6 @@ public class Client extends Application implements Serializable {
     private boolean recordGameFlag;
     private Thread gamethread;
 
-    
-
     private Game getforwardGameRequest() {
         Game newGameRequest = forwardedGameRequest;
         forwardedGameRequest = null;
@@ -110,8 +107,6 @@ public class Client extends Application implements Serializable {
 
     }
     Thread th5;
-
-    
 
     private String checkWinner() {
         String winner = "";
@@ -148,7 +143,6 @@ public class Client extends Application implements Serializable {
                 playerOpositions.clear();
                 playerOpositions.addAll(winningComp);
             } else if (playerXpositions.size() + playerOpositions.size() == 9) {
-                System.out.println("Drawwwww");
                 winner = Game.DRAW;
             }
         }
@@ -170,13 +164,13 @@ public class Client extends Application implements Serializable {
         for (int index = 0; index < 9; index++) {
             recordedPositions[index] = buttons[index].getText();
         }
-        
+
     }
 
     private void drawOldPositionsMulti() {
         playerXpositions.clear();
         playerOpositions.clear();
-        
+
         for (int index = 0; index < 9; index++) {
 
             if (recordedPositions[index].equalsIgnoreCase(Game.X_MOVE)
@@ -200,11 +194,11 @@ public class Client extends Application implements Serializable {
         }
         if (playerXpositions.size() > playerOpositions.size()) {
             currentMove = Game.O_MOVE;
-        }else{
+        } else {
             currentMove = Game.X_MOVE;
         }
-        
-    } 
+
+    }
 
     private void resetBoard() {
 
@@ -256,7 +250,7 @@ public class Client extends Application implements Serializable {
 
     private void updateBoard(Long buttonsPosition) {
         if (mySymbol.equalsIgnoreCase(currentMove)) {
-            
+
             buttons[buttonsPosition.intValue() - 1].setDisable(true);
 
             if (currentMove.equalsIgnoreCase(Game.X_MOVE)) {
@@ -399,7 +393,7 @@ public class Client extends Application implements Serializable {
     private void sendChat() {
 
         gameMessages = new Game();
-        gameMessages.setMessage(" [ " + username +" ] "+" : "+ messageField.getText());
+        gameMessages.setMessage(" [ " + username + " ] " + " : " + messageField.getText());
         sendGameMessage(Request.Chat_Message);
         messageField.clear();
 
@@ -413,16 +407,8 @@ public class Client extends Application implements Serializable {
     }
 
     public static void setRecordedPosition(String[] oldGame) {
-        System.out.println("seting the old positions");
         recordedPositions = new String[9];
         recordedPositions = oldGame;
-        System.out.println("first time printing the old postions");
-//       for (int i = 0 ; i < recordedPositions.length ;i++ )
-//        {
-//             recordedPositions[i] = oldGame[i];
-//               System.out.println(oldGame[i]);
-//           }
-      
         newgame = false;
     }
 
@@ -444,14 +430,12 @@ public class Client extends Application implements Serializable {
         myGame.setPlayerO(oName);
         positions = convert.fromRecordedGamePositionTOJsonArray(recordedPositions);
         obj = convert.fromGameToJsonWithArray(myGame, positions);
-        System.out.println("send recorded position to server:  "+obj);
         this.outStream.println(obj.toString());
     }
 
     private void checkRecordGameRespond() {
         if (myGame.getRespond().equalsIgnoreCase(Respond.SUCCESS)) {
-            System.out.println("the server succefully record theses position");
-            drawXO();
+            // drawXO();
         } else if (myGame.getRespond().equalsIgnoreCase(Respond.FAILURE)) {
         }
     }
@@ -460,7 +444,6 @@ public class Client extends Application implements Serializable {
 
         sendGameMove(Request.END_GAME);
         resetBoard();
-
 
     }
 
@@ -652,71 +635,14 @@ public class Client extends Application implements Serializable {
         alertWrongLogIn1.setTitle("LogIn ");
         alertWrongLogIn1.setHeaderText(null);
         alertWrongLogIn1.setContentText("Invalid User Name or Password");
-        
+
         alertForRespond.getButtonTypes()
                 .setAll(okButton, noButton);
         alertForRespond.setHeaderText(null);
 
-        
         alertForOldGameRespond.getButtonTypes()
-                .setAll(StartNewGameButton, resumeGameButton,cancelButton);
+                .setAll(StartNewGameButton, resumeGameButton, cancelButton);
         alertForOldGameRespond.setHeaderText(null);
-
-        
-//        thread = new Thread(new Runnable() {
-//            
-//            @Override
-//            public void run() {
-//                
-//                while (startAPP) {
-//                    try {
-//                        JSONObject message = (JSONObject) parser.parse(inStream.readLine());
-//                        messageHandelr(message);
-//
-//                    } 
-//                    catch (NullPointerException ex) {
-//                        Platform.runLater(()->{alertServerNotConnected.showAndWait();});
-//                        startAPP = false;
-//                        Platform.runLater(() -> {
-//                        ScreenOne().getChildren().clear();
-//                            System.out.println("Thread should stoped..");
-//                        thread.stop();
-//                            try {
-//                                socket.close();
-//                                inStream.close();
-//                                outStream.close();
-//                            } catch (IOException ex1) {
-//                            }
-//                        
-//                    });
-//                    Platform.runLater(() -> {
-//                        scene.setRoot(ScreenOne());
-//                    });
-//
-//                    } 
-//                    catch (IOException ex) {
-////                        alertServerNotConnected.showAndWait();
-////                        System.out.println("cannot start app");
-//                        System.out.println(ex);
-//                        
-//                        startAPP = false;
-//                        thread.stop();
-//                            try {
-//                                socket.close();
-//                                inStream.close();
-//                                outStream.close();
-//                            } catch (IOException ex1) {
-//                            }
-//                    } 
-//                    catch (ParseException ex) {
-//                        Platform.runLater(()->{alertServerNotConnected.showAndWait();});
-//                        
-//                        startAPP = false;
-//                    }
-//                }
-//            }
-//        });
-//        thread.start();
     }
 
     /**
@@ -830,70 +756,71 @@ public class Client extends Application implements Serializable {
 
             @Override
             public void handle(ActionEvent event) {
-                   try {
+                try {
 
-                        socket = new Socket(InetAddress.getLocalHost(), 5005);
-                        inStream = new DataInputStream(socket.getInputStream());
-                        outStream = new PrintStream(socket.getOutputStream());
-                        startAPP = true;
-                        thread = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
+                    socket = new Socket(InetAddress.getLocalHost(), 5005);
+                    inStream = new DataInputStream(socket.getInputStream());
+                    outStream = new PrintStream(socket.getOutputStream());
+                    startAPP = true;
+                    thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
 
-                                    while (startAPP) {
+                            while (startAPP) {
+                                try {
+                                    JSONObject message = (JSONObject) parser.parse(inStream.readLine());
+                                    messageHandelr(message);
+
+                                } catch (NullPointerException ex) {
+                                    Platform.runLater(() -> {
+                                        alertServerNotConnected.showAndWait();
+                                    });
+                                    startAPP = false;
+                                    Platform.runLater(() -> {
+                                        ScreenOne().getChildren().clear();
+                                        thread.stop();
                                         try {
-                                            JSONObject message = (JSONObject) parser.parse(inStream.readLine());
-                                            messageHandelr(message);
-
-                                        } 
-                                        catch (NullPointerException ex) {
-                                            Platform.runLater(()->{alertServerNotConnected.showAndWait();});
-                                            startAPP = false;
-                                            Platform.runLater(() -> {
-                                            ScreenOne().getChildren().clear();
-                                                System.out.println("Thread should stoped..");
-                                            thread.stop();
-                                                try {
-                                                    socket.close();
-                                                    inStream.close();
-                                                    outStream.close();
-                                                } catch (IOException ex1) {
-                                                }
-
-                                        });
-                                        Platform.runLater(() -> {
-                                            scene.setRoot(ScreenOne());
-                                        });
-
-                                        } 
-                                        catch (IOException ex) {
-                    //                        alertServerNotConnected.showAndWait();
-                    //                        System.out.println("cannot start app");
-                                            System.out.println(ex);
-
-                                            startAPP = false;
-                                            thread.stop();
-                                                try {
-                                                    socket.close();
-                                                    inStream.close();
-                                                    outStream.close();
-                                                } catch (IOException ex1) {
-                                                }
-                                        } 
-                                        catch (ParseException ex) {
-                                            Platform.runLater(()->{alertServerNotConnected.showAndWait();});
-
-                                            startAPP = false;
+                                            socket.close();
+                                            inStream.close();
+                                            outStream.close();
+                                        } catch (IOException ex1) {
                                         }
+
+                                    });
+                                    Platform.runLater(() -> {
+                                        scene.setRoot(ScreenOne());
+                                    });
+
+                                } catch (IOException ex) {
+                                    //                        alertServerNotConnected.showAndWait();
+                                    System.out.println(ex);
+
+                                    startAPP = false;
+                                    thread.stop();
+                                    try {
+                                        socket.close();
+                                        inStream.close();
+                                        outStream.close();
+                                    } catch (IOException ex1) {
                                     }
+                                } catch (ParseException ex) {
+                                    Platform.runLater(() -> {
+                                        alertServerNotConnected.showAndWait();
+                                    });
+
+                                    startAPP = false;
                                 }
-                            });
-                        thread.start();
-                    } catch (IOException ex) {
-                        Platform.runLater(()->{alertServerNotConnected.showAndWait();});
-                    }
-                ScreenTwo().getChildren().clear();
-                signupBtn1.getScene().setRoot(ScreenTwo());
+                            }
+                        }
+                    });
+                    thread.start();
+                    ScreenTwo().getChildren().clear();
+                    signupBtn1.getScene().setRoot(ScreenTwo());
+                } catch (IOException ex) {
+                    Platform.runLater(() -> {
+                        alertServerNotConnected.showAndWait();
+                    });
+                }
 
             }
 
@@ -903,85 +830,82 @@ public class Client extends Application implements Serializable {
 
             @Override
             public void handle(ActionEvent event) {
-                
-                    try {
 
-                        socket = new Socket(InetAddress.getLocalHost(), 5005);
-                        inStream = new DataInputStream(socket.getInputStream());
-                        outStream = new PrintStream(socket.getOutputStream());
-                        startAPP = true;
-                        thread = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
+                try {
 
-                                    while (startAPP) {
+                    socket = new Socket(InetAddress.getLocalHost(), 5005);
+                    inStream = new DataInputStream(socket.getInputStream());
+                    outStream = new PrintStream(socket.getOutputStream());
+                    startAPP = true;
+                    thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            while (startAPP) {
+                                try {
+                                    JSONObject message = (JSONObject) parser.parse(inStream.readLine());
+                                    messageHandelr(message);
+
+                                } catch (NullPointerException ex) {
+                                    Platform.runLater(() -> {
+                                        alertServerNotConnected.showAndWait();
+                                    });
+                                    startAPP = false;
+                                    Platform.runLater(() -> {
+                                        ScreenOne().getChildren().clear();
+                                        thread.stop();
                                         try {
-                                            JSONObject message = (JSONObject) parser.parse(inStream.readLine());
-                                            messageHandelr(message);
-
-                                        } 
-                                        catch (NullPointerException ex) {
-                                            Platform.runLater(()->{alertServerNotConnected.showAndWait();});
-                                            startAPP = false;
-                                            Platform.runLater(() -> {
-                                            ScreenOne().getChildren().clear();
-                                                System.out.println("Thread should stoped..");
-                                            thread.stop();
-                                                try {
-                                                    socket.close();
-                                                    inStream.close();
-                                                    outStream.close();
-                                                } catch (IOException ex1) {
-                                                }
-
-                                        });
-                                        Platform.runLater(() -> {
-                                            scene.setRoot(ScreenOne());
-                                        });
-
-                                        } 
-                                        catch (IOException ex) {
-                    //                        alertServerNotConnected.showAndWait();
-                    //                        System.out.println("cannot start app");
-                                            System.out.println(ex);
-
-                                            startAPP = false;
-                                            thread.stop();
-                                                try {
-                                                    socket.close();
-                                                    inStream.close();
-                                                    outStream.close();
-                                                } catch (IOException ex1) {
-                                                }
-                                        } 
-                                        catch (ParseException ex) {
-                                            Platform.runLater(()->{alertServerNotConnected.showAndWait();});
-
-                                            startAPP = false;
+                                            socket.close();
+                                            inStream.close();
+                                            outStream.close();
+                                        } catch (IOException ex1) {
                                         }
+
+                                    });
+                                    Platform.runLater(() -> {
+                                        scene.setRoot(ScreenOne());
+                                    });
+
+                                } catch (IOException ex) {
+                                    //                        alertServerNotConnected.showAndWait();
+                                    System.out.println(ex);
+
+                                    startAPP = false;
+                                    thread.stop();
+                                    try {
+                                        socket.close();
+                                        inStream.close();
+                                        outStream.close();
+                                    } catch (IOException ex1) {
                                     }
+                                } catch (ParseException ex) {
+                                    Platform.runLater(() -> {
+                                        alertServerNotConnected.showAndWait();
+                                    });
+
+                                    startAPP = false;
                                 }
-                            });
-                        thread.start();
-                        System.out.println("connected to server");
-                    } catch (IOException ex) {
-                        System.out.println("Cant connect to server..");
-                        Platform.runLater(()->{alertServerNotConnected.showAndWait();});
-                    }
-                
-                if(startAPP){
+                            }
+                        }
+                    });
+                    thread.start();
+                } catch (IOException ex) {
+                    Platform.runLater(() -> {
+                        alertServerNotConnected.showAndWait();
+                    });
+                }
+
+                if (startAPP) {
 
                     if (userText1.getText().isEmpty() || passText1.getText().isEmpty()) {
                         alertEmptyLogIn1.showAndWait();
-                    } 
-                    else {
+                    } else {
                         Player newPlayer = new Player(userText1.getText(), passText1.getText());
                         setPlayerName(userText1.getText());
 
                         convert = new JsonConverter();
                         JSONObject obj = new JSONObject();
                         obj = convert.fromPlayerToJson(newPlayer);
-                        System.out.println("inside loggin" + obj);
                         outStream.println(obj.toString());
                     }
                 }
@@ -1190,6 +1114,14 @@ public class Client extends Application implements Serializable {
             public void handle(ActionEvent event) {
                 ScreenOne().getChildren().clear();
                 backBtn2.getScene().setRoot(ScreenOne());
+                thread.stop();
+                try {
+                    socket.close();
+                    inStream.close();
+                    outStream.close();
+                    startAPP = false;
+                } catch (IOException ex) {
+                }
             }
 
         });
@@ -1328,7 +1260,7 @@ public class Client extends Application implements Serializable {
 
             @Override
             public void handle(ActionEvent event) {
-                
+
                 Player newPlayer = new Player();
                 newPlayer.setUsername(username);
                 newPlayer.setDestination("Computre");
@@ -1430,13 +1362,11 @@ public class Client extends Application implements Serializable {
         ScreenFour.getChildren().add(playBtn4);
         ScreenFour.getChildren().add(backBtn4);
 //        playerData.addAll(ASD);
-        for (int i=0 ; i< ASD.size();i++)
-        {
-            if (!(ASD.get(i).getUsername().equals("Computre")))
-            {
+        for (int i = 0; i < ASD.size(); i++) {
+            if (!(ASD.get(i).getUsername().equals("Computre"))) {
                 playerData.add(ASD.get(i));
             }
-            
+
         }
         PlayerName.setCellValueFactory(
                 new PropertyValueFactory<Player, String>("username")
@@ -1472,18 +1402,15 @@ public class Client extends Application implements Serializable {
                     destenation = PlayerTable.getSelectionModel().getSelectedItem().getUsername();
                     System.out.println(destenation);
                     Player p5 = new Player();
-                        p5.setUsername(userText1.getText());
-                        p5.setDestination(destenation);
-                        p5.setRequest(Request.CHECKOLDGAME);
-                        
-                        obj = convert.fromPlayerToJson(p5);
-                        System.out.println("pppppppppp"+obj);
-                        outStream.println(obj.toString());
-                        xName = userText1.getText();
-                        oName = destenation;
-                        
-                    
-                    
+                    p5.setUsername(userText1.getText());
+                    p5.setDestination(destenation);
+                    p5.setRequest(Request.CHECKOLDGAME);
+
+                    obj = convert.fromPlayerToJson(p5);
+                    outStream.println(obj.toString());
+                    xName = userText1.getText();
+                    oName = destenation;
+
                 } catch (NullPointerException q) {
 
                     unSelected4.showAndWait();
@@ -1662,8 +1589,6 @@ public class Client extends Application implements Serializable {
         ScreenSingleMode.getChildren().add(computerName);
         ScreenSingleMode.getChildren().add(scoreSeperator);
 
-        
-        
         gameFlag = true;
         symbol = Game.X_MOVE;
         buttons = new Button[9];
@@ -1677,17 +1602,15 @@ public class Client extends Application implements Serializable {
         buttons[6] = bt7;
         buttons[7] = bt8;
         buttons[8] = bt9;
-        
+
         playerScoreCounter = 0;
         computerScoreCounter = 0;
-        if(newgame){
-            System.out.println("single mode new game ");
+        if (newgame) {
             recordedPositions = new String[9];
-        }else{
-            System.out.println("single mode old game ");
+        } else {
             drawOldPositions(recordedPositions);
         }
-        
+
         for (index = 0; index < 9; index++) {
             buttons[index].setFont(Font.font("Engravers MT", FontWeight.BOLD, 36));
         }
@@ -1784,14 +1707,13 @@ public class Client extends Application implements Serializable {
 
         return ScreenSingleMode;
     }
-    
-    private static  boolean  newgame = true;
+
+    private static boolean newgame = true;
+
     public AnchorPane ScreenMultiMode() {
         myGame = new Game();
         convert = new JsonConverter();
         recordGameFlag = true;
-
-        
 
         ScreenMultiMode = new AnchorPane();
         MultiGameImage = new ImageView();
@@ -1819,19 +1741,14 @@ public class Client extends Application implements Serializable {
 
         playerOneName.setText(xName);
         playerTwoName.setText(oName);
-        
-        if(newgame) {
-//            System.out.println(" line 1635  the  is a new game ");
+
+        if (newgame) {
             recordedPositions = new String[9];
             currentMove = Game.X_MOVE;
-        }else{
-//            System.out.println("this is an old game ");
-//            for (int i = 0 ; i < recordedPositions.length ;i++ )
-//            {
-//                System.out.println(recordedPositions[i]);
-//            }
+        } else {
+
             drawOldPositionsMulti();
-            
+
         }
 
         btn1.setOnAction(new EventHandler<ActionEvent>() {
@@ -2154,7 +2071,6 @@ public class Client extends Application implements Serializable {
     }
 
     public void messageHandelr(JSONObject message) {
-        System.out.println(" client messageHandelr "+message);
         switch ((String) message.get("request")) {
             case Request.LOGIN:
                 Player p = convert.fromJsonToPlayer(message);
@@ -2182,7 +2098,6 @@ public class Client extends Application implements Serializable {
                 loadOldPosition(message);
                 break;
             case Request.RECEVE_GAME_SYMBOL:
-                System.out.println("recive symbol"+message);
                 receveMySymbol(message);
                 break;
             case Request.GAME_MOVE:
@@ -2190,7 +2105,6 @@ public class Client extends Application implements Serializable {
             case Request.Chat_Message:
             case Request.RECORD_GAME:
             case Request.END_GAME:
-                System.out.println("forwardgame reqq"+message);
                 forwardGameRequest(message);
                 break;
             case Request.RESUME_COMPUTER_GAME:
@@ -2198,130 +2112,99 @@ public class Client extends Application implements Serializable {
                 break;
         }
     }
-    
-    private void resuemComputerGame(JSONObject message){
+
+    private void resuemComputerGame(JSONObject message) {
         Game newGame = convert.fromJsonWithArrayToGame(message, convert.fromJsonArrayToRecordedGame((JSONArray) message.get("recordedPosition")));
-         int cnt = 0;
-          for (int i = 0 ; i < newGame.getRecordedGamePosition().length; i++)
-          { 
-              if (newGame.getRecordedGamePosition()[i]== null)
-              {
-                  cnt++;
-              }
-          
-          }
-          if (cnt == newGame.getRecordedGamePosition().length)
-          {
-              System.out.println("no record position");
-              // load sibgle mode with noew game
-              ScreenSingleMode().getChildren().clear();
-              scene.setRoot(ScreenSingleMode());
-          }
-          else
-          {
-              // generate alert to as user resume or no
-              alertForOldGameRespond.setTitle("Continue old game or not");
-                alertForOldGameRespond.setContentText("Do you want to resume old game?");
-               Platform.runLater(() -> {
+        int cnt = 0;
+        for (int i = 0; i < newGame.getRecordedGamePosition().length; i++) {
+            if (newGame.getRecordedGamePosition()[i] == null) {
+                cnt++;
+            }
 
-             alertForOldGameRespond.showAndWait().ifPresent(type -> {
-                     System.out.println("insiede the alert  waiting to yes or no");
-
-                 if (type == resumeGameButton) {
-                    //load single mode with old position
-                    recordedPositions = newGame.getRecordedGamePosition();
-                    newgame = false;
-                    ScreenSingleMode().getChildren().clear();
-                    scene.setRoot(ScreenSingleMode());
-                 }else if (type == StartNewGameButton){
-                    ScreenSingleMode().getChildren().clear();
-                    scene.setRoot(ScreenSingleMode());
-                 }
-                 
-                 // load single mode with new game
-             });
-
-         });
-              
-          }
-        
-    }
-    private void askUserToResumeGameOldGameOrNot(JSONObject message){
-        Player newPlayer = convert.fromJsonToPlayer(message);
-        newPlayer.setResumeOldGame(false);
-        
-        if(newPlayer.getRespond().equalsIgnoreCase(Respond.SUCCESS)){
-            // generate alret 
-            alertForOldGameRespond.setTitle("Continue old game with " + newPlayer.getUsername()+ " or not");
+        }
+        if (cnt == newGame.getRecordedGamePosition().length) {
+            // load sibgle mode with noew game
+            ScreenSingleMode().getChildren().clear();
+            scene.setRoot(ScreenSingleMode());
+        } else {
+            // generate alert to as user resume or no
+            alertForOldGameRespond.setTitle("Continue old game or not");
             alertForOldGameRespond.setContentText("Do you want to resume old game?");
-              Platform.runLater(() -> {
+            Platform.runLater(() -> {
 
-            alertForOldGameRespond.showAndWait().ifPresent(type -> {
-                    System.out.println("insiede the alert  waiting to yes or no");
+                alertForOldGameRespond.showAndWait().ifPresent(type -> {
 
-                if (type == resumeGameButton) {
-                    System.out.println("the user want to resume an old game test");
-                   newPlayer.setResumeOldGame(true);
-                   newPlayer.setRequest(Request.GAME_INVITATION);
-                    obj = convert.fromPlayerToJson(newPlayer);
-                    System.out.println("2037" + obj);
-                    outStream.println(obj.toString());
-                }
-                else if (type == StartNewGameButton)
-                {
-                    newPlayer.setRequest(Request.GAME_INVITATION);
-                    obj = convert.fromPlayerToJson(newPlayer);
-                    System.out.println("2037" + obj);
-                    outStream.println(obj.toString());
-                }
-                
-//                newPlayer.setRequest(Request.GAME_INVITATION);
-//                obj = convert.fromPlayerToJson(newPlayer);
-//                System.out.println("2037" + obj);
-//                outStream.println(obj.toString());
+                    if (type == resumeGameButton) {
+                        //load single mode with old position
+                        recordedPositions = newGame.getRecordedGamePosition();
+                        newgame = false;
+                        ScreenSingleMode().getChildren().clear();
+                        scene.setRoot(ScreenSingleMode());
+                    } else if (type == StartNewGameButton) {
+                        // load single mode with new game
+                        ScreenSingleMode().getChildren().clear();
+                        scene.setRoot(ScreenSingleMode());
+                    }
+
+                    
+                });
+
             });
 
-        });
         }
-        else
-        {
-        
-                newPlayer.setRequest(Request.GAME_INVITATION);
-                obj = convert.fromPlayerToJson(newPlayer);
-                System.out.println("2037" + obj);
-                outStream.println(obj.toString());
+
+    }
+
+    private void askUserToResumeGameOldGameOrNot(JSONObject message) {
+        Player newPlayer = convert.fromJsonToPlayer(message);
+        newPlayer.setResumeOldGame(false);
+
+        if (newPlayer.getRespond().equalsIgnoreCase(Respond.SUCCESS)) {
+            // generate alret 
+            alertForOldGameRespond.setTitle("Continue old game with " + newPlayer.getUsername() + " or not");
+            alertForOldGameRespond.setContentText("Do you want to resume old game?");
+            Platform.runLater(() -> {
+
+                alertForOldGameRespond.showAndWait().ifPresent(type -> {
+
+                    if (type == resumeGameButton) {
+                        newPlayer.setResumeOldGame(true);
+                        newPlayer.setRequest(Request.GAME_INVITATION);
+                        obj = convert.fromPlayerToJson(newPlayer);
+                        outStream.println(obj.toString());
+                    } else if (type == StartNewGameButton) {
+                        newPlayer.setRequest(Request.GAME_INVITATION);
+                        obj = convert.fromPlayerToJson(newPlayer);
+                        outStream.println(obj.toString());
+                    }
+                });
+
+            });
+        } else {
+
+            newPlayer.setRequest(Request.GAME_INVITATION);
+            obj = convert.fromPlayerToJson(newPlayer);
+            outStream.println(obj.toString());
         }
-        
+
     }
 
     private void loadOldPosition(JSONObject meesage) {
-        System.out.println("old Position obje"  + meesage);
         Game newGame = convert.fromJsonWithArrayToGame(meesage, convert.fromJsonArrayToRecordedGame((JSONArray) meesage.get("recordedPosition")));
         recordedPositions = newGame.getRecordedGamePosition();
         newgame = false;
-    
-         System.out.println("line 2077");
-            mySymbol = newGame.getNextMove();
-            Platform.runLater(
-                        () -> {
-                            ScreenMultiMode().getChildren().clear();
-                        }
-                );
-            Platform.runLater(
-                    () -> {
-                        scene.setRoot(ScreenMultiMode());
-                    }
-            );
-//        setRecordedPosition(newGame.getRecordedGamePosition());
-           
-//           for(int i = 0 ; i < recordedPositions.length ; i++)
-//           {
-//               System.out.println(recordedPositions[i]);
-//           }
-        
-        
-        
 
+        mySymbol = newGame.getNextMove();
+        Platform.runLater(
+                () -> {
+                    ScreenMultiMode().getChildren().clear();
+                }
+        );
+        Platform.runLater(
+                () -> {
+                    scene.setRoot(ScreenMultiMode());
+                }
+        );
     }
 
     private void receveMySymbol(JSONObject obj) {
@@ -2329,10 +2212,10 @@ public class Client extends Application implements Serializable {
         gameRequest = convert.fromJsonToGame(obj);
         mySymbol = gameRequest.getNextMove();
         Platform.runLater(
-                    () -> {
-                        ScreenMultiMode().getChildren().clear();
-                    }
-            );
+                () -> {
+                    ScreenMultiMode().getChildren().clear();
+                }
+        );
         Platform.runLater(
                 () -> {
                     scene.setRoot(ScreenMultiMode());
@@ -2353,15 +2236,12 @@ public class Client extends Application implements Serializable {
 
         Player p = convert.fromJsonToPlayer(message);
         if (p.getRespond().equals(Respond.SUCCESS)) {
-            if(p.isResumeOldGame()){
-                System.out.println("send resume old game to server ");
+            if (p.isResumeOldGame()) {
                 sendGameMove(Request.GET_RECORDEDGAME);
-            }else{
-                System.out.println("send  new game to server");
-                 sendGameMove(Request.START_GAME);
+            } else {
+                sendGameMove(Request.START_GAME);
             }
-           
-           
+
         } else {
             Platform.runLater(() -> {
                 alertRejection.showAndWait();
@@ -2372,15 +2252,14 @@ public class Client extends Application implements Serializable {
 
     public void generateAlertToAskUserForRespond(JSONObject message) {
         Player p3 = convert.fromJsonToPlayer(message);
-        if(p3.isResumeOldGame()){
+        if (p3.isResumeOldGame()) {
             alertForRespond.setTitle("Continue old game invitation with " + p3.getUsername());
-            alertForRespond.setContentText("Do you want to resume old game?");   
-        }
-        else{
+            alertForRespond.setContentText("Do you want to resume old game?");
+        } else {
             alertForRespond.setTitle("Play invitation from " + p3.getUsername());
             alertForRespond.setContentText("Do you want to play?");
         }
-        
+
         Platform.runLater(() -> {
 
             alertForRespond.showAndWait().ifPresent(type -> {
@@ -2388,15 +2267,12 @@ public class Client extends Application implements Serializable {
                 if (type == okButton) {
                     p3.setRespond(Respond.SUCCESS);
                     obj = convert.fromPlayerToJson(p3);
-                    System.out.println("respond game from destenation " + obj);
                     outStream.println(obj.toString());
                     xName = p3.getUsername();
                     oName = getusername();
-                } 
-                else {
+                } else {
                     p3.setRespond(Respond.FAILURE);
                     obj = convert.fromPlayerToJson(p3);
-                    System.out.println("respond game from destenation " + obj);
                     outStream.println(obj.toString());
                 }
 
@@ -2432,7 +2308,7 @@ public class Client extends Application implements Serializable {
             Platform.runLater(() -> {
                 signupBtn2.getScene().setRoot(ScreenOne());
             });
-            
+
             thread.stop();
             try {
                 socket.close();
@@ -2440,16 +2316,15 @@ public class Client extends Application implements Serializable {
                 outStream.close();
                 startAPP = false;
             } catch (IOException ex) {
-                System.out.println("line(2445) sign up respond: the streams does not closed");
             }
-            
+
         } else {
             Platform.runLater(() -> {
                 alertUserExists.showAndWait();
             });
 
         }
-        
+
     }
 
     public void logout(Player p) {
@@ -2461,7 +2336,6 @@ public class Client extends Application implements Serializable {
             Platform.runLater(() -> {
                 logOutBtn3.getScene().setRoot(ScreenOne());
             });
-            System.out.println(" loug out: Thread should stoped....");
             thread.stop();
             startAPP = false;
             try {
@@ -2470,7 +2344,7 @@ public class Client extends Application implements Serializable {
                 outStream.close();
             } catch (IOException ex) {
             }
-            
+
         } else {
             alertWrongLogout1 = new Alert(Alert.AlertType.ERROR);
             alertWrongLogout1.setTitle("Logout ");
@@ -2507,7 +2381,7 @@ public class Client extends Application implements Serializable {
         playerXpositions.clear();
         playerOpositions.clear();
         for (int index = 0; index < 9; index++) {
-            
+
             if (!positions[index].equalsIgnoreCase("")) {
                 buttons[index].setText(positions[index]);
                 buttons[index].setDisable(true);
@@ -2523,7 +2397,7 @@ public class Client extends Application implements Serializable {
             playComputerMove();
         }
 
-    } 
+    }
 
     int computerMove() {
         Random random = new Random();
@@ -2561,12 +2435,12 @@ public class Client extends Application implements Serializable {
             }
         }
     }
-    
-    void playUserMove(int position){
+
+    void playUserMove(int position) {
         if (gameFlag) {
-            
-            buttons[position -1].setText(symbol);
-            buttons[position -1].setDisable(true);
+
+            buttons[position - 1].setText(symbol);
+            buttons[position - 1].setDisable(true);
             if (symbol.equalsIgnoreCase(Game.X_MOVE)) {
                 playerXpositions.add(position);
                 symbol = Game.O_MOVE;
@@ -2584,7 +2458,7 @@ public class Client extends Application implements Serializable {
                 }
             }
         }
-        
+
     }
 
     private void playAgain() {
@@ -2599,7 +2473,7 @@ public class Client extends Application implements Serializable {
             btn.setDisable(false);
             Button tmpButton = new Button();
             btn.setStyle(tmpButton.getStyle());
-            btn.setFont(Font.font("Engravers MT",36.0));
+            btn.setFont(Font.font("Engravers MT", 36.0));
         }
     }
 
@@ -2764,7 +2638,7 @@ public class Client extends Application implements Serializable {
                 Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
+
         thread.stop();
 
     }
