@@ -35,7 +35,7 @@ public class GameDataBase {
             // String q = new String("select * from student");
             DriverManager.registerDriver(new com.mysql.jdbc.Driver());
 
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/xo_db", "root", "");
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/xo_db", "java", "java");
 
             stmt = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 

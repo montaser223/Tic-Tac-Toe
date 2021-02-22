@@ -38,13 +38,14 @@ import javafx.stage.Stage;
  */
 class Server {
 
-    private static ClientHandler handler;
-    private static ServerSocket serverSocket;
-    private static Socket socket;
-    private static volatile boolean startServerflag;
-    private static Thread thread;
+    private  ClientHandler handler;
+    private  ArrayList <ClientHandler>  user = new ArrayList <ClientHandler> ();
+    private  ServerSocket serverSocket;
+    private  Socket socket;
+    private  volatile boolean startServerflag;
+    private  Thread thread;
 
-    public static void startServerX() {
+    public  void startServerX() {
         try {
             serverSocket = new ServerSocket(5005);
             startServerflag = true;
@@ -60,7 +61,7 @@ class Server {
                     try {
 
                         socket = serverSocket.accept();
-                        new ClientHandler(socket);
+                        user.add(new ClientHandler(socket));
 
                     } catch (IOException ex) {
                         startServerflag = false;
@@ -73,12 +74,11 @@ class Server {
         thread.start();
     }
 
-    public static void stopServer() {
+    public void stopServer() {
 
         if (startServerflag) {
 
             startServerflag = false;
-
             try {
                 serverSocket.close();
             } catch (IOException ex) {
@@ -86,11 +86,12 @@ class Server {
             try {
                 socket.close();
             } catch (NullPointerException ex) {
-
             } catch (IOException ex) {
-
             }
-
+            for(int index = 0 ; index < user.size(); index++){
+                user.get(index).stopClientHandler();
+            }
+            user.clear();
             thread.stop();
         }
     }
@@ -180,7 +181,8 @@ public class ServerGUI extends Application {
             public void handle(ActionEvent event) {
 
                 if (startFlag) {
-                    Server.startServerX();
+                    s = new Server();
+                    s.startServerX();
                     startAndStopButton.setLayoutX(357.0);
                     startAndStopButton.setLayoutY(450.0);
                     startAndStopButton.setMnemonicParsing(false);
@@ -194,7 +196,7 @@ public class ServerGUI extends Application {
                     startTimer();
                     startFlag = false;
                 } else {
-                    Server.stopServer();
+                    s.stopServer();
                     startFlag = true;
                     stopTimer();
                     startAndStopButton.setText("Start");
@@ -302,7 +304,7 @@ public class ServerGUI extends Application {
     public void stop() {
         /* this function will handle case if user close the app from the close btn (X)
             it will close Server and thread*/
-        Server.stopServer();
+        s.stopServer();
         stopTimer();
     }
 

@@ -376,6 +376,13 @@ public class ClientHandler extends Thread implements Serializable {
     public void stopClientHandler() {
 
         this.connected = false;
+        try {
+            this.inStream.close();
+            this.outStream.close();
+        } catch (IOException ex) {
+              System.out.println(ex.getMessage());
+        }
+        
         this.stop();
     }
 
