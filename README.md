@@ -43,7 +43,7 @@ Network based Tic-Tac-Toe game, implemented with JavaFX as a project in ITI Open
       - Sources -> Add Folder -> Add ProjectImg Folder
     - Make sure from existance of two packages in Client project first one is libs package and second is client
    - clean and build the client project then Run Client.java file
-## [Demo](https://drive.google.com/file/d/1eHO6xEs0CjBr6oCaYjRK4kw3a83UucfK/view?usp=sharing)
+## [Demo](https://drive.google.com/file/d/18ITYb7UKVlUwUQSZWtQ5dUB2gi76hV4f/view?usp=sharing)
 
 ![picture](Demo.gif)
                                                 
