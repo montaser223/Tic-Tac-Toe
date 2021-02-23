@@ -25,6 +25,7 @@ Network based Tic-Tac-Toe game, implemented with JavaFX as a project in ITI Open
         - json-simple-1.1.1
         - gson-2.6.2
         - mysql-connector-java-5.1.49-bin
+    - Sources -> Add Folder -> Add ProjectImg Folder
    - Import xo_db.sql file to phpmyadmin
    - Run XAMPP
    - In netbeans open service tab  add new driver "jdbc:mysql://localhost:3306/xo_db" and make sure there is a mysql server at the "localhost" on port 3306 also add a user named "root" with empty password then allow this user's access on database names "xo_db"
@@ -39,6 +40,7 @@ Network based Tic-Tac-Toe game, implemented with JavaFX as a project in ITI Open
       - Libraries and make sure that following libraries are included
           - json-simple-1.1.1
           - gson-2.6.2
+      - Sources -> Add Folder -> Add ProjectImg Folder
     - Make sure from existance of two packages in Client project first one is libs package and second is client
    - clean and build the client project then Run Client.java file
 ## [Demo](https://drive.google.com/file/d/1eHO6xEs0CjBr6oCaYjRK4kw3a83UucfK/view?usp=sharing)
