@@ -74,7 +74,7 @@ Network based Tic-Tac-Toe game, implemented with JavaFX as a project in ITI Open
  - [Abo Bakr Yousre](https://www.linkedin.com/in/abobakryousre/)
  - [Abd El-Rahman Montaser](http://linkedin.com/in/abdelrahman-montaser)
  - [Eman Reda Soliman](https://www.linkedin.com/mwlite/in/eman-soliman)
- - [Heba Mostafa Mohamed](www.linkedin.com/in/heba-abdelmagead)
+ - [Heba Mostafa Mohamed](https://www.linkedin.com/in/heba-abdelmagead)
  - [Mohamed Mahmoud Mohamed Kaoud](https://www.linkedin.com/in/mohamedkaoud) 
  - Omnia Mostafa Khalaf
  
