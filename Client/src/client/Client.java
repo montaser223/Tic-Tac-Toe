@@ -672,13 +672,9 @@ public class Client extends Application implements Serializable {
         LoginImg.setFitWidth(307.0);
         LoginImg.setPickOnBounds(true);
 
-        try {
-            FileInputStream stream = new FileInputStream("ProjectImg/login.jpg");
-            Image image = new Image(stream);
+            Image image = new Image(getClass().getClassLoader().getResourceAsStream("login.jpg"));
             LoginImg.setImage(image);
 
-        } catch (FileNotFoundException ex) {
-        }
 
         LoginLabel.setAlignment(javafx.geometry.Pos.CENTER);
         LoginLabel.setLayoutX(387.0);
@@ -967,13 +963,9 @@ public class Client extends Application implements Serializable {
         SignUpImg.setFitHeight(538.0);
         SignUpImg.setFitWidth(321.0);
         SignUpImg.setPickOnBounds(true);
-        try {
-            FileInputStream stream = new FileInputStream("ProjectImg/registration.jpg");
-            Image image = new Image(stream);
-            SignUpImg.setImage(image);
+        Image image = new Image(getClass().getClassLoader().getResourceAsStream("registration.jpg"));
+        SignUpImg.setImage(image);
 
-        } catch (FileNotFoundException ex) {
-        }
         GridPane.setColumnIndex(SignUpFormPanel, 1);
         SignUpFormPanel.setPrefHeight(200.0);
         SignUpFormPanel.setPrefWidth(200.0);
@@ -1165,13 +1157,9 @@ public class Client extends Application implements Serializable {
         PlayImg.setFitHeight(540.0);
         PlayImg.setFitWidth(700.0);
         PlayImg.setPickOnBounds(true);
-        try {
-            FileInputStream stream = new FileInputStream("ProjectImg/rocket.jpg");
-            Image image = new Image(stream);
-            PlayImg.setImage(image);
 
-        } catch (FileNotFoundException ex) {
-        }
+        Image image = new Image(getClass().getClassLoader().getResourceAsStream("rocket.jpg"));
+        PlayImg.setImage(image);
 
         PlayLable.setAlignment(javafx.geometry.Pos.CENTER);
         PlayLable.setLayoutX(145.0);
@@ -1275,7 +1263,7 @@ public class Client extends Application implements Serializable {
         return ScreenThree;
     }
 
-    public AnchorPane ScreenFour() throws ParseException, IOException {
+    public AnchorPane ScreenFour() {
         TableImg = new ImageView();
         ScreenFour = new AnchorPane();
 
@@ -1298,13 +1286,10 @@ public class Client extends Application implements Serializable {
         TableImg.setFitHeight(540.0);
         TableImg.setFitWidth(700.0);
         TableImg.setPickOnBounds(true);
-        try {
-            FileInputStream stream = new FileInputStream("ProjectImg/image.jpg");
-            Image image = new Image(stream);
-            TableImg.setImage(image);
+    
+        Image image = new Image(getClass().getClassLoader().getResourceAsStream("image.jpg"));
+        TableImg.setImage(image);
 
-        } catch (FileNotFoundException ex) {
-        }
 
         PlayerTable.setLayoutX(89.0);
         PlayerTable.setLayoutY(109.0);
@@ -1456,13 +1441,10 @@ public class Client extends Application implements Serializable {
         GameImg.setFitHeight(540.0);
         GameImg.setFitWidth(700.0);
         GameImg.setPickOnBounds(true);
-        try {
-            FileInputStream stream = new FileInputStream("ProjectImg/image.jpg");
-            Image image = new Image(stream);
-            GameImg.setImage(image);
 
-        } catch (FileNotFoundException ex) {
-        }
+        Image image = new Image(getClass().getClassLoader().getResourceAsStream("image.jpg"));
+        GameImg.setImage(image);
+
 
         exit.setAlignment(javafx.geometry.Pos.CENTER);
         exit.setLayoutX(331.0);
@@ -1855,13 +1837,10 @@ public class Client extends Application implements Serializable {
         MultiGameImage.setFitHeight(540.0);
         MultiGameImage.setFitWidth(700.0);
         MultiGameImage.setPickOnBounds(true);
-        try {
-            FileInputStream stream = new FileInputStream("ProjectImg/image.jpg");
-            Image image = new Image(stream);
-            MultiGameImage.setImage(image);
 
-        } catch (FileNotFoundException ex) {
-        }
+        Image image = new Image(getClass().getClassLoader().getResourceAsStream("image.jpg"));
+        MultiGameImage.setImage(image);
+
 
         chatArea.setEditable(false);
         chatArea.setLayoutX(383.0);
@@ -2605,14 +2584,12 @@ public class Client extends Application implements Serializable {
             Parent root = ScreenOne();
             scene = new Scene(root);
 
-            try {
-                InputStream stream = new FileInputStream("ProjectImg/xo.png");
-                Image image = new Image(stream);
+           
+//              InputStream stream = new FileInputStream("ProjectImg/xo.png");
+                Image image = new Image(getClass().getClassLoader().getResourceAsStream("xo.png"));
                 ImageView imageView = new ImageView();
                 primaryStage.getIcons().add(image);
-            } catch (FileNotFoundException ex) {
-            }
-
+           
             primaryStage.setScene(scene);
             primaryStage.setResizable(false);
             primaryStage.setTitle("Tic Tac Toe");

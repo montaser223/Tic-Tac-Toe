@@ -352,7 +352,7 @@ public class ClientHandler extends Thread implements Serializable {
             players.get(getPlayerIndex(destinationPlayer.getUsername())).setStatus(Status.PLAYING);
             
             try {
-                this.sleep(1000);
+                this.sleep(500);
             } catch (InterruptedException ex) {
             }
 

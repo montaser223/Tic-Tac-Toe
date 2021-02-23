@@ -129,13 +129,9 @@ public class ServerGUI extends Application {
         serverImg.setFitHeight(540.0);
         serverImg.setFitWidth(259.0);
         serverImg.setPickOnBounds(true);
-        try {
-            FileInputStream stream = new FileInputStream("ProjectImg/server.jpeg");
-            Image image = new Image(stream);
-            serverImg.setImage(image);
 
-        } catch (FileNotFoundException ex) {
-        };
+            Image image = new Image(getClass().getClassLoader().getResourceAsStream("server.jpeg"));
+            serverImg.setImage(image);
         /**
          * *************************Button text
          * flag******************************************************************
@@ -255,12 +251,10 @@ public class ServerGUI extends Application {
     @Override
     public void start(Stage stage) {
 
-        try {
-
-            Image image = new Image(new FileInputStream("ProjectImg/index.jpeg"));
+            
+            Image image = new Image(getClass().getClassLoader().getResourceAsStream("index.jpeg"));
             stage.getIcons().add(image);
-        } catch (FileNotFoundException ex) {
-        }
+        
         ImageView imageView = new ImageView();
 
         Scene scene = new Scene(root, 642, 540);
