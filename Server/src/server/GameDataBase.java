@@ -46,50 +46,7 @@ public class GameDataBase {
     
     
     
-    public void game_record(String[] positions,String username1, String username2) {
-//        String[] positions = new String[9];
-        try {
-//            int j = 1;
-            select_player1_id(username1);
-            select_player2_id(username2);
-//            select_game_id();
-            select_game_id_specific_player(player1_id, player2_id);
-            System.out.println(player1_id +" "+ player2_id);
-            if (select_from_recorded_game() == false) {
-                System.out.println("enter");
-
-                queryString = " insert into game (bn1,bn2,bn3,bn4,bn5,bn6,bn7,bn8,bn9,playerX,playerO)"
-                        + " values (?,?,?,?,?,?,?,?,?,?,?)";
-
-                PreparedStatement preparedStmt = con.prepareStatement(queryString);
-                    int i;
-                for (i = 0; i < 9; i++) {
-                    System.out.println("GameDataBase.for" + positions[i]);
-                    preparedStmt.setString(i + 1,positions[i]);
-
-                }
-                
-                preparedStmt.setString(i + 1,username1);
-                preparedStmt.setString(i + 2, username2);
-                preparedStmt.execute();
-                System.out.println("GameDataBase execute");
-                
-                select_game_id();
-                
-                insert_into_recorded_game();
-//                game_record_inreverse_order(positions,username2,username1);
-            } else {
-                System.out.println("updated");
-                update_into_recorded_game(positions);
-            }
-        } catch (SQLException ex) {
-//            Logger.getLogger(game.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println(ex.getMessage());
-        }
-
-    }
-
-
+    
     public void select_player1_id(String username1) {
         try {
             queryString = "select ID from player where username ='" + username1 + "' ";
