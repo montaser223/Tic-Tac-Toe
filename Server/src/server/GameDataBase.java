@@ -44,6 +44,50 @@ public class GameDataBase {
         }
     }
     
+public Game return_positions_of_tow_players(Game newGame){
+        try {
+            select_player1_id(newGame.getPlayerX());
+            select_player2_id(newGame.getPlayerO());
+            select_game_id_specific_player(player1_id,player2_id);
+            System.out.println(game_id);
+            queryString = " select bn1,bn2,bn3,bn4,bn5,bn6,bn7,bn8,bn9,playerX,playerO from game where ID='"+game_id+"'";
+            
+            rs = stmt.executeQuery(queryString);
+            
+            
+            while (rs.next()) {
+                positions[0] = rs.getString("bn1");
+                positions[1] = rs.getString("bn2");
+                positions[2] = rs.getString("bn3");
+                positions[3] = rs.getString("bn4");
+                positions[4] = rs.getString("bn5");
+                positions[5] = rs.getString("bn6");
+                positions[6] = rs.getString("bn7");
+                positions[7] = rs.getString("bn8");
+                positions[8] = rs.getString("bn9");
+                
+                
+                //System.out.println(rs.getInt("ID"));
+            }
+            newGame.setRecordedGamePosition(positions);
+            
+            
+        }catch (SQLException ex) {
+            System.out.println("server.GameDataBase.return_positions_of_tow_players()");
+        }
+//            queryString = "delete from game where  ID='"+game_id+"'";
+//            stmt = con.createStatement();
+//            stmt.executeUpdate(queryString);
+//            System.out.println("Record deleted successfully");
+//            
+//            queryString = "delete from players_record_games where  game_id='"+game_id+"'";
+//            stmt = con.createStatement();
+//            stmt.executeUpdate(queryString);
+//            System.out.println("Record deleted successfully");
+//            Logger.getLogger(game.class.getName()).log(Level.SEVERE, null, ex);
+              return  newGame;
+    
+    }
     
     
     
