@@ -44,7 +44,7 @@ public class GameDataBase {
         }
     }
     
-    public Game return_positions_of_tow_players(Game newGame){
+public Game return_positions_of_tow_players(Game newGame){
         try {
             select_player1_id(newGame.getPlayerX());
             select_player2_id(newGame.getPlayerO());
@@ -88,8 +88,8 @@ public class GameDataBase {
               return  newGame;
     
     }
-
-    public void game_record_inreverse_order(String Position[],String use2,String use1) {
+    
+ public void game_record_inreverse_order(String Position[],String use2,String use1) {
 
         try {
             System.out.println("enter_reverse_order");
@@ -117,8 +117,11 @@ public class GameDataBase {
 
 
     }
-    
-    public void game_record(String[] positions,String username1, String username2) {
+
+
+   
+
+public void game_record(String[] positions,String username1, String username2) {
 //        String[] positions = new String[9];
         try {
 //            int j = 1;
@@ -161,7 +164,8 @@ public class GameDataBase {
 
     }
 
-
+    
+    
     public void select_player1_id(String username1) {
         try {
             queryString = "select ID from player where username ='" + username1 + "' ";
