@@ -89,6 +89,34 @@ public Game return_positions_of_tow_players(Game newGame){
     
     }
     
+ public void game_record_inreverse_order(String Position[],String use2,String use1) {
+
+        try {
+            System.out.println("enter_reverse_order");
+            
+            queryString = " insert into game (bn1,bn2,bn3,bn4,bn5,bn6,bn7,bn8,bn9,playerX,playerO)"
+                    + " values (?,?,?,?,?,?,?,?,?,?,?)";
+            
+            PreparedStatement preparedStmt = con.prepareStatement(queryString);
+            int i;
+            for (i = 0; i < 9; i++) {
+                preparedStmt.setString(i + 1,Position[i]);
+                
+            }
+            preparedStmt.setString(i + 1,use2);
+            preparedStmt.setString(i + 2, use1);
+            preparedStmt.execute();
+            
+            select_game_id();
+            
+            insert_into_recorded_game();
+        } catch (SQLException ex) {
+            Logger.getLogger(GameDataBase.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
+
+    }
     
     
     public void select_player1_id(String username1) {
