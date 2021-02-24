@@ -44,79 +44,7 @@ public class GameDataBase {
         }
     }
     
-    public Game return_positions_of_tow_players(Game newGame){
-        try {
-            select_player1_id(newGame.getPlayerX());
-            select_player2_id(newGame.getPlayerO());
-            select_game_id_specific_player(player1_id,player2_id);
-            System.out.println(game_id);
-            queryString = " select bn1,bn2,bn3,bn4,bn5,bn6,bn7,bn8,bn9,playerX,playerO from game where ID='"+game_id+"'";
-            
-            rs = stmt.executeQuery(queryString);
-            
-            
-            while (rs.next()) {
-                positions[0] = rs.getString("bn1");
-                positions[1] = rs.getString("bn2");
-                positions[2] = rs.getString("bn3");
-                positions[3] = rs.getString("bn4");
-                positions[4] = rs.getString("bn5");
-                positions[5] = rs.getString("bn6");
-                positions[6] = rs.getString("bn7");
-                positions[7] = rs.getString("bn8");
-                positions[8] = rs.getString("bn9");
-                
-                
-                //System.out.println(rs.getInt("ID"));
-            }
-            newGame.setRecordedGamePosition(positions);
-            
-            
-        }catch (SQLException ex) {
-            System.out.println("server.GameDataBase.return_positions_of_tow_players()");
-        }
-//            queryString = "delete from game where  ID='"+game_id+"'";
-//            stmt = con.createStatement();
-//            stmt.executeUpdate(queryString);
-//            System.out.println("Record deleted successfully");
-//            
-//            queryString = "delete from players_record_games where  game_id='"+game_id+"'";
-//            stmt = con.createStatement();
-//            stmt.executeUpdate(queryString);
-//            System.out.println("Record deleted successfully");
-//            Logger.getLogger(game.class.getName()).log(Level.SEVERE, null, ex);
-              return  newGame;
     
-    }
-
-    public void game_record_inreverse_order(String Position[],String use2,String use1) {
-
-        try {
-            System.out.println("enter_reverse_order");
-            
-            queryString = " insert into game (bn1,bn2,bn3,bn4,bn5,bn6,bn7,bn8,bn9,playerX,playerO)"
-                    + " values (?,?,?,?,?,?,?,?,?,?,?)";
-            
-            PreparedStatement preparedStmt = con.prepareStatement(queryString);
-            int i;
-            for (i = 0; i < 9; i++) {
-                preparedStmt.setString(i + 1,Position[i]);
-                
-            }
-            preparedStmt.setString(i + 1,use2);
-            preparedStmt.setString(i + 2, use1);
-            preparedStmt.execute();
-            
-            select_game_id();
-            
-            insert_into_recorded_game();
-        } catch (SQLException ex) {
-            Logger.getLogger(GameDataBase.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-
-
-    }
     
     public void game_record(String[] positions,String username1, String username2) {
 //        String[] positions = new String[9];
